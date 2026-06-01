@@ -2833,6 +2833,9 @@ const FIREBASE_CONFIG = {
 
 let firebaseDB = null;
 let firebaseSaveTimeout = null;
+// Traba de seguridad: recién permitimos subir a la nube DESPUÉS de haberla leído
+// una vez. Evita que una copia vieja/vacía pise la versión buena al abrir la página.
+let cloudSynced = false;
 
 function initFirebase() {
   try {
@@ -2841,6 +2844,7 @@ function initFirebase() {
     firebaseDB = firebase.database();
     // Escuchar cambios en tiempo real
     firebaseDB.ref('wm_app_v2').on('value', function(snapshot) {
+      cloudSynced = true; // ya leímos la nube: a partir de acá sí podemos subir
       const data = snapshot.val();
       if (data) {
         const incoming = typeof data === 'string' ? JSON.parse(data) : data;
@@ -2888,8 +2892,10 @@ function saveState() {
   // Ensure per-user fields are not in shared state
   stripViewStateFromShared();
   localStorage.setItem('wm_app_v2', JSON.stringify(state));
-  // Guardar en Firebase con un pequeño delay para no saturar
-  if (firebaseDB) {
+  // Guardar en Firebase con un pequeño delay para no saturar.
+  // Solo subimos si YA leímos la nube al menos una vez (cloudSynced), para que
+  // una copia vieja/vacía recién abierta no pueda pisar la versión buena.
+  if (firebaseDB && cloudSynced) {
     clearTimeout(firebaseSaveTimeout);
     firebaseSaveTimeout = setTimeout(function() {
       showSyncIndicator('⏳ Guardando...');
