@@ -2047,6 +2047,19 @@ body.edit-mode .col-type-toggle { display: inline; }
   </div>
 </div>
 
+<!-- DASHBOARD DRILL-DOWN MODAL — detalle de una sumatoria por sector -->
+<div class="modal-overlay" id="modal-dash-drill">
+  <div class="modal" style="width:580px;max-width:96vw;max-height:88vh;overflow:auto;">
+    <button class="modal-close" onclick="closeModal('modal-dash-drill')">×</button>
+    <h3 id="dash-drill-title">Detalle por sector</h3>
+    <div class="modal-sub">Tocá un nombre o el botón “Ir →” para abrir esa pestaña.</div>
+    <div id="dash-drill-body" style="margin-top:14px;"></div>
+    <div class="form-actions">
+      <button class="btn btn-gold" onclick="closeModal('modal-dash-drill')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- CALENDAR EVENT MODAL -->
 <div class="modal-overlay" id="modal-cal-event">
   <div class="modal">
@@ -4776,15 +4789,14 @@ function renderDashboard() {
     return tab.rows.flatMap(r => tab.columns.map((_,i) => getCell(tab, r, i)));
   }
 
-  const allCells = tabs.flatMap(t => tabCells(t));
-  // Embudo de estados (cada celda cuenta en UN solo lugar según su estado actual):
-  //   Pendiente -> Realizado (hecho, sin enviar) -> Finalizado (enviado al cliente)
-  const doneAll   = allCells.filter(c=>c.s==='done').length;            // todo lo que está hecho (enviado o no)
-  const sentCount = allCells.filter(c=>c.s==='done' && c.es).length;    // FINALIZADOS = enviados al cliente
-  const done      = doneAll - sentCount;                                // REALIZADOS = hechos pero todavía NO enviados
-  const pending   = allCells.filter(c=>c.s==='empty'||c.s==='pending').length;
-  const naCount   = allCells.filter(c=>c.s==='na').length;
-  const universo  = done + sentCount + pending;                         // total de trabajo del período (sin N/A)
+  // Conteos por sector (Empresas, Serv. Profesionales, Sueldos, ...) — MISMA fuente que el
+  // detalle clickeable (computeDashSectorsAll), así la tarjeta y el desglose siempre coinciden.
+  const sectorData = computeDashSectorsAll();
+  const countCat = cat => sectorData[cat].reduce((s,g)=>s+g.items.length,0);
+  const done      = countCat('realizado');   // REALIZADOS (hechos, sin enviar)
+  const sentCount = countCat('finalizado');  // FINALIZADOS (enviados al cliente)
+  const pending   = countCat('pendiente');   // PENDIENTES / en proceso / sin registrar
+  const universo  = done + sentCount + pending;                         // total de trabajo del período
   const pct       = universo > 0 ? Math.round((done+sentCount)/universo*100) : 0; // % completado (hecho, enviado o no)
   const sentPct   = universo > 0 ? Math.round(sentCount/universo*100) : 0;        // % finalizados (enviados) sobre el total
   const realizPct = universo > 0 ? Math.round(done/universo*100) : 0;             // % realizados (sin enviar) sobre el total
@@ -4796,9 +4808,9 @@ function renderDashboard() {
 
   // -- KPI strip is always on top, not movable
   const kpiHtml = `<div class="stats-bar" style="margin-bottom:24px;">
-      <div class="stat-card green"><div class="stat-num">${done}</div><div class="stat-label">Realizados${universo>0?' ('+realizPct+'%)':''}${activeCol?'':' (año)'}</div></div>
-      <div class="stat-card" style="border-left:3px solid #4a9eff;"><div class="stat-num" style="color:#0066cc;">${sentCount}</div><div class="stat-label">📤 Finalizados / enviados${universo>0?' ('+sentPct+'%)':''}</div></div>
-      <div class="stat-card red"><div class="stat-num">${pending}</div><div class="stat-label">Pendientes${activeCol?'':' (año)'}</div></div>
+      <div class="stat-card green" style="cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('realizado')"><div class="stat-num">${done}</div><div class="stat-label">Realizados${universo>0?' ('+realizPct+'%)':''}${activeCol?'':' (año)'} <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
+      <div class="stat-card" style="border-left:3px solid #4a9eff;cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('finalizado')"><div class="stat-num" style="color:#0066cc;">${sentCount}</div><div class="stat-label">📤 Finalizados / enviados${universo>0?' ('+sentPct+'%)':''} <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
+      <div class="stat-card red" style="cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('pendiente')"><div class="stat-num">${pending}</div><div class="stat-label">Pendientes${activeCol?'':' (año)'} <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
       <div class="stat-card"><div class="stat-num">${pct}%</div><div class="stat-label">Completado</div></div>
       <div class="stat-card blue"><div class="stat-num">${totalRows}</div><div class="stat-label">Registros activos</div></div>
     </div>`;
@@ -4956,6 +4968,105 @@ function attachDashboardHandlers() {
 }
 
 // Adapt the existing sueldos dashboard into a section descriptor
+// ============ DRILL-DOWN: detalle de una sumatoria por sector ============
+// Recalcula, para el período del dashboard, qué ítems caen en cada categoría
+// (pendiente / realizado / finalizado) separados por sector (cada pestaña tabla + Sueldos).
+// Es la fuente ÚNICA: los KPIs de arriba y este detalle salen de acá, así siempre coinciden.
+function computeDashSectorsAll() {
+  let activeCol = userPrefs.dashMonth;
+  if (activeCol === undefined) activeCol = MONTHS[new Date().getMonth()];
+  const out = { pendiente: [], realizado: [], finalizado: [] };
+  const cats = ['pendiente','realizado','finalizado'];
+
+  // --- Pestañas tipo tabla (Empresas, Serv. Profesionales, etc.) ---
+  state.tabs.filter(t => t.type === 'table').forEach(tab => {
+    const g = { pendiente:[], realizado:[], finalizado:[] };
+    if (activeCol) {
+      const idx = tab.columns.indexOf(activeCol);
+      if (idx !== -1) tab.rows.forEach(r => {
+        const c = getCell(tab, r, idx);
+        if (!c || c.s === 'na') return;
+        if (c.s === 'done' && c.es)  g.finalizado.push({ name:r.name, tag:r.tag, detail: c.ed ? ('📅 '+fmtDate(c.ed)) : '📤 enviado' });
+        else if (c.s === 'done')     g.realizado.push({ name:r.name, tag:r.tag, detail: c.d ? fmtDate(c.d) : '✓' });
+        else if (c.s === 'empty' || c.s === 'pending') g.pendiente.push({ name:r.name, tag:r.tag, detail: c.s==='pending' ? '⏳ pendiente' : '○ sin registrar' });
+      });
+    } else {
+      tab.rows.forEach(r => {
+        let done=0, pend=0, sent=0, total=0;
+        tab.columns.forEach((c,i)=>{ const cell=getCell(tab,r,i); if(!cell||cell.s==='na')return; total++; if(cell.s==='done'){done++; if(cell.es)sent++;} else if(cell.s==='empty'||cell.s==='pending')pend++; });
+        if(total===0)return;
+        if(pend>0) g.pendiente.push({ name:r.name, tag:r.tag, detail: pend+'/'+total+' pend.' });
+        else if(sent===done && sent>0) g.finalizado.push({ name:r.name, tag:r.tag, detail: sent+' env.' });
+        else g.realizado.push({ name:r.name, tag:r.tag, detail: done+'/'+total+' ✓' });
+      });
+    }
+    cats.forEach(cat => { if (g[cat].length) out[cat].push({ sector: tab.name, tabId: tab.id, period: activeCol || 'año completo', items: g[cat] }); });
+  });
+
+  // --- Sueldos (modelo de datos propio, con su propio período) ---
+  if (state.sueldos) {
+    const ym = getCurrentSueldosMonth();
+    const md = state.sueldos[ym] || { sueldos:[], sd:[] };
+    const parts = ym.split('-'); const yy = parts[0], mm = parts[1];
+    const periodLabel = (MONTHS[parseInt(mm)-1] || mm) + ' ' + yy;
+    const items = [
+      ...((md.sueldos)||[]).map(r=>({ ...r, _g:'Sueldo' })),
+      ...((md.sd)||[]).map(r=>({ ...r, _g:'Serv. Doméstico' }))
+    ];
+    const g = { pendiente:[], realizado:[], finalizado:[] };
+    items.forEach(it=>{
+      const st = it.status || 'pendiente';
+      const row = { name: it.name, tag: it._g + (it.grupo ? ' · '+it.grupo : ''), detail: getSueldoStateInfo(st).label };
+      if (st==='enviado' || st==='finalizado') g.finalizado.push(row);
+      else if (st==='pronto') g.realizado.push(row);           // pronto = hecho, listo para enviar
+      else g.pendiente.push(row);                               // pendiente + proceso
+    });
+    cats.forEach(cat => { if (g[cat].length) out[cat].push({ sector:'Sueldos', tabId:'sueldos', period: periodLabel, items: g[cat] }); });
+  }
+  return out;
+}
+
+const DASH_DRILL_META = {
+  pendiente:  { title:'Pendientes',              icon:'⏳', color:'var(--c-pending,#d4860a)' },
+  realizado:  { title:'Realizados (sin enviar)', icon:'✅', color:'var(--c-green,#2e7d52)' },
+  finalizado: { title:'Finalizados / enviados',  icon:'📤', color:'#0066cc' }
+};
+
+// Abre el modal con el detalle de una categoría, agrupado por sector y clickeable
+function openDashDrill(cat) {
+  const meta = DASH_DRILL_META[cat] || DASH_DRILL_META.pendiente;
+  const data = computeDashSectorsAll()[cat] || [];
+  const totalItems = data.reduce((s,grp)=>s+grp.items.length, 0);
+
+  const titleEl = document.getElementById('dash-drill-title');
+  const bodyEl  = document.getElementById('dash-drill-body');
+  if (titleEl) titleEl.innerHTML = `${meta.icon} ${meta.title} — por sector <span style="color:var(--c-text-muted);font-weight:400;">(${totalItems})</span>`;
+
+  let html = '';
+  if (totalItems === 0) {
+    html = `<div style="padding:24px 8px;color:var(--c-text-muted);font-style:italic;text-align:center;">No hay nada en esta categoría para el período actual.</div>`;
+  } else {
+    data.forEach(grp => {
+      html += `<div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--c-bg-alt);border-radius:4px;border-left:3px solid ${meta.color};">
+          <span><strong>${grp.sector}</strong> <span style="color:var(--c-text-muted);font-size:11px;">${grp.period?('· '+grp.period):''}</span></span>
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span class="tag-pill" style="background:var(--c-card);color:var(--c-text);font-weight:700;">${grp.items.length}</span>
+            <button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="closeModal('modal-dash-drill');switchTab('${grp.tabId}')">Ir →</button>
+          </span>
+        </div>
+        <ul class="pending-list" style="margin:6px 0 0;">`;
+      grp.items.forEach(it => {
+        const tagPill = it.tag ? `<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">${it.tag}</span>` : '';
+        html += `<li style="cursor:pointer;" title="Ir a ${grp.sector}" onclick="closeModal('modal-dash-drill');switchTab('${grp.tabId}')"><span class="pending-name">${it.name}${tagPill}</span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">${it.detail||''}</span></li>`;
+      });
+      html += `</ul></div>`;
+    });
+  }
+  if (bodyEl) bodyEl.innerHTML = html;
+  document.getElementById('modal-dash-drill').classList.add('open');
+}
+
 function buildSueldosDashboardDescriptor() {
   if (!state.sueldos) return null;
   const ym = getCurrentSueldosMonth();
