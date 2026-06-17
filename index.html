@@ -2207,138 +2207,132 @@ body.edit-mode .col-type-toggle { display: inline; }
 
 <div class="edit-banner">MODO EDICIÓN ACTIVO · Clic en títulos para editarlos · ✕ para eliminar · + para agregar</div>
 
-<div class="nav-tabs" id="nav-tabs"><div class="nav-tab" data-tab-id="dashboard" data-tab-idx="0" onclick="switchTab('dashboard')"><span>Dashboard</span></div><div class="nav-tab" data-tab-id="mydash" data-tab-idx="1" onclick="switchTab('mydash')" ondblclick="renameTab(event,'mydash')" title="Doble clic para renombrar"><span>📌Personal</span></div><div class="nav-tab" data-tab-id="empresas" data-tab-idx="2" onclick="switchTab('empresas')" ondblclick="renameTab(event,'empresas')" title="Doble clic para renombrar"><span>🏢Empresas</span><span class="tab-x" onclick="event.stopPropagation();removeTab('empresas')">✕</span></div><div class="nav-tab" data-tab-id="sprof" data-tab-idx="3" onclick="switchTab('sprof')" ondblclick="renameTab(event,'sprof')" title="Doble clic para renombrar"><span>📋Sv.Profesionales</span><span class="tab-x" onclick="event.stopPropagation();removeTab('sprof')">✕</span></div><div class="nav-tab" data-tab-id="sueldos" data-tab-idx="4" onclick="switchTab('sueldos')" ondblclick="renameTab(event,'sueldos')" title="Doble clic para renombrar"><span>💼Sueldos</span></div><div class="nav-tab" data-tab-id="tab_1779884915309" data-tab-idx="5" onclick="switchTab('tab_1779884915309')" ondblclick="renameTab(event,'tab_1779884915309')" title="Doble clic para renombrar"><span>📊EJ Económicos</span><span class="tab-x" onclick="event.stopPropagation();removeTab('tab_1779884915309')">✕</span></div><div class="nav-tab active" data-tab-id="clientes" data-tab-idx="6" onclick="switchTab('clientes')" ondblclick="renameTab(event,'clientes')" title="Doble clic para renombrar"><span>👥 Info. Clientes</span></div><div class="nav-tab" data-tab-id="calendario" data-tab-idx="7" onclick="switchTab('calendario')" ondblclick="renameTab(event,'calendario')" title="Doble clic para renombrar"><span>📅CALENDARIO</span></div><div class="nav-tab" data-tab-id="settings" data-tab-idx="8" onclick="switchTab('settings')"><span>Configuración</span></div><span class="nav-tab-add" onclick="openAddTab()">+ Nueva pestaña</span></div>
+<div class="nav-tabs" id="nav-tabs"><div class="nav-tab active" data-tab-id="dashboard" data-tab-idx="0" onclick="switchTab('dashboard')"><span>Dashboard</span></div><div class="nav-tab" data-tab-id="mydash" data-tab-idx="1" onclick="switchTab('mydash')" ondblclick="renameTab(event,'mydash')" title="Doble clic para renombrar"><span>📌Personal</span></div><div class="nav-tab" data-tab-id="empresas" data-tab-idx="2" onclick="switchTab('empresas')" ondblclick="renameTab(event,'empresas')" title="Doble clic para renombrar"><span>🏢Empresas</span><span class="tab-x" onclick="event.stopPropagation();removeTab('empresas')">✕</span></div><div class="nav-tab" data-tab-id="sprof" data-tab-idx="3" onclick="switchTab('sprof')" ondblclick="renameTab(event,'sprof')" title="Doble clic para renombrar"><span>📋Sv.Profesionales</span><span class="tab-x" onclick="event.stopPropagation();removeTab('sprof')">✕</span></div><div class="nav-tab" data-tab-id="sueldos" data-tab-idx="4" onclick="switchTab('sueldos')" ondblclick="renameTab(event,'sueldos')" title="Doble clic para renombrar"><span>💼Sueldos</span></div><div class="nav-tab" data-tab-id="tab_1779884915309" data-tab-idx="5" onclick="switchTab('tab_1779884915309')" ondblclick="renameTab(event,'tab_1779884915309')" title="Doble clic para renombrar"><span>📊EJ Económicos</span><span class="tab-x" onclick="event.stopPropagation();removeTab('tab_1779884915309')">✕</span></div><div class="nav-tab" data-tab-id="clientes" data-tab-idx="6" onclick="switchTab('clientes')" ondblclick="renameTab(event,'clientes')" title="Doble clic para renombrar"><span>👥 Info. Clientes</span></div><div class="nav-tab" data-tab-id="calendario" data-tab-idx="7" onclick="switchTab('calendario')" ondblclick="renameTab(event,'calendario')" title="Doble clic para renombrar"><span>📅CALENDARIO</span></div><div class="nav-tab" data-tab-id="settings" data-tab-idx="8" onclick="switchTab('settings')"><span>Configuración</span></div><span class="nav-tab-add" onclick="openAddTab()">+ Nueva pestaña</span></div>
 
 <div id="presence-warning" class="presence-warning" style="display:none;"></div>
 
 <div class="main-content" id="main-content">
     <div class="section-header">
       <div>
-        <div class="section-title">👥 Información de Clientes</div>
-        <div style="font-size:12px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px;">78 activos · 0 archivados · 2 coinciden con el filtro</div>
+        <div class="section-title">Resumen <span>2026</span></div>
+        <div style="font-size:12px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px;">Período: <strong style="color:var(--c-accent)">Mayo</strong></div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <div class="layout-switcher" title="Cambiar vista">
-          <button class="layout-opt active" onclick="setClientsLayout(1)" title="Expediente individual">📋 Expediente</button>
-          <button class="layout-opt" onclick="setClientsLayout(2)" title="Directorio">📊 Directorio</button>
-          <button class="layout-opt" onclick="setClientsLayout(3)" title="Panel-detalle">📑 Panel</button>
-          <button class="layout-opt" onclick="setClientsLayout(4)" title="Galería">🗂 Galería</button>
-        </div>
-        <button class="btn btn-outline" onclick="exportClientesXLSX()" title="Exportar a Excel">⬇ Excel</button>
-        <button class="btn btn-outline" onclick="exportClientesPDF()" title="Exportar a PDF">⬇ PDF</button>
-        <button class="btn btn-gold" onclick="openNewClienteModal()">+ Nuevo cliente</button>
+        <label style="font-size:11px;color:var(--c-text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;">Mes:</label>
+        <select id="dash-month-select" onchange="setDashMonth(this.value)" style="padding:8px 14px;border:1px solid var(--c-border);background:var(--c-card);border-radius:2px;font-family:inherit;font-size:13px;font-weight:700;color:var(--c-text);cursor:pointer;min-width:170px;">
+          <option value="">— Año completo —</option>
+          <option value="Enero">Enero</option><option value="Febrero">Febrero</option><option value="Marzo">Marzo</option><option value="Abril">Abril</option><option value="Mayo" selected="">Mayo</option><option value="Junio">Junio</option><option value="Julio">Julio</option><option value="Agosto">Agosto</option><option value="Septiembre">Septiembre</option><option value="Octubre">Octubre</option><option value="Noviembre">Noviembre</option><option value="Diciembre">Diciembre</option>
+        </select>
+        <button class="btn btn-outline" onclick="expandAllDashSections()" title="Expandir todas">⊞ Todas</button>
+        <button class="btn btn-outline" onclick="collapseAllDashSections()" title="Colapsar todas">⊟ Ninguna</button>
+        <button class="btn btn-outline" onclick="resetDashLayout()" title="Reset orden y colapso">↺</button>
       </div>
     </div>
-
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
-      <input id="clientes-search-input" placeholder="Buscar por nombre, RUT, CI, BPS, correo, dirección..." value="drones" style="flex:1;min-width:240px;max-width:480px;padding:8px 12px;border:1px solid var(--c-border);border-radius:4px;font-family:inherit;font-size:13px;background:var(--c-card);">
-      <select id="clientes-tipo-filter" style="padding:8px 12px;border:1px solid var(--c-border);border-radius:4px;font-family:inherit;font-size:13px;background:var(--c-card);">
-        <option value="">Todos los tipos (78)</option>
-        <option value="As. Civil">Asoc. Civil (1)</option><option value="I.Primaria">I. Primaria (1)</option><option value="IyC">IyC (16)</option><option value="IyC- Transporte carga">IyC Transp. (1)</option><option value="IyC-Rural">IyC Rural (4)</option><option value="IyC-contruccion">IyC Constr. (2)</option><option value="IyC-monotributo">IyC monotrib (14)</option><option value="IyC-monotributo mides">IyC mono MIDES (3)</option><option value="IyC-pequeña empresa">IyC pequeña (8)</option><option value="PF">PF (10)</option><option value="S.Prof">Serv. Prof. (15)</option><option value="SD">SD (3)</option>
-      </select>
-      <select id="clientes-sort-sel" title="Ordenar por" style="padding:8px 12px;border:1px solid var(--c-border);border-radius:4px;font-family:inherit;font-size:13px;background:var(--c-card);min-width:200px;">
-        <option value="nombre_asc">🔤 Nombre (A → Z)</option><option value="nombre_desc">🔤 Nombre (Z → A)</option><option value="tipo_asc">🏷 Tipo (A → Z)</option><option value="tipo_desc">🏷 Tipo (Z → A)</option><option value="rut_asc" selected="">🔢 RUT (ascendente)</option><option value="rut_desc">🔢 RUT (descendente)</option><option value="ci_asc">🪪 CI (ascendente)</option><option value="ci_desc">🪪 CI (descendente)</option><option value="fnac_asc">🎂 F. Nac. (más antiguo)</option><option value="fnac_desc">🎂 F. Nac. (más reciente)</option><option value="created_desc">🆕 Más recientes primero</option><option value="created_asc">📜 Más antiguos primero</option>
-      </select>
-      <button class="btn btn-outline btn-sm" onclick="clearClientesFilters()" title="Limpiar filtros">✕ Limpiar</button>
-      <button class="btn btn-outline" onclick="openTipoColorsEditor()" title="Personalizar colores por tipo">🎨 Colores</button>
-    </div><div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-    <button class="btn btn-outline" disabled="" style="opacity:.4;cursor:default;">← Anterior</button>
-    <select onchange="selectCliente(this.value)" style="flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--c-border);border-radius:4px;font-family:inherit;font-size:13px;background:var(--c-card);">
-      <option value="40386216_49984203" selected="">Drones del Pampa - Claudio Nicolas Vandes Vargas y Cristofer Hugo Duarte Bica</option><option value="40386216_49984203">Drones del Pampa SAS</option>
-    </select>
-    <button class="btn btn-outline" onclick="selectCliente('40386216_49984203')">Siguiente →</button>
-    <span style="color:var(--c-text-muted);font-size:12px;">1 de 2</span>
-  </div><div class="cliente-expediente">
-    <div class="cli-exp-header">
-      <div style="display:flex;align-items:center;gap:14px;">
-        <div class="cli-avatar-lg">DB</div>
-        <div>
-          <div class="cli-exp-name">Drones del Pampa - Claudio Nicolas Vandes Vargas y Cristofer Hugo Duarte Bica </div>
-          <div style="margin-top:4px;"><span class="tipo-badge" style="background:#e9f7ef;color:#196f3d;">IyC Rural</span></div>
-        </div>
-      </div>
-      <div style="display:flex;gap:6px;">
-        <button class="btn btn-outline" onclick="openEditCliente('40386216_49984203')">✎ Editar</button>
-        <button class="btn btn-outline" onclick="toggleClienteArchived('40386216_49984203')" title="Archivar">📦</button>
-        <button class="btn btn-outline" onclick="deleteCliente('40386216_49984203')" style="color:var(--c-red);border-color:var(--c-red);">🗑 Eliminar</button>
-      </div>
+    <div class="stats-bar" style="margin-bottom:24px;">
+      <div class="stat-card green"><div class="stat-num">22</div><div class="stat-label">Realizados</div></div>
+      <div class="stat-card red"><div class="stat-num">5</div><div class="stat-label">Pendientes</div></div>
+      <div class="stat-card"><div class="stat-num">81%</div><div class="stat-label">Completado</div></div>
+      <div class="stat-card" style="border-left:3px solid #4a9eff;"><div class="stat-num" style="color:#0066cc;">11</div><div class="stat-label">📤 Enviados al cliente (50%)</div></div>
+      <div class="stat-card blue"><div class="stat-num">27</div><div class="stat-label">Registros activos</div></div>
     </div>
-
-    <div class="cli-exp-body">
-      <div class="cli-exp-section">
-        <div class="cli-exp-section-title">📇 Identificación</div>
-        <div class="cli-exp-grid">
-          <div class="cli-field"><div class="cli-field-label">RUT</div><div class="cli-field-value"><span style="font-family:monospace;">140300620018</span></div></div>
-          <div class="cli-field"><div class="cli-field-label">BPS</div><div class="cli-field-value"><span style="font-family:monospace;">8038229</span></div></div>
-          <div class="cli-field"><div class="cli-field-label">CI</div><div class="cli-field-value"><span style="font-family:monospace;">40386216/49984203</span></div></div>
-          <div class="cli-field"><div class="cli-field-label">Fecha de nacimiento</div><div class="cli-field-value">—</div></div>
-        </div>
-      </div>
-
-      <div class="cli-exp-section">
-        <div class="cli-exp-section-title">🔐 Credenciales</div>
-        <div class="cli-exp-grid">
-          <div class="cli-field"><div class="cli-field-label">Contraseña BPS</div><div class="cli-field-value"><span style="color:var(--c-text-muted);font-style:italic;">—</span></div></div>
-          <div class="cli-field"><div class="cli-field-label">Contraseña Gub.uy</div><div class="cli-field-value"><span style="color:var(--c-text-muted);font-style:italic;">—</span></div></div>
-          <div class="cli-field"><div class="cli-field-label">Códigos identif. Gub.uy</div><div class="cli-field-value"><span style="color:var(--c-text-muted);font-style:italic;">—</span></div></div>
-        </div>
-      </div>
-
-      <div class="cli-exp-section">
-        <div class="cli-exp-section-title">💼 Profesional / CJPPU</div>
-        <div class="cli-exp-grid">
-          <div class="cli-field"><div class="cli-field-label">N° CJPPU</div><div class="cli-field-value"><span style="color:var(--c-text-muted);font-style:italic;">—</span></div></div>
-          <div class="cli-field"><div class="cli-field-label">CJPPU Contraseña</div><div class="cli-field-value"><span style="color:var(--c-text-muted);font-style:italic;">—</span></div></div>
-          <div class="cli-field"><div class="cli-field-label">RUPE</div><div class="cli-field-value"><span style="color:var(--c-text-muted);font-style:italic;">—</span></div></div>
-          <div class="cli-field"><div class="cli-field-label">Sistema de Facturación</div><div class="cli-field-value"><span style="color:var(--c-text-muted);font-style:italic;">—</span></div></div>
-        </div>
-      </div>
-
-      <div class="cli-exp-section">
-        <div class="cli-exp-section-title">📍 Contacto y otros</div>
-        <div class="cli-exp-grid">
-          <div class="cli-field"><div class="cli-field-label">Correo electrónico</div><div class="cli-field-value"><span style="color:var(--c-text-muted);font-style:italic;">—</span></div></div>
-          <div class="cli-field"><div class="cli-field-label">Dirección</div><div class="cli-field-value"><span style="color:var(--c-text-muted);font-style:italic;">—</span></div></div>
-          <div class="cli-field"><div class="cli-field-label">FOSMETAL</div><div class="cli-field-value"><span style="color:var(--c-text-muted);font-style:italic;">—</span></div></div>
-          <div class="cli-field"><div class="cli-field-label">Otros</div><div class="cli-field-value">BROU: 2026Dosefor@26	cta: 25759124 claudio2025	Pampa_2023!	Contraseña Certificdo digital: Rivera</div></div>
-        </div>
-      </div>
+    <div style="font-size:11px;color:var(--c-text-muted);margin-bottom:10px;letter-spacing:0.3px;">
+      💡 Arrastrá las secciones desde el ícono <strong>⋮⋮</strong> para reordenarlas. Clic en el título para colapsar/expandir.
     </div>
-
-    <div class="cli-exp-actions">
-      <a href="https://www.bps.gub.uy" target="_blank" rel="noopener" class="cli-exp-link">↗ BPS</a>
-      <a href="https://servicios.dgi.gub.uy" target="_blank" rel="noopener" class="cli-exp-link">↗ DGI</a>
-      <a href="https://mi.iduruguay.gub.uy" target="_blank" rel="noopener" class="cli-exp-link">↗ Gub.uy</a>
-      <a href="https://www.cjppu.org.uy" target="_blank" rel="noopener" class="cli-exp-link">↗ CJPPU</a>
-      <a href="https://www.comprasestatales.gub.uy" target="_blank" rel="noopener" class="cli-exp-link">↗ RUPE</a>
-    </div>
-  </div></div>
+    <div id="dash-sections-wrap" class="dash-sections-wrap"><div class="dash-section" data-section-id="tab_op_empresas" draggable="true">
+      <div class="dash-section-header" onclick="toggleDashSection('tab_op_empresas')">
+        <span class="dash-drag-handle" title="Arrastrar para mover">⋮⋮</span>
+        <span class="dash-section-title">🏢 🏢Empresas — Vista operativa (Mayo)</span>
+        
+        <span class="dash-section-toggle">▾</span>
+      </div>
+      <div class="dash-section-body"><div class="stats-bar" style="margin-bottom:16px;">
+    <div class="stat-card green" style="border-left-color:var(--c-green);"><div class="stat-num" style="color:var(--c-green);">11</div><div class="stat-label">Realizados</div></div>
+    <div class="stat-card" style="border-left-color:var(--c-pending);"><div class="stat-num" style="color:var(--c-pending);">0</div><div class="stat-label">En proceso</div></div>
+    <div class="stat-card red" style="border-left-color:var(--c-red);"><div class="stat-num" style="color:var(--c-red);">4</div><div class="stat-label">Sin registrar</div></div>
+    <div class="stat-card" style="border-left-color:var(--c-accent);"><div class="stat-num">73%</div><div class="stat-label">Completado</div></div>
+  </div><div class="dashboard-grid"><div class="dash-card" style="border-left:3px solid var(--c-pending,#d4860a);">
+    <h4 style="color:var(--c-pending,#d4860a);">⏳ Pendientes / Sin registrar <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">4</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">Freddy Pereira<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li><li><span class="pending-name">Residencial Galauru SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li><li><span class="pending-name">Gualberto Seguí<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li><li><span class="pending-name">Mónica Perez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li></ul></div><div class="dash-card" style="border-left:3px solid var(--c-green,#2e7d52);">
+    <h4 style="color:var(--c-green,#2e7d52);">✅ Realizados <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">11</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">El Rastro<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">02/06</span></li><li><span class="pending-name">Javier Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">02/06</span></li><li><span class="pending-name">FILJO SRL<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">08/06</span></li><li><span class="pending-name">Lucas Vandes - VANDFOR<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">08/06</span></li><li><span class="pending-name">Residencial Buenos Tiempos<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">03/06</span></li><li><span class="pending-name">Claudio Vandes<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Drones del Pampa SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">04/06</span></li><li><span class="pending-name">Richard Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">02/06</span></li><li><span class="pending-name">Fabio de la Rosa<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">02/06</span></li><li><span class="pending-name">Nahier Hernandez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">02/06</span></li><li><span class="pending-name">Cesar do Canto<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">02/06</span></li></ul></div></div><div class="dash-card" style="margin-top:16px;border-left:3px solid #4a9eff;">
+    <h4 style="color:#0066cc;">📤 Enviados al cliente <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">9</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">El Rastro<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 17/06</span></li><li><span class="pending-name">Javier Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 17/06</span></li><li><span class="pending-name">FILJO SRL<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 17/06</span></li><li><span class="pending-name">Residencial Buenos Tiempos<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 15/06</span></li><li><span class="pending-name">Drones del Pampa SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 15/06</span></li><li><span class="pending-name">Richard Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 17/06</span></li><li><span class="pending-name">Fabio de la Rosa<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 15/06</span></li><li><span class="pending-name">Nahier Hernandez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 16/06</span></li><li><span class="pending-name">Cesar do Canto<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 15/06</span></li></ul></div></div>
+    </div><div class="dash-section" data-section-id="tab_op_sprof" draggable="true">
+      <div class="dash-section-header" onclick="toggleDashSection('tab_op_sprof')">
+        <span class="dash-drag-handle" title="Arrastrar para mover">⋮⋮</span>
+        <span class="dash-section-title">👤 📋Sv.Profesionales — Vista operativa (Mayo)</span>
+        
+        <span class="dash-section-toggle">▾</span>
+      </div>
+      <div class="dash-section-body"><div class="stats-bar" style="margin-bottom:16px;">
+    <div class="stat-card green" style="border-left-color:var(--c-green);"><div class="stat-num" style="color:var(--c-green);">11</div><div class="stat-label">Realizados</div></div>
+    <div class="stat-card" style="border-left-color:var(--c-pending);"><div class="stat-num" style="color:var(--c-pending);">0</div><div class="stat-label">En proceso</div></div>
+    <div class="stat-card red" style="border-left-color:var(--c-red);"><div class="stat-num" style="color:var(--c-red);">1</div><div class="stat-label">Sin registrar</div></div>
+    <div class="stat-card" style="border-left-color:var(--c-accent);"><div class="stat-num">92%</div><div class="stat-label">Completado</div></div>
+  </div><div class="dashboard-grid"><div class="dash-card" style="border-left:3px solid var(--c-pending,#d4860a);">
+    <h4 style="color:var(--c-pending,#d4860a);">⏳ Pendientes / Sin registrar <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">1</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">Luis Alfredo Rondeau</span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li></ul></div><div class="dash-card" style="border-left:3px solid var(--c-green,#2e7d52);">
+    <h4 style="color:var(--c-green,#2e7d52);">✅ Realizados <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">11</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">Soledad Martinez</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Daiana Machado</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Miguel Yavarone</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Alejandro (Chiche)</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Alexandra Duarte</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Sebastian Bordenave</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Sergio Ayala</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Marcelo Roman</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Maria Victoria Cordero</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Florencia de Leon</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Rosangela Meneses</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li></ul></div></div><div class="dash-card" style="margin-top:16px;border-left:3px solid #4a9eff;">
+    <h4 style="color:#0066cc;">📤 Enviados al cliente <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">2</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">Daiana Machado</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 17/06</span></li><li><span class="pending-name">Rosangela Meneses</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 08/06</span></li></ul></div></div>
+    </div><div class="dash-section" data-section-id="sueldos_dashboard" draggable="true">
+      <div class="dash-section-header" onclick="toggleDashSection('sueldos_dashboard')">
+        <span class="dash-drag-handle" title="Arrastrar para mover">⋮⋮</span>
+        <span class="dash-section-title">💼 Sueldos — Vista operativa</span>
+        
+        <span class="dash-section-toggle">▾</span>
+      </div>
+      <div class="dash-section-body"><div style="font-size:11px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Período: <strong style="color:var(--c-accent)">Mayo 2026</strong> · <span onclick="switchTab('sueldos')" style="color:var(--c-accent);cursor:pointer;font-weight:700;">Ir a Sueldos →</span></div>
+    <div class="stats-bar" style="margin-bottom:16px;"><div class="stat-card" style="border-left-color:#888;cursor:pointer;" onclick="switchTab('sueldos')">
+      <div class="stat-num" style="color:#888">0</div>
+      <div class="stat-label">Pendiente</div>
+    </div><div class="stat-card" style="border-left-color:#d4860a;cursor:pointer;" onclick="switchTab('sueldos')">
+      <div class="stat-num" style="color:#d4860a">0</div>
+      <div class="stat-label">En proceso</div>
+    </div><div class="stat-card" style="border-left-color:#2e7d52;cursor:pointer;" onclick="switchTab('sueldos')">
+      <div class="stat-num" style="color:#2e7d52">0</div>
+      <div class="stat-label">Pronto</div>
+    </div><div class="stat-card" style="border-left-color:#1a4a7a;cursor:pointer;" onclick="switchTab('sueldos')">
+      <div class="stat-num" style="color:#1a4a7a">7</div>
+      <div class="stat-label">Enviado</div>
+    </div><div class="stat-card" style="border-left-color:#5b2c6f;cursor:pointer;" onclick="switchTab('sueldos')">
+      <div class="stat-num" style="color:#5b2c6f">15</div>
+      <div class="stat-label">Finalizado</div>
+    </div></div><div class="dashboard-grid"><div class="dash-card" style="border-left:3px solid var(--c-green,#2e7d52);">
+    <h4 style="color:var(--c-green,#2e7d52);">✅ Prontos para enviar <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">0</span></h4>
+    <ul class="pending-list"><li style="color:var(--c-text-muted);padding:14px 0;font-style:italic;">Ningún sueldo pronto este mes</li></ul></div><div class="dash-card" style="border-left:3px solid var(--c-pending,#d4860a);">
+    <h4 style="color:var(--c-pending,#d4860a);">⏳ Pendientes / en proceso <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">0</span></h4>
+    <ul class="pending-list"><li style="color:var(--c-green);padding:14px 0;">✓ Todos avanzados</li></ul></div></div><div class="dash-card" style="border-left:3px solid var(--c-blue,#1a4a7a);margin-top:16px;">
+      <h4 style="color:var(--c-blue,#1a4a7a);">✈ Enviados / finalizados <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">22</span></h4>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Vandford</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Freddy Pereira</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Noelia Bejerez</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Ruben Nuñez</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Freddy Pereira</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Maria Soledad</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Nelida Souza</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Gualberto Segui</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Dosefor</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Drones</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Drones SAS</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Galauru</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Residencial BT</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Richard Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Filjo</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Fabio Transporte</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Javier Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Veterinaria el Rastro</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Gino Duarte Construccion</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Julio Ucha</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Marcia Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Estudio WMachado</span></div></div></div>
+    </div></div></div>
 
 <!-- CELL EDIT MODAL -->
 <div class="modal-overlay" id="modal-cell">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modal-cell')">×</button>
-    <h3 id="modal-cell-title">Javier Machado</h3>
-    <div class="modal-sub" id="modal-cell-sub">FECHA BALANCE · 2026</div>
+    <h3 id="modal-cell-title">Sergio Ayala</h3>
+    <div class="modal-sub" id="modal-cell-sub">Mayo · 2026</div>
     <div class="form-group">
       <label>Estado</label>
-      <select id="modal-cell-status" onchange="updateCellModalFields()">
-        <option value="done">✓ Realizado</option>
-        <option value="pending">⏳ Pendiente</option>
-        <option value="na">— N/A</option>
-        <option value="empty">○ Sin registrar</option>
-      </select>
+      <select id="modal-cell-status" onchange="updateCellModalFields()" data-mode="normal" data-supports-sent="1">
+      <option value="done">✓ Realizado</option>
+      <option value="pending">⏳ Pendiente</option>
+      <option value="na">— N/A</option>
+      <option value="empty">○ Sin registrar</option>
+    </select>
     </div>
-    <div class="form-group" id="modal-date-group">
+    <div class="form-group" id="modal-date-group" style="">
       <label>Fecha de realización</label>
       <input type="date" id="modal-cell-date">
     </div>
-    <div class="form-group" id="modal-label-group">
+    <div class="form-group" id="modal-label-group" style="">
       <label>Etiqueta corta <span style="font-size:11px;color:var(--c-text-muted);font-weight:400;">(opcional, hasta 10 caracteres — reemplaza la fecha en la celda)</span></label>
       <input type="text" id="modal-cell-label" maxlength="10" placeholder="Ej: PPGo, Cuotas3, +50%...">
     </div>
     <!-- Sección "Enviado al cliente" — visible en pestañas Empresas / Serv. Profesionales cuando estado=done -->
-    <div class="form-group" id="modal-sent-group" style="display:none;background:#f0f9ff;border:1px solid #b3d9ff;padding:10px 14px;border-radius:5px;margin-top:6px;">
+    <div class="form-group" id="modal-sent-group" style="background: rgb(240, 249, 255); border: 1px solid rgb(179, 217, 255); padding: 10px 14px; border-radius: 5px; margin-top: 6px;">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;color:#0066cc;margin-bottom:8px;">
         <input type="checkbox" id="modal-cell-sent" onchange="updateCellModalFields()" style="width:auto;">
         📤 Enviado al cliente
@@ -2776,7 +2770,7 @@ body.edit-mode .col-type-toggle { display: inline; }
   </div>
 </div>
 
-<div class="tooltip-msg" id="tooltip-msg">✅ HTML descargado</div>
+<div class="tooltip-msg show" id="tooltip-msg">⚠ No se pudo guardar en la nube (se descargó el archivo)</div>
 
 </div> <!-- /app-container -->
 
@@ -3455,10 +3449,12 @@ function renderTable(tab) {
   const filter = userPrefs.monthFilters[tab.id];
   const cols = (filter !== undefined && filter !== -1 && filter < tab.columns.length) ? [filter] : tab.columns.map((_,i)=>i);
   const allCells = tab.rows.flatMap(r => cols.map(ci => getCell(tab, r, ci)));
-  const done = allCells.filter(c => c.s==='done').length;
+  const doneAll = allCells.filter(c => c.s==='done').length;
+  const sent    = allCells.filter(c => c.s==='done' && c.es).length;  // finalizados (enviados al cliente)
+  const done    = doneAll - sent;                                     // realizados, sin enviar
   const pending = allCells.filter(c => c.s==='empty' || c.s==='pending').length;
-  const total = done + pending;
-  const pct = total > 0 ? Math.round(done/total*100) : 0;
+  const total = done + sent + pending;
+  const pct = total > 0 ? Math.round((done+sent)/total*100) : 0;      // % completado (hecho, enviado o no)
 
   const isMonths = tab.columns.length === 12 && tab.columns.every((c,i)=>MONTHS.includes(c)||MONTHS_SHORT.includes(c));
   const isYearsMode = (tab.colMode === 'years') ||
@@ -3507,7 +3503,8 @@ function renderTable(tab) {
   }
 
   html += `<div class="stats-bar">
-    <div class="stat-card green"><div class="stat-num">${done}</div><div class="stat-label">Realizados</div></div>
+    <div class="stat-card green"><div class="stat-num">${done}</div><div class="stat-label">Realizados${sent>0?' (sin enviar)':''}</div></div>
+    ${sent>0?`<div class="stat-card" style="border-left:3px solid #4a9eff;"><div class="stat-num" style="color:#0066cc;">${sent}</div><div class="stat-label">📤 Finalizados</div></div>`:''}
     <div class="stat-card red"><div class="stat-num">${pending}</div><div class="stat-label">Pendientes</div></div>
     <div class="stat-card"><div class="stat-num">${pct}%</div><div class="stat-label">Completado</div></div>
   </div>`;
@@ -4780,12 +4777,17 @@ function renderDashboard() {
   }
 
   const allCells = tabs.flatMap(t => tabCells(t));
-  const done = allCells.filter(c=>c.s==='done').length;
-  const pending = allCells.filter(c=>c.s==='empty'||c.s==='pending').length;
-  const naCount = allCells.filter(c=>c.s==='na').length;
-  const sentCount = allCells.filter(c=>c.s==='done' && c.es).length; // realizados y enviados al cliente
-  const sentPct = done > 0 ? Math.round(sentCount/done*100) : 0;
-  const pct = done+pending > 0 ? Math.round(done/(done+pending)*100) : 0;
+  // Embudo de estados (cada celda cuenta en UN solo lugar según su estado actual):
+  //   Pendiente -> Realizado (hecho, sin enviar) -> Finalizado (enviado al cliente)
+  const doneAll   = allCells.filter(c=>c.s==='done').length;            // todo lo que está hecho (enviado o no)
+  const sentCount = allCells.filter(c=>c.s==='done' && c.es).length;    // FINALIZADOS = enviados al cliente
+  const done      = doneAll - sentCount;                                // REALIZADOS = hechos pero todavía NO enviados
+  const pending   = allCells.filter(c=>c.s==='empty'||c.s==='pending').length;
+  const naCount   = allCells.filter(c=>c.s==='na').length;
+  const universo  = done + sentCount + pending;                         // total de trabajo del período (sin N/A)
+  const pct       = universo > 0 ? Math.round((done+sentCount)/universo*100) : 0; // % completado (hecho, enviado o no)
+  const sentPct   = universo > 0 ? Math.round(sentCount/universo*100) : 0;        // % finalizados (enviados) sobre el total
+  const realizPct = universo > 0 ? Math.round(done/universo*100) : 0;             // % realizados (sin enviar) sobre el total
   const totalRows = tabs.reduce((s,t)=>s+t.rows.length,0);
   const label = activeCol ? activeCol : 'Año completo';
 
@@ -4794,10 +4796,10 @@ function renderDashboard() {
 
   // -- KPI strip is always on top, not movable
   const kpiHtml = `<div class="stats-bar" style="margin-bottom:24px;">
-      <div class="stat-card green"><div class="stat-num">${done}</div><div class="stat-label">Realizados${activeCol?'':' (año)'}</div></div>
+      <div class="stat-card green"><div class="stat-num">${done}</div><div class="stat-label">Realizados${universo>0?' ('+realizPct+'%)':''}${activeCol?'':' (año)'}</div></div>
+      <div class="stat-card" style="border-left:3px solid #4a9eff;"><div class="stat-num" style="color:#0066cc;">${sentCount}</div><div class="stat-label">📤 Finalizados / enviados${universo>0?' ('+sentPct+'%)':''}</div></div>
       <div class="stat-card red"><div class="stat-num">${pending}</div><div class="stat-label">Pendientes${activeCol?'':' (año)'}</div></div>
       <div class="stat-card"><div class="stat-num">${pct}%</div><div class="stat-label">Completado</div></div>
-      <div class="stat-card" style="border-left:3px solid #4a9eff;"><div class="stat-num" style="color:#0066cc;">${sentCount}</div><div class="stat-label">📤 Enviados al cliente${done>0?' ('+sentPct+'%)':''}</div></div>
       <div class="stat-card blue"><div class="stat-num">${totalRows}</div><div class="stat-label">Registros activos</div></div>
     </div>`;
 
@@ -5036,45 +5038,55 @@ function buildSueldosDashboardDescriptor() {
 
 // Build the Sueldos-style operational section for a table tab (Empresas / Serv. Profesionales)
 function buildTabOperationalSection(tab, activeCol) {
-  // Bucket rows by their status in the active column (or aggregate across year if no col)
-  const groups = { done: [], pending: [], empty: [], na: [] };
+  // Bucket rows by their status in the active column (or aggregate across year if no col).
+  // Embudo: empty/pending -> done (realizado, sin enviar) -> sent (finalizado, enviado al cliente).
+  // Una empresa enviada cae SOLO en 'sent', nunca en 'done'.
+  const groups = { done: [], sent: [], pending: [], empty: [], na: [] };
 
   if (activeCol) {
     const idx = tab.columns.indexOf(activeCol);
     tab.rows.forEach(r => {
       const cell = idx === -1 ? {s:'empty'} : getCell(tab, r, idx);
-      groups[cell.s || 'empty'].push({ name: r.name, tag: r.tag, date: cell.d, comment: cell.c });
+      // Hecho + enviado al cliente => finalizado (sale de "realizados")
+      if (cell.s === 'done' && cell.es) {
+        groups.sent.push({ name: r.name, tag: r.tag, date: cell.d, ed: cell.ed, comment: cell.c });
+      } else {
+        groups[cell.s || 'empty'].push({ name: r.name, tag: r.tag, date: cell.d, comment: cell.c });
+      }
     });
   } else {
     // Aggregate: classify each row by counts across all months
     tab.rows.forEach(r => {
-      let done = 0, pend = 0, total = 0;
+      let done = 0, pend = 0, sent = 0, total = 0, lastSent = '';
       tab.columns.forEach((c,i) => {
         const cell = getCell(tab, r, i);
         if (cell.s === 'na') return;
         total++;
-        if (cell.s === 'done') done++;
+        if (cell.s === 'done') { done++; if (cell.es) { sent++; if (cell.ed && cell.ed > lastSent) lastSent = cell.ed; } }
         else if (cell.s === 'empty' || cell.s === 'pending') pend++;
       });
       if (total === 0) return;
-      if (pend === 0) groups.done.push({ name: r.name, tag: r.tag, doneCount: done, total });
-      else if (done === 0) groups.empty.push({ name: r.name, tag: r.tag, pendCount: pend, total });
-      else groups.pending.push({ name: r.name, tag: r.tag, doneCount: done, pendCount: pend, total });
+      if (pend > 0 && done > 0) groups.pending.push({ name: r.name, tag: r.tag, doneCount: done, pendCount: pend, total });
+      else if (pend > 0) groups.empty.push({ name: r.name, tag: r.tag, pendCount: pend, total });
+      else if (sent === done && sent > 0) groups.sent.push({ name: r.name, tag: r.tag, cnt: sent, total, ed: lastSent }); // todo hecho y todo enviado
+      else groups.done.push({ name: r.name, tag: r.tag, doneCount: done, sentCount: sent, total }); // hecho, falta enviar
     });
   }
 
   const counts = {
-    done: groups.done.length,
+    done: groups.done.length,      // realizados (hechos, sin enviar)
+    sent: groups.sent.length,      // finalizados (enviados al cliente)
     pending: groups.pending.length,
     empty: groups.empty.length,
-    na: tab.rows.length - (groups.done.length + groups.pending.length + groups.empty.length)
+    na: tab.rows.length - (groups.done.length + groups.sent.length + groups.pending.length + groups.empty.length)
   };
-  const total = counts.done + counts.pending + counts.empty;
-  const pct = total > 0 ? Math.round(counts.done / total * 100) : 0;
+  const total = counts.done + counts.sent + counts.pending + counts.empty;
+  const pct = total > 0 ? Math.round((counts.done + counts.sent) / total * 100) : 0; // % completado (hecho, enviado o no)
 
   // KPI strip
   let body = `<div class="stats-bar" style="margin-bottom:16px;">
-    <div class="stat-card green" style="border-left-color:var(--c-green);"><div class="stat-num" style="color:var(--c-green);">${counts.done}</div><div class="stat-label">Realizados</div></div>
+    <div class="stat-card green" style="border-left-color:var(--c-green);"><div class="stat-num" style="color:var(--c-green);">${counts.done}</div><div class="stat-label">Realizados (sin enviar)</div></div>
+    <div class="stat-card" style="border-left:3px solid #4a9eff;"><div class="stat-num" style="color:#0066cc;">${counts.sent}</div><div class="stat-label">📤 Finalizados (enviados)</div></div>
     <div class="stat-card" style="border-left-color:var(--c-pending);"><div class="stat-num" style="color:var(--c-pending);">${counts.pending}</div><div class="stat-label">En proceso</div></div>
     <div class="stat-card red" style="border-left-color:var(--c-red);"><div class="stat-num" style="color:var(--c-red);">${counts.empty}</div><div class="stat-label">Sin registrar</div></div>
     <div class="stat-card" style="border-left-color:var(--c-accent);"><div class="stat-num">${pct}%</div><div class="stat-label">Completado</div></div>
@@ -5135,35 +5147,21 @@ function buildTabOperationalSection(tab, activeCol) {
 
   body += `</div>`;  // end dashboard-grid
 
-  // === Bloque "Enviados al cliente" (nombres + fecha de envío) ===
-  var sentItems = [];
-  if (activeCol) {
-    var sIdx = tab.columns.indexOf(activeCol);
-    if (sIdx !== -1) tab.rows.forEach(function(r){
-      var cell = getCell(tab, r, sIdx);
-      if (cell && cell.s === 'done' && cell.es) sentItems.push({ name: r.name, tag: r.tag, ed: cell.ed });
-    });
-  } else {
-    tab.rows.forEach(function(r){
-      var cnt = 0, last = '';
-      tab.columns.forEach(function(c,i){ var cell = getCell(tab, r, i); if (cell && cell.s === 'done' && cell.es){ cnt++; if (cell.ed && cell.ed > last) last = cell.ed; } });
-      if (cnt > 0) sentItems.push({ name: r.name, tag: r.tag, cnt: cnt, ed: last });
-    });
-  }
+  // === Bloque "Finalizados — Enviados al cliente" (mismos datos que el KPI de finalizados) ===
   body += `<div class="dash-card" style="margin-top:16px;border-left:3px solid #4a9eff;">
-    <h4 style="color:#0066cc;">📤 Enviados al cliente <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">${sentItems.length}</span></h4>
+    <h4 style="color:#0066cc;">📤 Finalizados — Enviados al cliente <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">${groups.sent.length}</span></h4>
     <ul class="pending-list">`;
-  if (sentItems.length === 0) {
-    body += '<li style="color:var(--c-text-muted);padding:14px 0;font-style:italic;">Todavía no se envió ninguno en este período</li>';
+  if (groups.sent.length === 0) {
+    body += '<li style="color:var(--c-text-muted);padding:14px 0;font-style:italic;">Todavía no se finalizó (envió) ninguno en este período</li>';
   } else {
-    sentItems.slice(0, 40).forEach(function(x){
+    groups.sent.slice(0, 40).forEach(function(x){
       var tagPill = x.tag ? `<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">${x.tag}</span>` : '';
       var dateLabel = activeCol
         ? (x.ed ? ('📅 ' + fmtDate(x.ed)) : '📤 enviado')
-        : (x.cnt + ' env.' + (x.ed ? (' · últ. ' + fmtDate(x.ed)) : ''));
+        : ((x.cnt||0) + ' env.' + (x.ed ? (' · últ. ' + fmtDate(x.ed)) : ''));
       body += `<li><span class="pending-name">${x.name}${tagPill}</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">${dateLabel}</span></li>`;
     });
-    if (sentItems.length > 40) body += `<li style="color:var(--c-text-muted);padding-top:8px;font-style:italic;">+ ${sentItems.length - 40} más...</li>`;
+    if (groups.sent.length > 40) body += `<li style="color:var(--c-text-muted);padding-top:8px;font-style:italic;">+ ${groups.sent.length - 40} más...</li>`;
   }
   body += `</ul></div>`;
 
@@ -14121,31 +14119,31 @@ body.edit-mode .hon-edit-name { display:inline; }
 
 <div class="modal-overlay" id="modal-cli-edit"><div class="modal cliente-edit-modal">
     <button class="modal-close" onclick="closeModal('modal-cli-edit')">×</button>
-    <h3>Drones del Pampa SAS</h3>
+    <h3>Sergio Alejandro Ayala Guruceaga</h3>
     <div class="modal-sub">Editá los datos. Los cambios se guardan al cerrar.</div>
     <div class="cli-edit-grid">
-      <label>Tipo<select id="cli-tipo"><option value="IyC" selected="">IyC</option><option value="IyC-pequeña empresa">IyC pequeña</option><option value="IyC-monotributo">IyC monotrib</option><option value="IyC-monotributo mides">IyC mono MIDES</option><option value="IyC-Rural">IyC Rural</option><option value="IyC-contruccion">IyC Constr.</option><option value="IyC- Transporte carga">IyC Transp.</option><option value="S.Prof">Serv. Prof.</option><option value="PF">PF</option><option value="SD">SD</option><option value="As. Civil">Asoc. Civil</option><option value="I.Primaria">I. Primaria</option></select></label>
-      <label class="full">Nombre<input id="cli-nombre" type="text" value="Drones del Pampa SAS"></label>
-      <label>RUT<input id="cli-rut" type="text" value="190336570017"></label>
-      <label>BPS<input id="cli-bps" type="text" value="8542601"></label>
-      <label>CI<input id="cli-ci" type="text" value="40386216/49984203"></label>
-      <label>Fecha de nacimiento<input id="cli-fecha" type="date" value=""></label>
-      <label>Contraseña BPS<input id="cli-passbps" type="text" value=""></label>
-      <label>Contraseña Gub.uy<input id="cli-passgub" type="text" value=""></label>
+      <label>Tipo<select id="cli-tipo"><option value="IyC">IyC</option><option value="IyC-pequeña empresa">IyC pequeña</option><option value="IyC-monotributo">IyC monotrib</option><option value="IyC-monotributo mides">IyC mono MIDES</option><option value="IyC-Rural">IyC Rural</option><option value="IyC-contruccion">IyC Constr.</option><option value="IyC- Transporte carga">IyC Transp.</option><option value="S.Prof" selected="">Serv. Prof.</option><option value="PF">PF</option><option value="SD">SD</option><option value="As. Civil">Asoc. Civil</option><option value="I.Primaria">I. Primaria</option></select></label>
+      <label class="full">Nombre<input id="cli-nombre" type="text" value="Sergio Alejandro Ayala Guruceaga"></label>
+      <label>RUT<input id="cli-rut" type="text" value="217802670013"></label>
+      <label>BPS<input id="cli-bps" type="text" value="6712802"></label>
+      <label>CI<input id="cli-ci" type="text" value="18419473"></label>
+      <label>Fecha de nacimiento<input id="cli-fecha" type="date" value="1957-07-15"></label>
+      <label>Contraseña BPS<input id="cli-passbps" type="text" value="Cacho3000"></label>
+      <label>Contraseña Gub.uy<input id="cli-passgub" type="text" value="cacho3000"></label>
       <label class="full">Códigos identificador Gub.uy<input id="cli-codgub" type="text" value=""></label>
       <label class="full">Correo electrónico<input id="cli-correo" type="email" value=""></label>
-      <label class="full">Dirección<input id="cli-direccion" type="text" value="Manuel Oribe1255"></label>
+      <label class="full">Dirección<input id="cli-direccion" type="text" value="Mercedes 1144 apto 101"></label>
       <label class="full">Sistema de Facturación<input id="cli-facturacion" type="text" value=""></label>
       <label>N° CJPPU<input id="cli-cjppu" type="text" value=""></label>
       <label>Contraseña CJPPU<input id="cli-passcjppu" type="text" value=""></label>
       <label>RUPE<input id="cli-rupe" type="text" value=""></label>
       <label>FOSMETAL<input id="cli-fosmetal" type="text" value=""></label>
-      <label class="full">Otros<textarea id="cli-otros" rows="2">cta: 26264749</textarea></label>
+      <label class="full">Otros<textarea id="cli-otros" rows="2"></textarea></label>
     </div>
     <div class="form-actions">
-      <button class="btn btn-outline" onclick="deleteCliente('40386216_49984203')" style="color:var(--c-red);border-color:var(--c-red);">🗑 Eliminar</button>
-      <button class="btn btn-outline" onclick="toggleClienteArchived('40386216_49984203')" title="Archivar — queda visible pero atenuado al final">📦 Archivar</button>
+      <button class="btn btn-outline" onclick="deleteCliente('cli_mq6lydcw_67_6v0ya5')" style="color:var(--c-red);border-color:var(--c-red);">🗑 Eliminar</button>
+      <button class="btn btn-outline" onclick="toggleClienteArchived('cli_mq6lydcw_67_6v0ya5')" title="Archivar — queda visible pero atenuado al final">📦 Archivar</button>
       <button class="btn btn-outline" onclick="closeModal('modal-cli-edit')">Cancelar</button>
-      <button class="btn btn-gold" onclick="saveClienteFromModal('40386216_49984203')">Guardar</button>
+      <button class="btn btn-gold" onclick="saveClienteFromModal('cli_mq6lydcw_67_6v0ya5')">Guardar</button>
     </div>
   </div></div></body></html>
