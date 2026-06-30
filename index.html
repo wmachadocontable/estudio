@@ -3185,7 +3185,7 @@ function renderTabs() {
       const unlocked = _unlockedTabsThisSession.has(t.id);
       privacyIcon += `<span class="tab-privacy-icon" title="${unlocked?'Desbloqueada esta sesión':'Protegida con contraseña'}">${unlocked?'🔓':'🔐'}</span>`;
     }
-    return `<div class="nav-tab${active}" data-tab-id="${t.id}" data-tab-idx="${i}"${draggable} onclick="switchTab('${t.id}')"${editable}>${privacyIcon}<span>${bbEscape(t.name)}</span>${x}</div>`;
+    return `<div class="nav-tab${active}${t.type==='declaraciones'?' has-decl-sub':''}" data-tab-id="${t.id}" data-tab-idx="${i}"${draggable} onclick="switchTab('${t.id}')"${editable}>${privacyIcon}<span>${bbEscape(t.name)}</span>${t.type==='declaraciones'?'<span class="decl-sub-caret">▾</span>':''}${x}${t.type==='declaraciones' && typeof window.declNavSubmenu==='function' ? window.declNavSubmenu(t.id) : ''}</div>`;
   }).join('') + `<span class="nav-tab-add" onclick="openAddTab()">+ Nueva pestaña</span>`;
   if (userPrefs.editMode) attachTabDragHandlers();
 }
@@ -6640,9 +6640,14 @@ function findBuilderBlock(tabId, blockId) {
   // Declaraciones: cada carpeta tiene UNA tabla (block). Reutilizamos todo el
   // motor de columnas/celdas existente buscando el bloque dentro de las carpetas.
   if (tab.type === 'declaraciones') {
-    const folders = tab.folders || [];
-    for (const f of folders) {
-      if (f.block && f.block.id === blockId) return { tab, blk: f.block, idx:0 };
+    if (typeof window.declEnsureTypes === 'function') window.declEnsureTypes(tab);
+    const types = tab.types || [];
+    for (const ty of types) {
+      const yrs = ty.years || {};
+      for (const y in yrs) {
+        if (yrs[y] && yrs[y].id === blockId)
+          return { tab, blk: { id: yrs[y].id, type:'cTable', title: (ty.name + ' ' + y), cols: ty.cols, rows: yrs[y].rows }, idx:0 };
+      }
     }
     return { tab, blk:null, idx:-1 };
   }
@@ -14307,492 +14312,627 @@ body.edit-mode .hon-edit-name { display:inline; }
   #decl-color-modal .dcc-row{ display:flex; align-items:center; gap:12px; margin-bottom:9px; }
   #decl-color-modal .dcc-row .dcc-prev{ flex:1; font-weight:700; font-size:12px; border-radius:20px; padding:5px 12px; text-align:center; }
   #decl-color-modal input[type=color]{ width:46px; height:34px; border:1px solid var(--c-border,#dcdfe4); border-radius:8px; background:none; cursor:pointer; padding:0; }
+
+  /* ===== Submenú HOVER en la barra de navegación (Declaraciones) ===== */
+  .nav-tab.has-decl-sub{ position:relative; }
+  .decl-sub-caret{ font-size:9px; margin-left:5px; opacity:.7; }
+  .decl-navsub{ display:none; position:absolute; top:100%; left:0; min-width:240px; background:#0d1b2b;
+    border:1px solid #25405c; border-top:none; border-radius:0 0 8px 8px; padding:6px; z-index:1200;
+    box-shadow:0 12px 30px rgba(0,0,0,.35); }
+  .nav-tab.has-decl-sub:hover .decl-navsub{ display:block; }
+  .decl-navitem{ display:flex; align-items:center; gap:8px; padding:7px 9px; border-radius:6px; cursor:pointer;
+    color:#dfe6ee; font-size:13px; letter-spacing:.3px; text-transform:none; }
+  .decl-navitem:hover{ background:#16314a; }
+  .decl-navitem.active{ background:#1d3a56; color:#fff; }
+  .decl-navitem .dot{ width:9px; height:9px; border-radius:50%; flex:0 0 auto; }
+  .decl-navitem .nm{ flex:1; white-space:nowrap; }
+  .decl-navitem .cnt{ font-size:11px; background:rgba(255,255,255,.14); border-radius:10px; padding:1px 7px; }
+  .decl-navitem .acts{ display:none; gap:2px; }
+  .decl-navitem:hover .acts{ display:inline-flex; }
+  .decl-navitem .acts button{ background:none; border:none; color:#9fb2c6; cursor:pointer; font-size:12px; padding:2px 3px; border-radius:4px; }
+  .decl-navitem .acts button:hover{ background:rgba(255,255,255,.12); color:#fff; }
+  .decl-navadd{ margin-top:4px; padding:7px 9px; border-radius:6px; cursor:pointer; color:#bcd; font-size:12.5px;
+    text-align:center; border:1px dashed #2f4a66; }
+  .decl-navadd:hover{ background:#16314a; color:#fff; }
+
+  /* ===== Barra de TIPO + AÑO dentro del contenido ===== */
+  .decl-typebar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:6px 0 14px; position:relative; }
+  .decl-typecur{ display:flex; align-items:center; gap:7px; background:#fff; border:1px solid var(--c-border,#dcdfe4);
+    border-radius:9px; padding:7px 12px; cursor:pointer; font-size:14px; }
+  .decl-typecur:hover{ border-color:var(--c-accent,#b8c1cc); }
+  .decl-typecur .tdot{ width:10px; height:10px; border-radius:50%; }
+  .decl-typecur .caret{ font-size:10px; opacity:.6; }
+  .decl-typemenu{ display:none; position:absolute; top:46px; left:0; z-index:60; min-width:220px; background:#fff;
+    border:1px solid var(--c-border,#dcdfe4); border-radius:10px; padding:6px; box-shadow:0 12px 28px rgba(0,0,0,.14); }
+  .decl-typemenu.open{ display:block; }
+  .decl-typemi{ display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:7px; cursor:pointer; font-size:13.5px; }
+  .decl-typemi:hover{ background:var(--c-bg,#f3f5f7); }
+  .decl-typemi.active{ background:rgba(184,193,204,.22); font-weight:700; }
+  .decl-typemi .tdot{ width:9px; height:9px; border-radius:50%; }
+  .decl-typemi.add{ color:var(--c-accent-dark,#8a95a3); border:1px dashed var(--c-border,#dcdfe4); justify-content:center; margin-top:4px; }
+  .decl-sep{ width:1px; height:26px; background:var(--c-border,#e2e5ea); }
+  .decl-yearbar{ display:flex; align-items:center; gap:6px; }
+  .decl-ybtn{ border:1px solid var(--c-border,#dcdfe4); background:#fff; border-radius:8px; padding:7px 11px; cursor:pointer;
+    font-size:13px; font-weight:700; color:var(--c-text); }
+  .decl-ybtn:hover{ border-color:var(--c-accent,#b8c1cc); }
+  .decl-ybtn.add{ border-style:dashed; color:var(--c-accent-dark,#8a95a3); }
+  .decl-year-sel{ border:1px solid var(--c-border,#dcdfe4); border-radius:8px; padding:7px 10px; font-size:15px; font-weight:700;
+    background:#fff; cursor:pointer; min-width:84px; text-align:center; }
+  .decl-spacer{ flex:1; }
+  .decl-btn.carry{ background:var(--c-header,#102030); color:#fff; border-color:var(--c-header,#102030); font-weight:700; }
+  .decl-btn.carry:hover{ filter:brightness(1.15); }
+
+  /* ===== Modal de traspaso ===== */
+  #decl-carry-modal .dca-dest{ display:flex; align-items:center; gap:10px; margin:6px 0 12px; }
+  #decl-carry-modal .dca-dest label{ font-size:12px; color:var(--c-text-muted,#667); }
+  #decl-carry-modal .dca-destinp{ width:110px; padding:8px 10px; border:1px solid var(--c-border,#dcdfe4); border-radius:8px; font-size:15px; font-weight:700; }
+  #decl-carry-modal .dca-cols2{ display:flex; gap:14px; }
+  #decl-carry-modal .dca-box{ flex:1; border:1px solid var(--c-border,#e2e5ea); border-radius:10px; overflow:hidden; }
+  #decl-carry-modal .dca-h{ background:var(--c-bg,#f3f5f7); padding:8px 11px; font-size:12px; font-weight:700; color:var(--c-text);
+    display:flex; align-items:center; gap:6px; }
+  #decl-carry-modal .dca-mini{ margin-left:auto; font-size:11px; border:1px solid var(--c-border,#dcdfe4); background:#fff;
+    border-radius:6px; padding:2px 7px; cursor:pointer; }
+  #decl-carry-modal .dca-mini:last-child{ margin-left:4px; }
+  #decl-carry-modal .dca-list{ max-height:260px; overflow:auto; padding:6px 4px; }
+  #decl-carry-modal .dca-row{ display:flex; align-items:center; gap:8px; padding:5px 9px; font-size:13px; cursor:pointer; border-radius:6px; }
+  #decl-carry-modal .dca-row:hover{ background:var(--c-bg,#f3f5f7); }
+  #decl-carry-modal .dca-fix{ color:var(--c-text-muted,#8a93a0); font-size:11px; }
+  @media (max-width:560px){ #decl-carry-modal .dca-cols2{ flex-direction:column; } }
 </style>
 <script>
 (function(){
-  // Namespace de estado por-usuaria (no se sincroniza): búsqueda, vista y filtro.
+  // ===========================================================================
+  //  DECLARACIONES  ·  modelo: cada TIPO de declaración (IRPF, IVA, IRAE…) es una
+  //  subpestaña; dentro tiene un selector de AÑOS y una tabla de clientes por año.
+  //  Las columnas se comparten entre los años del mismo tipo.
+  //  tab.types = [ { id, name, icon, color, cols:[...], years:{ '2025':{id,rows:[]} } } ]
+  // ===========================================================================
   const DECL = window.__DECL = window.__DECL || { search:{}, view:{}, filter:{} };
 
   function declTab(tabId){ return state.tabs.find(t => t.id === tabId && t.type === 'declaraciones'); }
-  function declFolders(tab){ if(!Array.isArray(tab.folders)) tab.folders = []; return tab.folders; }
-  function declActiveId(tab){
-    const fs = declFolders(tab); if(!fs.length) return '';
-    const key = 'declFolder_'+tab.id; const stored = userPrefs[key];
-    if(stored && fs.some(f=>f.id===stored)) return stored;
-    return fs[0].id;
+  const _rk = ()=> (typeof genRowKey==='function'?genRowKey():'r_'+Date.now()+'_'+Math.random().toString(36).slice(2,7));
+  const _ck = ()=> (typeof genColKey==='function'?genColKey():'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,7));
+  const _id = (p)=> p+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const TYPE_COLORS = ['#2f6f4f','#1e497c','#8a5a00','#7a3b8f','#0f6e72','#9a3b3b','#3d5a2a'];
+
+  // ---- Plantillas de columnas ----
+  function colsIRPF(){
+    return [
+      {key:_ck(),label:'Cliente',ctype:'text'},
+      {key:_ck(),label:'Hecho IRPF',ctype:'checkbox'},
+      {key:_ck(),label:'Hecho IVA',ctype:'tag',options:['SI','No','N/A']},
+      {key:_ck(),label:'Presentado',ctype:'date'},
+      {key:_ck(),label:'Importe',ctype:'money',currency:'$U'},
+      {key:_ck(),label:'Medio de pago',ctype:'tag',options:['Scotia','BBVA','Itaú','Santander','BROU','Efectivo','Transferencia']},
+      {key:_ck(),label:'Fecha de pago',ctype:'date'},
+      {key:_ck(),label:'Ejecutor',ctype:'person'},
+      {key:_ck(),label:'Timbre',ctype:'money',currency:'$U'},
+      {key:_ck(),label:'Saldo / Notas',ctype:'text'},
+      {key:_ck(),label:'Estado',ctype:'tag',options:['Pendiente','En curso','Presentada','Cobrada'],
+        tagColors:{'Pendiente':'#fdecc8','En curso':'#dbe8fb','Presentada':'#d6f0df','Cobrada':'#d4eef1'}}
+    ];
   }
-  function declActiveFolder(tab){ const fs=declFolders(tab); return fs.find(f=>f.id===declActiveId(tab)) || fs[0] || null; }
-  window.declSetActiveFolder = function(tabId, fid){ userPrefs['declFolder_'+tabId]=fid; saveUserPrefs(); renderContent(); };
+  function colsGeneric(){
+    return [
+      {key:_ck(),label:'Cliente',ctype:'text'},
+      {key:_ck(),label:'Presentado',ctype:'date'},
+      {key:_ck(),label:'Importe',ctype:'money',currency:'$U'},
+      {key:_ck(),label:'Saldo / Notas',ctype:'text'},
+      {key:_ck(),label:'Estado',ctype:'tag',options:['Pendiente','En curso','Presentada','Cobrada'],
+        tagColors:{'Pendiente':'#fdecc8','En curso':'#dbe8fb','Presentada':'#d6f0df','Cobrada':'#d4eef1'}}
+    ];
+  }
+  function makeType(name, icon, color, cols, year){
+    const ty = { id:_id('dty'), name:name, icon:icon||'📄', color:color||'#2f6f4f', cols:cols||colsGeneric(), years:{} };
+    if(year) ty.years[year] = { id:_id('dyr'), rows:[] };
+    return ty;
+  }
+
+  // ---- Migración carpetas(viejo) -> tipos+años(nuevo). Idempotente. ----
+  window.declEnsureTypes = function(tab){
+    if(!tab || tab.type!=='declaraciones') return [];
+    if(Array.isArray(tab.types)) return tab.types;
+    const types = [];
+    const folders = Array.isArray(tab.folders) ? tab.folders : [];
+    folders.forEach(f=>{
+      const blk = f.block || {cols:[],rows:[]};
+      const m = (f.name||'').match(/(19|20)\d{2}/);
+      const year = (f.year && /^\d{4}$/.test(''+f.year)) ? (''+f.year) : (m ? m[0] : String(new Date().getFullYear()));
+      const baseName = (f.name||'Declaración').replace(/\s*(19|20)\d{2}\s*/,'').trim() || (f.name||'Declaración');
+      let ty = types.find(t => t.name.toLowerCase() === baseName.toLowerCase());
+      if(!ty){
+        ty = { id: f.id || _id('dty'), name: baseName, icon: f.icon||'📄', color: f.color||'#2f6f4f', cols: (blk.cols||[]), years:{} };
+        types.push(ty);
+      }
+      ty.years[year] = { id: blk.id || _id('dyr'), rows: (blk.rows||[]) };
+    });
+    if(!types.length) types.push(makeType('IRPF','📄','#2f6f4f', colsIRPF(), String(new Date().getFullYear())));
+    tab.types = types;
+    delete tab.folders;
+    return tab.types;
+  };
+
+  function types(tab){ return window.declEnsureTypes(tab); }
+  function activeType(tab){
+    const ts = types(tab); if(!ts.length) return null;
+    const id = userPrefs['declType_'+tab.id];
+    return ts.find(t=>t.id===id) || ts[0];
+  }
+  function yearsOf(ty){ return Object.keys(ty.years||{}).sort(); }
+  function activeYear(tab, ty){
+    const ys = yearsOf(ty);
+    if(!ys.length){ const y=String(new Date().getFullYear()); ty.years[y]={id:_id('dyr'),rows:[]}; return y; }
+    const stored = userPrefs['declYear_'+tab.id+'_'+ty.id];
+    return (stored && ty.years[stored]) ? stored : ys[ys.length-1];
+  }
+  function yearBlock(ty, year){ return ty.years[year]; }
 
   function fmtMoney(n, curr){ curr=curr||'$U';
     return curr+' '+Number(n||0).toLocaleString('es-UY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
-  // Texto plano de una celda (para buscar / exportar / tarjetas)
   function cellText(col, row){
     const v = row[col.key];
     switch(col.ctype){
       case 'checkbox': return v ? 'sí' : 'no';
       case 'money':    return v!=null ? fmtMoney(v, col.currency) : '';
-      case 'date':     return v ? new Date(v+'T12:00:00').toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+v : '';
-      case 'person': { if(!v) return ''; const u = (typeof findUserByName==='function')?findUserByName(v):null; return u?(u.displayName||u.name):v; }
-      case 'progress':return v!=null ? v+'%' : '';
+      case 'date':     return v ? new Date(v+'T12:00:00').toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+      case 'person': { if(!v) return ''; const u=(typeof findUserByName==='function')?findUserByName(v):null; return u?(u.displayName||u.name):v; }
       default:         return v!=null ? String(v) : '';
     }
   }
-  function rowMatchesUnused(){ return true; }
 
-  // ===== Colores de estado y edición directa de celdas =====
-  // Paleta por defecto (se puede sobrescribir por columna en col.tagColors).
+  // ===== Colores de estado =====
   const STATE_PALETTE = {
-    'pendiente':  {bg:'#fdecc8', fg:'#8a5a00', bd:'#f0cf86'},
-    'en curso':   {bg:'#dbe8fb', fg:'#1e4e84', bd:'#a9c6ef'},
-    'en proceso': {bg:'#dbe8fb', fg:'#1e4e84', bd:'#a9c6ef'},
-    'presentada': {bg:'#d6f0df', fg:'#1d7a48', bd:'#9ad6b2'},
-    'presentado': {bg:'#d6f0df', fg:'#1d7a48', bd:'#9ad6b2'},
-    'cobrada':    {bg:'#d4eef1', fg:'#10707c', bd:'#9fd6dd'},
-    'cobrado':    {bg:'#d4eef1', fg:'#10707c', bd:'#9fd6dd'},
-    'si':         {bg:'#d6f0df', fg:'#1d7a48', bd:'#9ad6b2'},
-    'no':         {bg:'#fbe0df', fg:'#a13530', bd:'#f0b3b0'},
-    'n/a':        {bg:'#eceef1', fg:'#6b7280', bd:'#d8dce2'}
+    'pendiente':{bg:'#fdecc8',fg:'#8a5a00',bd:'#f0cf86'}, 'en curso':{bg:'#dbe8fb',fg:'#1e4e84',bd:'#a9c6ef'},
+    'en proceso':{bg:'#dbe8fb',fg:'#1e4e84',bd:'#a9c6ef'}, 'presentada':{bg:'#d6f0df',fg:'#1d7a48',bd:'#9ad6b2'},
+    'presentado':{bg:'#d6f0df',fg:'#1d7a48',bd:'#9ad6b2'}, 'cobrada':{bg:'#d4eef1',fg:'#10707c',bd:'#9fd6dd'},
+    'cobrado':{bg:'#d4eef1',fg:'#10707c',bd:'#9fd6dd'}, 'si':{bg:'#d6f0df',fg:'#1d7a48',bd:'#9ad6b2'},
+    'no':{bg:'#fbe0df',fg:'#a13530',bd:'#f0b3b0'}, 'n/a':{bg:'#eceef1',fg:'#6b7280',bd:'#d8dce2'}
   };
-  // Color de texto legible según el fondo elegido.
   window.declFgFor = function(bg){
-    try{ const c=bg.replace('#',''); const r=parseInt(c.substr(0,2),16), g=parseInt(c.substr(2,2),16), b=parseInt(c.substr(4,2),16);
-      return ((0.299*r+0.587*g+0.114*b)/255) > 0.62 ? '#1b1f24' : '#ffffff'; }catch(e){ return '#1b1f24'; }
+    try{ const c=bg.replace('#',''); const r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);
+      return ((0.299*r+0.587*g+0.114*b)/255)>0.62?'#1b1f24':'#ffffff'; }catch(e){ return '#1b1f24'; }
   };
-  function tagStyle(col, val){
-    if(val==null || val==='') return null;
+  function tagStyle(col,val){
+    if(val==null||val==='') return null;
     const custom = col && col.tagColors && col.tagColors[val];
-    if(custom) return { bg:custom, fg:window.declFgFor(custom), bd:custom };
+    if(custom) return {bg:custom,fg:window.declFgFor(custom),bd:custom};
     const p = STATE_PALETTE[String(val).toLowerCase()];
     if(p) return p;
-    return { bg:'#eef0f3', fg:'#3a414b', bd:'#dfe3e8' };
+    return {bg:'#eef0f3',fg:'#3a414b',bd:'#dfe3e8'};
+  }
+  function findColByKey(tab, key){
+    const ts=types(tab);
+    for(const ty of ts){ const c=(ty.cols||[]).find(c=>c.key===key); if(c) return c; }
+    return null;
   }
 
-  // Renderizador de celda con EDICIÓN DIRECTA (no necesita el modo estructura).
-  function declCell(tab, blk, col, row){
-    const v = row[col.key]; const k = col.key;
-    const ref = "'"+tab.id+"','"+blk.id+"','"+row.__key+"','"+k+"'";
+  // ===== Render de celda con edición DIRECTA (sin modo estructura) =====
+  function declCell(blkId, col, row){
+    const v=row[col.key], k=col.key;
+    const ref = "'"+blkId+"','"+row.__key+"','"+k+"'";
     switch(col.ctype){
-      case 'text':
-        return '<input class="decl-inp" type="text" value="'+bbEscape(v||'')+'" placeholder="—" onchange="setCTableCell('+ref+',this.value)">';
-      case 'number':
-        return '<input class="decl-inp decl-num" type="number" step="any" placeholder="—" value="'+(v!=null?v:'')+'" onchange="setCTableCell('+ref+',this.value===\'\'?null:parseFloat(this.value))">';
-      case 'money': {
-        const curr = col.currency || '$U';
-        return '<span class="decl-money"><span class="decl-cur">'+bbEscape(curr)+'</span><input class="decl-inp decl-num" type="number" step="any" placeholder="0" value="'+(v!=null?v:'')+'" onchange="setCTableCell('+ref+',this.value===\'\'?null:parseFloat(this.value))"></span>';
-      }
-      case 'date':
-        return '<input class="decl-inp decl-date" type="date" value="'+(v||'')+'" onchange="setCTableCell('+ref+',this.value)">';
-      case 'checkbox':
-        return '<input type="checkbox" class="decl-chk" '+(v?'checked':'')+' onchange="setCTableCell('+ref+',this.checked)">';
-      case 'tag': {
-        const opts = col.options || []; const st = tagStyle(col, v);
-        const sa = st ? ' style="background:'+st.bg+';color:'+st.fg+';border-color:'+st.bd+';"' : '';
+      case 'text':   return '<input class="decl-inp" type="text" value="'+bbEscape(v||'')+'" placeholder="—" onchange="declSet('+ref+',this.value)">';
+      case 'number': return '<input class="decl-inp decl-num" type="number" step="any" placeholder="—" value="'+(v!=null?v:'')+'" onchange="declSet('+ref+',this.value===\'\'?null:parseFloat(this.value))">';
+      case 'money': { const c=col.currency||'$U';
+        return '<span class="decl-money"><span class="decl-cur">'+bbEscape(c)+'</span><input class="decl-inp decl-num" type="number" step="any" placeholder="0" value="'+(v!=null?v:'')+'" onchange="declSet('+ref+',this.value===\'\'?null:parseFloat(this.value))"></span>'; }
+      case 'date':   return '<input class="decl-inp decl-date" type="date" value="'+(v||'')+'" onchange="declSet('+ref+',this.value)">';
+      case 'checkbox': return '<input type="checkbox" class="decl-chk" '+(v?'checked':'')+' onchange="declSet('+ref+',this.checked)">';
+      case 'tag': { const opts=col.options||[]; const st=tagStyle(col,v);
+        const sa = st?' style="background:'+st.bg+';color:'+st.fg+';border-color:'+st.bd+';"':'';
         return '<select class="decl-state"'+sa+' onchange="declOnTag(this,'+ref+')"><option value="">—</option>'
-          + opts.map(o=>'<option value="'+bbEscape(o)+'"'+(v===o?' selected':'')+'>'+bbEscape(o)+'</option>').join('')
-          + '</select>';
-      }
-      case 'person': {
-        const opts = (typeof getValidUsers==='function') ? getValidUsers() : [];
-        return '<select class="decl-inp" onchange="setCTableCell('+ref+',this.value)"><option value="">—</option>'
-          + opts.map(u=>'<option value="'+bbEscape(u.name)+'"'+(v===u.name?' selected':'')+'>'+bbEscape(u.displayName||u.name)+'</option>').join('')
-          + '</select>';
-      }
-      default:
-        // Tipos especiales (fórmula, archivo, rating, etc.): usamos el motor general.
-        return renderCTableCell(tab, blk, col, row);
+          + opts.map(o=>'<option value="'+bbEscape(o)+'"'+(v===o?' selected':'')+'>'+bbEscape(o)+'</option>').join('') + '</select>'; }
+      case 'person': { const opts=(typeof getValidUsers==='function')?getValidUsers():[];
+        return '<select class="decl-inp" onchange="declSet('+ref+',this.value)"><option value="">—</option>'
+          + opts.map(u=>'<option value="'+bbEscape(u.name)+'"'+(v===u.name?' selected':'')+'>'+bbEscape(u.displayName||u.name)+'</option>').join('') + '</select>'; }
+      default: return (typeof renderCTableCell==='function') ? renderCTableCell(declTab(_curTabId), {id:blkId,cols:[],rows:[]}, col, row) : bbEscape(v||'');
     }
   }
 
-  // Al elegir un estado: guarda y recolorea el chip al instante (sin recargar la tabla).
-  window.declOnTag = function(sel, tabId, blkId, rowKey, colKey){
-    setCTableCell(tabId, blkId, rowKey, colKey, sel.value);
-    const tab = declTab(tabId);
-    const folder = tab && declFolders(tab).find(f=>f.block && f.block.id===blkId);
-    const col = folder && (folder.block.cols||[]).find(c=>c.key===colKey);
+  // ===== Mutaciones (propias, seguras con el modelo nuevo) =====
+  let _curTabId = null;
+  function locateBlock(blkId){
+    for(const tab of state.tabs){ if(tab.type!=='declaraciones') continue;
+      const ts=types(tab); for(const ty of ts){ for(const y in ty.years){ if(ty.years[y].id===blkId) return {tab,ty,year:y,yb:ty.years[y]}; } } }
+    return null;
+  }
+  window.declSet = function(blkId, rowKey, colKey, value){
+    const loc = locateBlock(blkId); if(!loc) return;
+    const row = (loc.yb.rows||[]).find(r=>r.__key===rowKey); if(!row) return;
+    row[colKey] = value; saveState();
+  };
+  window.declOnTag = function(sel, blkId, rowKey, colKey){
+    window.declSet(blkId, rowKey, colKey, sel.value);
+    const col = findColByKey(declTab(_curTabId), colKey);
     const st = col ? tagStyle(col, sel.value) : null;
     if(st){ sel.style.background=st.bg; sel.style.color=st.fg; sel.style.borderColor=st.bd; }
     else { sel.style.background=''; sel.style.color=''; sel.style.borderColor=''; }
   };
-
-  // ---- Editor de colores de estado ----
-  let _colorCtx = null;
-  window.declOpenColorModal = function(tabId, blkId, colKey){
-    const tab = declTab(tabId); if(!tab) return;
-    const folder = declFolders(tab).find(f=>f.block && f.block.id===blkId); if(!folder) return;
-    const col = (folder.block.cols||[]).find(c=>c.key===colKey); if(!col) return;
-    _colorCtx = { tabId, blkId, colKey };
-    const body = document.getElementById('decl-color-body');
-    body.innerHTML = (col.options||[]).map((o,i)=>{
-      const st = tagStyle(col, o);
-      return '<div class="dcc-row">'
-        + '<input type="color" id="dcc-'+i+'" value="'+_toHex(st.bg)+'">'
-        + '<span class="dcc-prev" id="dccp-'+i+'" style="background:'+st.bg+';color:'+st.fg+';">'+bbEscape(o)+'</span>'
-        + '</div>';
-    }).join('');
-    // Vista previa en vivo
-    (col.options||[]).forEach((o,i)=>{
-      const inp = document.getElementById('dcc-'+i);
-      inp.addEventListener('input', function(){
-        const prev = document.getElementById('dccp-'+i);
-        prev.style.background = inp.value; prev.style.color = window.declFgFor(inp.value);
-      });
-    });
-    document.getElementById('decl-color-modal').classList.add('open');
-  };
-  window.declSaveColors = function(){
-    if(!_colorCtx) return;
-    const tab = declTab(_colorCtx.tabId); if(!tab) return;
-    const folder = declFolders(tab).find(f=>f.block && f.block.id===_colorCtx.blkId); if(!folder) return;
-    const col = (folder.block.cols||[]).find(c=>c.key===_colorCtx.colKey); if(!col) return;
-    col.tagColors = col.tagColors || {};
-    (col.options||[]).forEach((o,i)=>{ const inp=document.getElementById('dcc-'+i); if(inp) col.tagColors[o]=inp.value; });
-    saveState(); closeModal('decl-color-modal'); renderContent();
-    if(typeof toast==='function') toast('🎨 Colores guardados');
-  };
-  function _toHex(c){ // normaliza a #rrggbb para el input color
-    if(!c) return '#cccccc';
-    if(c[0]==='#' && c.length===7) return c;
-    const m = c.match(/(\d+)/g); if(m && m.length>=3){ return '#'+m.slice(0,3).map(x=>('0'+parseInt(x).toString(16)).slice(-2)).join(''); }
-    return '#cccccc';
-  }
-  function injectColorModal(){
-    if(document.getElementById('decl-color-modal')) return;
-    const w = document.createElement('div');
-    w.id='decl-color-modal'; w.className='modal-overlay';
-    w.innerHTML = '<div class="modal" style="width:340px;max-width:92vw;position:relative;">'
-      + '<button class="modal-close" onclick="closeModal(\'decl-color-modal\')">×</button>'
-      + '<h3>🎨 Colores de estado</h3>'
-      + '<div class="modal-sub">Asigná un color a cada estado. Se aplica en la tabla y en las tarjetas, para todo el equipo.</div>'
-      + '<div id="decl-color-body" style="margin:8px 0 4px;"></div>'
-      + '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">'
-      +   '<button class="decl-btn" onclick="closeModal(\'decl-color-modal\')">Cancelar</button>'
-      +   '<button class="decl-btn primary" onclick="declSaveColors()">Guardar</button>'
-      + '</div></div>';
-    document.body.appendChild(w);
-  }
-
-  // ---- Crear carpeta por AÑO con las columnas de declaraciones ya armadas ----
-  window.declAddYear = function(tabId){
-    const tab = declTab(tabId); if(!tab) return;
-    const def = new Date().getFullYear();
-    const y = prompt('¿De qué año es la carpeta?', String(def));
-    if(y===null) return;
-    const yr = String(y).trim(); if(!yr){ toast('Poné un año'); return; }
-    const fs = declFolders(tab);
-    if(fs.some(f=>String(f.year)===yr || f.name===('IRPF '+yr))){
-      if(!confirm('Ya existe una carpeta para '+yr+'. ¿Crear otra igual?')) return;
-    }
-    const now = Date.now();
-    const ck = (s)=> 'c_'+now+'_'+s;
-    const folder = {
-      id:'fld_'+now, name:'IRPF '+yr, icon:'📄', color:'#2f6f4f', year:yr,
-      block:{ id:'blk_'+now, type:'cTable', title:'IRPF '+yr, cols:[
-        {key:ck('cli'),   label:'Cliente',        ctype:'text'},
-        {key:ck('hirpf'), label:'Hecho IRPF',     ctype:'checkbox'},
-        {key:ck('hiva'),  label:'Hecho IVA',      ctype:'tag', options:['SI','No','N/A']},
-        {key:ck('pres'),  label:'Presentado',     ctype:'date'},
-        {key:ck('imp'),   label:'Importe',        ctype:'money', currency:'$U'},
-        {key:ck('medio'), label:'Medio de pago',  ctype:'tag', options:['Scotia','BBVA','Itaú','Santander','BROU','Efectivo','Transferencia']},
-        {key:ck('pago'),  label:'Fecha de pago',  ctype:'date'},
-        {key:ck('ejec'),  label:'Ejecutor',       ctype:'person'},
-        {key:ck('timb'),  label:'Timbre',         ctype:'money', currency:'$U'},
-        {key:ck('saldo'), label:'Saldo / Notas',  ctype:'text'},
-        {key:ck('est'),   label:'Estado',         ctype:'tag', options:['Pendiente','En curso','Presentada','Cobrada'],
-          tagColors:{ 'Pendiente':'#fdecc8','En curso':'#dbe8fb','Presentada':'#d6f0df','Cobrada':'#d4eef1' } }
-      ], rows:[] }
-    };
-    fs.push(folder);
-    userPrefs['declFolder_'+tab.id] = folder.id; saveUserPrefs();
+  window.declAddRow = function(tabId){
+    const tab=declTab(tabId); if(!tab) return; const ty=activeType(tab); const y=activeYear(tab,ty);
+    ty.years[y].rows = ty.years[y].rows || []; ty.years[y].rows.push({__key:_rk()});
     saveState(); renderContent();
-    if(typeof toast==='function') toast('📅 Carpeta '+yr+' creada');
+  };
+  window.declRemoveRow = function(tabId, rowKey){
+    const tab=declTab(tabId); if(!tab) return; const ty=activeType(tab); const y=activeYear(tab,ty);
+    ty.years[y].rows = (ty.years[y].rows||[]).filter(r=>r.__key!==rowKey);
+    saveState(); renderContent();
+  };
+  window.declRemoveCol = function(tabId, colKey){
+    const tab=declTab(tabId); if(!tab) return; const ty=activeType(tab);
+    const col=(ty.cols||[]).find(c=>c.key===colKey);
+    if(!confirm('¿Eliminar la columna “'+(col?col.label:'')+'”? Se borra en todos los años de '+ty.name+'.')) return;
+    ty.cols = (ty.cols||[]).filter(c=>c.key!==colKey);
+    Object.keys(ty.years).forEach(y=>{ (ty.years[y].rows||[]).forEach(r=>{ delete r[colKey]; }); });
+    saveState(); renderContent();
   };
 
-  // ---- Render principal ----
-  window.renderDeclaraciones = function(tab){
-    const fs = declFolders(tab);
-    let h = '<div class="decl-wrap">';
-    h += '<div class="decl-head"><div class="decl-title">📋 '+bbEscape(tab.name.replace(/^📋\s*/,''))+'</div>';
-    h += '<span class="decl-hint">Carpetas de declaraciones juradas del estudio · compartidas con todo el equipo</span></div>';
-
-    // Barra de carpetas
-    h += '<div class="decl-folders">';
-    const activeId = declActiveId(tab);
-    fs.forEach(f=>{
-      const count = (f.block && f.block.rows ? f.block.rows.length : 0);
-      h += '<div class="decl-folder'+(f.id===activeId?' active':'')+'" onclick="declSetActiveFolder(\''+tab.id+'\',\''+f.id+'\')">'
-        + '<span class="fdot" style="background:'+(f.color||'#b8c1cc')+'"></span>'
-        + '<span>'+(f.icon||'📁')+' '+bbEscape(f.name)+'</span>'
-        + '<span class="fcount">'+count+'</span>'
-        + '<span class="facts">'
-        +   '<button title="Editar carpeta" onclick="event.stopPropagation();declOpenFolderModal(\''+tab.id+'\',\''+f.id+'\')">✎</button>'
-        +   '<button title="Mover ◀" onclick="event.stopPropagation();declMoveFolder(\''+tab.id+'\',\''+f.id+'\',-1)">◀</button>'
-        +   '<button title="Mover ▶" onclick="event.stopPropagation();declMoveFolder(\''+tab.id+'\',\''+f.id+'\',1)">▶</button>'
-        +   '<button title="Eliminar carpeta" onclick="event.stopPropagation();declDeleteFolder(\''+tab.id+'\',\''+f.id+'\')">🗑</button>'
-        + '</span></div>';
-    });
-    h += '<button class="decl-addfolder" onclick="declOpenFolderModal(\''+tab.id+'\',null)">+ Carpeta</button>';
-    h += '<button class="decl-addyear" title="Crear una carpeta por año con las columnas de declaraciones ya armadas" onclick="declAddYear(\''+tab.id+'\')">📅 + Año</button>';
-    h += '</div>';
-
-    const folder = declActiveFolder(tab);
-    if(!folder){
-      h += '<div class="decl-empty">Todavía no hay carpetas. Creá una con “+ Carpeta” (por ejemplo IVA, IRAE, Cierres…).</div></div>';
-      return h;
-    }
-
-    // Toolbar (buscador, vista, filtro, acciones)
-    const view = DECL.view[folder.id] || 'table';
-    const estadoCol = (folder.block.cols||[]).find(c => c.ctype==='tag' && /estado/i.test(c.label));
-    const curSearch = DECL.search[folder.id] || '';
-    const curFilter = DECL.filter[folder.id] || '';
-    h += '<div class="decl-toolbar">';
-    h += '<div class="decl-search">🔎<input id="decl-search-input" placeholder="Buscar cliente, nota, etiqueta…" value="'+bbEscape(curSearch)+'" oninput="declOnSearch(\''+tab.id+'\',\''+folder.id+'\',this.value)"></div>';
-    if(estadoCol){
-      h += '<select class="decl-select" onchange="declSetFilter(\''+folder.id+'\',this.value)"><option value="">Estado: todos</option>'
-        + (estadoCol.options||[]).map(o=>'<option value="'+bbEscape(o)+'"'+(curFilter===o?' selected':'')+'>'+bbEscape(o)+'</option>').join('')
-        + '</select>';
-    }
-    h += '<button class="decl-btn'+(view==='table'?' active':'')+'" onclick="declSetView(\''+folder.id+'\',\'table\')">📊 Tabla</button>';
-    h += '<button class="decl-btn'+(view==='cards'?' active':'')+'" onclick="declSetView(\''+folder.id+'\',\'cards\')">🗂️ Tarjetas</button>';
-    if(estadoCol){
-      h += '<button class="decl-btn" title="Cambiar los colores de los estados" onclick="declOpenColorModal(\''+tab.id+'\',\''+folder.block.id+'\',\''+estadoCol.key+'\')">🎨 Colores</button>';
-    }
-    h += '<button class="decl-btn" onclick="declExportCSV(\''+tab.id+'\',\''+folder.id+'\')">⬇ Excel/CSV</button>';
-    const editing = userPrefs.editMode;
-    h += '<button class="decl-btn'+(editing?' active':'')+'" title="Agregar o quitar columnas/filas" onclick="toggleEditMode()">⚙ '+(editing?'Listo':'Estructura')+'</button>';
-    h += '</div>';
-
-    h += '<div class="decl-table-host" id="decl-table-host">'+ declRenderFolder(tab, folder) +'</div>';
-    h += '</div>';
-    return h;
+  // ===== Tipos (subpestañas) =====
+  window.declGoType = function(tabId, typeId){
+    userPrefs['declType_'+tabId]=typeId; saveUserPrefs();
+    if(userPrefs.activeTabId!==tabId){ switchTab(tabId); }
+    else { renderContent(); renderTabs(); }
+  };
+  window.declAddType = function(tabId){
+    const tab=declTab(tabId); if(!tab) return;
+    const name=prompt('Nombre del tipo de declaración (ej: IVA, IRAE, Cierres…):',''); if(name===null) return;
+    const nm=name.trim(); if(!nm){ toast('Poné un nombre'); return; }
+    const ts=types(tab);
+    const color=TYPE_COLORS[ts.length % TYPE_COLORS.length];
+    const isIrpf=/irpf/i.test(nm);
+    const ty=makeType(nm,'📄',color, isIrpf?colsIRPF():colsGeneric(), String(new Date().getFullYear()));
+    ts.push(ty);
+    userPrefs['declType_'+tab.id]=ty.id; saveUserPrefs();
+    saveState(); if(userPrefs.activeTabId!==tab.id) switchTab(tab.id); else { renderContent(); renderTabs(); }
+    toast('✓ Tipo “'+nm+'” creado');
+  };
+  window.declRenameType = function(tabId, typeId){
+    const tab=declTab(tabId); if(!tab) return; const ty=types(tab).find(t=>t.id===typeId); if(!ty) return;
+    const name=prompt('Nuevo nombre del tipo:', ty.name); if(name===null) return;
+    if(name.trim()){ ty.name=name.trim(); saveState(); renderContent(); renderTabs(); }
+  };
+  window.declDeleteType = function(tabId, typeId){
+    const tab=declTab(tabId); if(!tab) return; const ts=types(tab); const ty=ts.find(t=>t.id===typeId); if(!ty) return;
+    if(ts.length<=1){ toast('Tiene que quedar al menos un tipo'); return; }
+    if(!confirm('¿Eliminar el tipo “'+ty.name+'” con todos sus años y datos? Lo verá todo el equipo.')) return;
+    tab.types = ts.filter(t=>t.id!==typeId);
+    if(userPrefs['declType_'+tab.id]===typeId){ userPrefs['declType_'+tab.id]=tab.types[0].id; saveUserPrefs(); }
+    saveState(); renderContent(); renderTabs();
   };
 
-  // Filtrado de filas según búsqueda + filtro de estado
-  function visibleRows(folder){
-    let rows = (folder.block.rows||[]).slice();
-    const q = (DECL.search[folder.id]||'').toLowerCase();
-    const f = DECL.filter[folder.id]||'';
-    const estadoCol = (folder.block.cols||[]).find(c => c.ctype==='tag' && /estado/i.test(c.label));
-    if(q) rows = rows.filter(r => (folder.block.cols||[]).some(c => cellText(c,r).toLowerCase().includes(q)));
-    if(f && estadoCol) rows = rows.filter(r => r[estadoCol.key]===f);
+  // ===== Años =====
+  window.declSetYear = function(tabId, typeId, year){
+    userPrefs['declYear_'+tabId+'_'+typeId]=year; saveUserPrefs(); renderContent();
+  };
+  window.declStepYear = function(tabId, typeId, dir){
+    const tab=declTab(tabId); if(!tab) return; const ty=types(tab).find(t=>t.id===typeId); if(!ty) return;
+    const ys=yearsOf(ty); const cur=activeYear(tab,ty); const i=ys.indexOf(cur); const j=i+dir;
+    if(j<0||j>=ys.length){ toast(dir>0?'No hay un año posterior. Usá “+ Año”.':'No hay un año anterior.'); return; }
+    window.declSetYear(tabId, typeId, ys[j]);
+  };
+  window.declAddYear = function(tabId){
+    const tab=declTab(tabId); if(!tab) return; const ty=activeType(tab);
+    const def=String(new Date().getFullYear());
+    const y=prompt('¿Qué año querés agregar a “'+ty.name+'”?', def); if(y===null) return;
+    const yr=String(y).trim(); if(!/^\d{4}$/.test(yr)){ toast('Poné un año de 4 dígitos'); return; }
+    if(!ty.years[yr]) ty.years[yr]={id:_id('dyr'),rows:[]};
+    userPrefs['declYear_'+tab.id+'_'+ty.id]=yr; saveUserPrefs();
+    saveState(); renderContent();
+    toast('📅 Año '+yr+' listo en '+ty.name);
+  };
+
+  // ===== Filtrado =====
+  function fkey(ty,year){ return ty.id+'_'+year; }
+  function visibleRows(ty, year){
+    let rows=(ty.years[year].rows||[]).slice();
+    const k=fkey(ty,year);
+    const q=(DECL.search[k]||'').toLowerCase();
+    const f=DECL.filter[k]||'';
+    const estadoCol=(ty.cols||[]).find(c=>c.ctype==='tag' && /estado/i.test(c.label));
+    if(q) rows=rows.filter(r=>(ty.cols||[]).some(c=>cellText(c,r).toLowerCase().includes(q)));
+    if(f && estadoCol) rows=rows.filter(r=>r[estadoCol.key]===f);
     return rows;
   }
 
-  // ---- Vista TABLA (reusa renderCTableCell del motor existente) ----
-  function declRenderFolder(tab, folder){
-    const view = DECL.view[folder.id] || 'table';
-    if(view==='cards') return declRenderCards(tab, folder);
-    const blk = folder.block;
-    const editing = userPrefs.editMode;
-    const cols = blk.cols||[];
-    const rows = visibleRows(folder);
-    if(!cols.length) return '<div class="decl-empty">Esta carpeta no tiene columnas. Activá “Editar” y agregá una.</div>';
+  // ===== Render principal =====
+  window.renderDeclaraciones = function(tab){
+    _curTabId = tab.id;
+    const ts = types(tab);
+    const ty = activeType(tab);
+    let h = '<div class="decl-wrap">';
+    h += '<div class="decl-head"><div class="decl-title">📋 '+bbEscape(tab.name.replace(/^📋\s*/,''))+'</div>';
+    h += '<span class="decl-hint">Pasá el cursor por “Declaraciones” (arriba) para cambiar de tipo · cada tipo tiene sus años</span></div>';
 
-    let h = '<table class="bb-ctable"><thead><tr>';
-    if(editing) h += '<th style="width:32px;"></th>';
+    if(!ty){ h += '<div class="decl-empty">Todavía no hay tipos de declaración. Creá uno con “+ Tipo”.</div></div>'; return h; }
+
+    const year = activeYear(tab, ty);
+    const ys = yearsOf(ty);
+    const k = fkey(ty, year);
+
+    // Barra de TIPO + selector de AÑO
+    h += '<div class="decl-typebar">';
+    h += '<div class="decl-typecur" onclick="declToggleTypeMenu(event)"><span class="tdot" style="background:'+(ty.color||'#2f6f4f')+'"></span>'+(ty.icon||'📄')+' <b>'+bbEscape(ty.name)+'</b> <span class="caret">▾</span></div>';
+    h += '<div class="decl-typemenu" id="decl-typemenu">'
+       + ts.map(t=>'<div class="decl-typemi'+(t.id===ty.id?' active':'')+'" onclick="declGoType(\''+tab.id+'\',\''+t.id+'\')"><span class="tdot" style="background:'+(t.color||'#2f6f4f')+'"></span>'+(t.icon||'📄')+' '+bbEscape(t.name)+'</div>').join('')
+       + '<div class="decl-typemi add" onclick="declAddType(\''+tab.id+'\')">+ Tipo</div></div>';
+    h += '<span class="decl-sep"></span>';
+    h += '<div class="decl-yearbar">';
+    h += '<button class="decl-ybtn" title="Año anterior" onclick="declStepYear(\''+tab.id+'\',\''+ty.id+'\',-1)">◀</button>';
+    h += '<select class="decl-year-sel" onchange="declSetYear(\''+tab.id+'\',\''+ty.id+'\',this.value)">'
+       + ys.map(y=>'<option value="'+y+'"'+(y===year?' selected':'')+'>'+y+'</option>').join('') + '</select>';
+    h += '<button class="decl-ybtn" title="Año siguiente" onclick="declStepYear(\''+tab.id+'\',\''+ty.id+'\',1)">▶</button>';
+    h += '<button class="decl-ybtn add" title="Agregar un año" onclick="declAddYear(\''+tab.id+'\')">📅 + Año</button>';
+    h += '</div>';
+    h += '<span class="decl-spacer"></span>';
+    h += '<button class="decl-btn carry" title="Copiar clientes a otro año" onclick="declOpenCarry(\''+tab.id+'\')">⤴ Pasar clientes a otro año</button>';
+    h += '</div>';
+
+    // Toolbar
+    const view = DECL.view[k] || 'table';
+    const estadoCol = (ty.cols||[]).find(c=>c.ctype==='tag' && /estado/i.test(c.label));
+    const curSearch = DECL.search[k]||'', curFilter = DECL.filter[k]||'';
+    h += '<div class="decl-toolbar">';
+    h += '<div class="decl-search">🔎<input id="decl-search-input" placeholder="Buscar cliente, nota, etiqueta…" value="'+bbEscape(curSearch)+'" oninput="declOnSearch(\''+tab.id+'\',this.value)"></div>';
+    if(estadoCol){
+      h += '<select class="decl-select" onchange="declSetFilter(\''+tab.id+'\',this.value)"><option value="">Estado: todos</option>'
+        + (estadoCol.options||[]).map(o=>'<option value="'+bbEscape(o)+'"'+(curFilter===o?' selected':'')+'>'+bbEscape(o)+'</option>').join('')+'</select>';
+    }
+    h += '<button class="decl-btn'+(view==='table'?' active':'')+'" onclick="declSetView(\''+tab.id+'\',\'table\')">📊 Tabla</button>';
+    h += '<button class="decl-btn'+(view==='cards'?' active':'')+'" onclick="declSetView(\''+tab.id+'\',\'cards\')">🗂️ Tarjetas</button>';
+    if(estadoCol) h += '<button class="decl-btn" title="Cambiar los colores de los estados" onclick="declOpenColorModal(\''+tab.id+'\',\''+ty.id+'\',\''+estadoCol.key+'\')">🎨 Colores</button>';
+    h += '<button class="decl-btn" onclick="declExportCSV(\''+tab.id+'\')">⬇ Excel/CSV</button>';
+    const editing = userPrefs.editMode;
+    h += '<button class="decl-btn'+(editing?' active':'')+'" title="Agregar o quitar columnas" onclick="toggleEditMode()">⚙ '+(editing?'Listo':'Estructura')+'</button>';
+    h += '</div>';
+
+    h += '<div class="decl-table-host" id="decl-table-host">'+ declRenderTable(tab, ty, year) +'</div>';
+    h += '</div>';
+    return h;
+  };
+
+  function declRenderTable(tab, ty, year){
+    const k=fkey(ty,year);
+    const view=DECL.view[k]||'table';
+    if(view==='cards') return declRenderCards(tab, ty, year);
+    const blkId = ty.years[year].id;
+    const editing = userPrefs.editMode;
+    const cols = ty.cols||[];
+    const rows = visibleRows(ty, year);
+    if(!cols.length) return '<div class="decl-empty">Este tipo no tiene columnas. Activá “⚙ Estructura” y agregá una.</div>';
+
+    let h='<table class="bb-ctable"><thead><tr>';
+    if(editing) h+='<th style="width:32px;"></th>';
     cols.forEach(col=>{
-      const cat = COL_TYPE_CATALOG.find(c=>c.type===col.ctype); const ico = cat?cat.icon:'';
-      h += '<th><span>'+bbEscape(col.label)+' <span class="col-type-badge">'+ico+'</span></span>'
-        + (editing ? '<span class="col-actions">'
-            + '<button title="Editar columna" onclick="editCTableColumn(\''+tab.id+'\',\''+blk.id+'\',\''+col.key+'\')">✎</button>'
-            + '<button title="Eliminar columna" onclick="removeCTableColumn(\''+tab.id+'\',\''+blk.id+'\',\''+col.key+'\')">✕</button>'
-            + '</span>' : '')
+      const cat=(typeof COL_TYPE_CATALOG!=='undefined')?COL_TYPE_CATALOG.find(c=>c.type===col.ctype):null; const ico=cat?cat.icon:'';
+      h+='<th><span>'+bbEscape(col.label)+' <span class="col-type-badge">'+ico+'</span></span>'
+        + (editing?'<span class="col-actions">'
+            + '<button title="Editar columna" onclick="editCTableColumn(\''+tab.id+'\',\''+blkId+'\',\''+col.key+'\')">✎</button>'
+            + '<button title="Eliminar columna" onclick="declRemoveCol(\''+tab.id+'\',\''+col.key+'\')">✕</button></span>':'')
         + '</th>';
     });
-    if(editing) h += '<th class="ctable-add-col" title="Agregar columna" onclick="openColConfig(\''+tab.id+'\',\''+blk.id+'\',null)">+</th>';
-    h += '</tr></thead><tbody>';
+    if(editing) h+='<th class="ctable-add-col" title="Agregar columna" onclick="openColConfig(\''+tab.id+'\',\''+blkId+'\',null)">+</th>';
+    h+='</tr></thead><tbody>';
 
     if(!rows.length){
-      const cs = cols.length + (editing?2:0);
-      h += '<tr><td colspan="'+cs+'" class="decl-empty">'+((DECL.search[folder.id]||DECL.filter[folder.id])?'Sin resultados para el filtro actual.':'Sin filas. Activá “Editar” y usá “+ Cliente”.')+'</td></tr>';
+      const cs=cols.length+(editing?2:0);
+      h+='<tr><td colspan="'+cs+'" class="decl-empty">'+((DECL.search[k]||DECL.filter[k])?'Sin resultados para el filtro actual.':'Sin clientes en '+year+'. Usá “+ Cliente” abajo o “⤴ Pasar clientes a otro año”.')+'</td></tr>';
     } else {
       rows.forEach(row=>{
-        h += '<tr data-row-key="'+row.__key+'">';
-        if(editing) h += '<td><button class="row-remove" title="Eliminar fila" onclick="removeCTableRow(\''+tab.id+'\',\''+blk.id+'\',\''+row.__key+'\')">✕</button></td>';
-        cols.forEach(col=>{ h += '<td>'+declCell(tab, blk, col, row)+'</td>'; });
-        if(editing) h += '<td></td>';
-        h += '</tr>';
+        h+='<tr data-row-key="'+row.__key+'">';
+        if(editing) h+='<td><button class="row-remove" title="Eliminar fila" onclick="declRemoveRow(\''+tab.id+'\',\''+row.__key+'\')">✕</button></td>';
+        cols.forEach(col=>{ h+='<td>'+declCell(blkId, col, row)+'</td>'; });
+        if(editing) h+='<td></td>';
+        h+='</tr>';
       });
     }
-
-    // Pie de totales (suma de columnas dinero/número sobre lo visible)
-    const numCols = cols.filter(c=>c.ctype==='money'||c.ctype==='number');
+    // Totales
+    const numCols=cols.filter(c=>c.ctype==='money'||c.ctype==='number');
     if(numCols.length && rows.length){
-      h += '<tr class="decl-foot">';
-      if(editing) h += '<td></td>';
+      h+='<tr class="decl-foot">'; if(editing) h+='<td></td>';
       cols.forEach((col,i)=>{
-        if(i===0){ h += '<td>Totales · '+rows.length+' fila'+(rows.length!==1?'s':'')+'</td>'; return; }
-        if(col.ctype==='money'||col.ctype==='number'){
-          const sum = rows.reduce((a,r)=> a + (Number(r[col.key])||0), 0);
-          h += '<td>'+(col.ctype==='money'?fmtMoney(sum,col.currency):sum.toLocaleString('es-UY'))+'</td>';
-        } else h += '<td></td>';
+        if(i===0){ h+='<td>Totales · '+rows.length+' cliente'+(rows.length!==1?'s':'')+'</td>'; return; }
+        if(col.ctype==='money'||col.ctype==='number'){ const sum=rows.reduce((a,r)=>a+(Number(r[col.key])||0),0);
+          h+='<td>'+(col.ctype==='money'?fmtMoney(sum,col.currency):sum.toLocaleString('es-UY'))+'</td>'; }
+        else h+='<td></td>';
       });
-      if(editing) h += '<td></td>';
-      h += '</tr>';
+      if(editing) h+='<td></td>'; h+='</tr>';
     }
-    h += '</tbody></table>';
+    h+='</tbody></table>';
+    h+='<div class="bb-ctable-footer" style="margin-top:8px;"><button class="decl-btn" onclick="declAddRow(\''+tab.id+'\')">+ Cliente</button>';
+    if(editing) h+=' <button class="decl-btn" onclick="openColConfig(\''+tab.id+'\',\''+blkId+'\',null)">+ Columna</button>';
+    h+='</div>';
 
-    // "+ Cliente" siempre disponible (agregar fila es carga de datos, no estructura).
-    h += '<div class="bb-ctable-footer" style="margin-top:8px;"><button class="decl-btn" onclick="addCTableRow(\''+tab.id+'\',\''+blk.id+'\')">+ Cliente</button>';
-    if(editing) h += ' <button class="decl-btn" onclick="openColConfig(\''+tab.id+'\',\''+blk.id+'\',null)">+ Columna</button>';
-    h += '</div>';
-
-    // Neto Importe − Timbre (si existen ambas columnas)
-    const impCol = cols.find(c=>/importe/i.test(c.label));
-    const timCol = cols.find(c=>/timbre/i.test(c.label));
-    if(impCol && timCol && rows.length){
-      const imp = rows.reduce((a,r)=>a+(Number(r[impCol.key])||0),0);
-      const tim = rows.reduce((a,r)=>a+(Number(r[timCol.key])||0),0);
-      h += '<div class="decl-neto">Neto ('+bbEscape(impCol.label)+' − '+bbEscape(timCol.label)+'): <b>'+fmtMoney(imp-tim, impCol.currency)+'</b></div>';
+    const impCol=cols.find(c=>/importe/i.test(c.label)), timCol=cols.find(c=>/timbre/i.test(c.label));
+    if(impCol&&timCol&&rows.length){
+      const imp=rows.reduce((a,r)=>a+(Number(r[impCol.key])||0),0), tim=rows.reduce((a,r)=>a+(Number(r[timCol.key])||0),0);
+      h+='<div class="decl-neto">Neto ('+bbEscape(impCol.label)+' − '+bbEscape(timCol.label)+'): <b>'+fmtMoney(imp-tim,impCol.currency)+'</b></div>';
     }
     return h;
   }
 
-  // ---- Vista TARJETAS (solo lectura, para escanear) ----
-  function declRenderCards(tab, folder){
-    const cols = folder.block.cols||[];
-    const rows = visibleRows(folder);
+  function declRenderCards(tab, ty, year){
+    const cols=ty.cols||[]; const rows=visibleRows(ty,year);
     if(!rows.length) return '<div class="decl-empty">Sin resultados.</div>';
-    const titleCol = cols.find(c=>c.ctype==='text') || cols[0];
-    let h = '<div class="decl-cards">';
+    const titleCol=cols.find(c=>c.ctype==='text')||cols[0];
+    let h='<div class="decl-cards">';
     rows.forEach(row=>{
-      h += '<div class="decl-card" style="border-left-color:'+(folder.color||'var(--c-accent)')+'">';
-      h += '<h4>'+bbEscape(cellText(titleCol,row)||'(sin nombre)')+'</h4>';
-      cols.forEach(col=>{
-        if(col===titleCol) return;
-        const txt = cellText(col,row); if(!txt) return;
-        let val = bbEscape(txt);
-        if(col.ctype==='tag'){ const st=tagStyle(col,row[col.key]); const sa = st?(' style="background:'+st.bg+';color:'+st.fg+';border-color:'+st.bd+';"'):''; val = '<span class="decl-chip tagged"'+sa+'>'+val+'</span>'; }
-        if(col.ctype==='checkbox') val = (row[col.key]?'✅':'⬜');
-        h += '<div class="row"><span class="lab">'+bbEscape(col.label)+'</span><span class="val">'+val+'</span></div>';
+      h+='<div class="decl-card" style="border-left-color:'+(ty.color||'var(--c-accent)')+'">';
+      h+='<h4>'+bbEscape(cellText(titleCol,row)||'(sin nombre)')+'</h4>';
+      cols.forEach(col=>{ if(col===titleCol) return; const txt=cellText(col,row); if(!txt) return;
+        let val=bbEscape(txt);
+        if(col.ctype==='tag'){ const st=tagStyle(col,row[col.key]); const sa=st?(' style="background:'+st.bg+';color:'+st.fg+';border-color:'+st.bd+';"'):''; val='<span class="decl-chip tagged"'+sa+'>'+val+'</span>'; }
+        if(col.ctype==='checkbox') val=(row[col.key]?'✅':'⬜');
+        h+='<div class="row"><span class="lab">'+bbEscape(col.label)+'</span><span class="val">'+val+'</span></div>';
       });
-      h += '</div>';
+      h+='</div>';
     });
-    h += '</div>';
-    return h;
+    h+='</div>'; return h;
   }
 
-  // ---- Interacciones de toolbar (sin perder foco del buscador) ----
-  window.declOnSearch = function(tabId, fid, val){
-    DECL.search[fid] = val;
-    const tab = declTab(tabId); if(!tab) return;
-    const folder = declFolders(tab).find(f=>f.id===fid); if(!folder) return;
-    const host = document.getElementById('decl-table-host');
-    if(host) host.innerHTML = declRenderFolder(tab, folder);
+  // ===== Toolbar handlers =====
+  window.declOnSearch = function(tabId, val){
+    const tab=declTab(tabId); if(!tab) return; const ty=activeType(tab); const y=activeYear(tab,ty);
+    DECL.search[fkey(ty,y)]=val;
+    const host=document.getElementById('decl-table-host'); if(host) host.innerHTML=declRenderTable(tab,ty,y);
   };
-  window.declSetView = function(fid, v){ DECL.view[fid]=v; renderContent(); };
-  window.declSetFilter = function(fid, v){ DECL.filter[fid]=v; renderContent(); };
+  window.declSetFilter = function(tabId, val){
+    const tab=declTab(tabId); if(!tab) return; const ty=activeType(tab); const y=activeYear(tab,ty);
+    DECL.filter[fkey(ty,y)]=val; renderContent();
+  };
+  window.declSetView = function(tabId, v){
+    const tab=declTab(tabId); if(!tab) return; const ty=activeType(tab); const y=activeYear(tab,ty);
+    DECL.view[fkey(ty,y)]=v; renderContent();
+  };
+  window.declToggleTypeMenu = function(ev){
+    if(ev) ev.stopPropagation();
+    const m=document.getElementById('decl-typemenu'); if(m) m.classList.toggle('open');
+  };
+  document.addEventListener('click', function(){ const m=document.getElementById('decl-typemenu'); if(m) m.classList.remove('open'); });
 
   window.attachDeclHandlers = function(tab){
-    const i = document.getElementById('decl-search-input');
+    const i=document.getElementById('decl-search-input');
     if(i && i.value){ const v=i.value; i.focus(); try{ i.setSelectionRange(v.length,v.length); }catch(e){} }
   };
 
-  // ---- CRUD de carpetas ----
-  let _folderCtx = null;
-  window.declOpenFolderModal = function(tabId, folderId){
-    const tab = declTab(tabId); if(!tab) return;
-    _folderCtx = { tabId, folderId };
-    const f = folderId ? declFolders(tab).find(x=>x.id===folderId) : null;
-    document.getElementById('decl-folder-title').textContent = f ? 'Editar carpeta' : 'Nueva carpeta';
-    document.getElementById('decl-folder-name').value  = f ? f.name : '';
-    document.getElementById('decl-folder-icon').value  = f ? (f.icon||'📁') : '📁';
-    document.getElementById('decl-folder-color').value = f ? (f.color||'#2f6f4f') : '#2f6f4f';
-    document.getElementById('decl-folder-del').style.display = f ? 'inline-block' : 'none';
-    document.getElementById('decl-folder-modal').classList.add('open');
-    setTimeout(()=>{ const n=document.getElementById('decl-folder-name'); if(n) n.focus(); }, 50);
-  };
-  window.declSaveFolderModal = function(){
-    if(!_folderCtx) return;
-    const tab = declTab(_folderCtx.tabId); if(!tab) return;
-    const name = document.getElementById('decl-folder-name').value.trim();
-    if(!name){ toast('Poné un nombre a la carpeta'); return; }
-    const icon = document.getElementById('decl-folder-icon').value.trim() || '📁';
-    const color= document.getElementById('decl-folder-color').value;
-    const fs = declFolders(tab);
-    if(_folderCtx.folderId){
-      const f = fs.find(x=>x.id===_folderCtx.folderId);
-      if(f){ f.name=name; f.icon=icon; f.color=color; if(f.block) f.block.title=name; }
-    } else {
-      const id = 'fld_'+Date.now();
-      const bid= 'blk_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-      fs.push({ id, name, icon, color, block:{ id:bid, type:'cTable', title:name,
-        cols:[ {key:'c_'+Date.now(), label:'Cliente', ctype:'text'} ], rows:[] } });
-      userPrefs['declFolder_'+tab.id] = id; saveUserPrefs();
-    }
-    saveState();
-    closeModal('decl-folder-modal');
-    renderContent();
-  };
-  window.declDeleteFolder = function(tabId, fid){
-    const tab = declTab(tabId); if(!tab) return;
-    const fs = declFolders(tab);
-    const f = fs.find(x=>x.id===fid); if(!f) return;
-    if(!confirm('¿Eliminar la carpeta “'+f.name+'” y todos sus datos? Esta acción la verán todos los usuarios.')) return;
-    tab.folders = fs.filter(x=>x.id!==fid);
-    if(userPrefs['declFolder_'+tab.id]===fid){ delete userPrefs['declFolder_'+tab.id]; saveUserPrefs(); }
-    saveState(); renderContent();
-  };
-  window.declMoveFolder = function(tabId, fid, dir){
-    const tab = declTab(tabId); if(!tab) return;
-    const fs = declFolders(tab); const i = fs.findIndex(x=>x.id===fid);
-    const j = i+dir; if(i<0||j<0||j>=fs.length) return;
-    const t = fs[i]; fs[i]=fs[j]; fs[j]=t;
-    saveState(); renderContent();
+  // ===== Submenú HOVER en la barra de navegación =====
+  window.declNavSubmenu = function(tabId){
+    const tab=declTab(tabId); if(!tab) return '';
+    const ts=types(tab); const actId=(activeType(tab)||{}).id;
+    let h='<div class="decl-navsub">';
+    ts.forEach(t=>{
+      const tot=Object.keys(t.years||{}).reduce((a,y)=>a+((t.years[y].rows||[]).length),0);
+      h+='<div class="decl-navitem'+(t.id===actId?' active':'')+'" onclick="event.stopPropagation();declGoType(\''+tabId+'\',\''+t.id+'\')">'
+        + '<span class="dot" style="background:'+(t.color||'#2f6f4f')+'"></span><span class="nm">'+(t.icon||'📄')+' '+bbEscape(t.name)+'</span>'
+        + '<span class="cnt">'+tot+'</span>'
+        + '<span class="acts"><button title="Renombrar" onclick="event.stopPropagation();declRenameType(\''+tabId+'\',\''+t.id+'\')">✎</button>'
+        + '<button title="Eliminar tipo" onclick="event.stopPropagation();declDeleteType(\''+tabId+'\',\''+t.id+'\')">🗑</button></span></div>';
+    });
+    h+='<div class="decl-navadd" onclick="event.stopPropagation();declAddType(\''+tabId+'\')">+ Tipo</div>';
+    h+='</div>';
+    return h;
   };
 
-  // ---- Exportar carpeta a CSV (Excel) ----
-  window.declExportCSV = function(tabId, fid){
-    const tab = declTab(tabId); if(!tab) return;
-    const folder = declFolders(tab).find(f=>f.id===fid); if(!folder) return;
-    const cols = folder.block.cols||[];
-    const rows = visibleRows(folder);
-    const esc = s => '"'+String(s==null?'':s).replace(/"/g,'""')+'"';
-    let csv = cols.map(c=>esc(c.label)).join(',')+'\n';
-    rows.forEach(r=>{ csv += cols.map(c=>esc(cellText(c,r).split('  ')[0])).join(',')+'\n'; });
-    const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = (folder.name||'declaracion').replace(/[^\w\-]+/g,'_')+'.csv';
+  // ===== Exportar CSV (año activo) =====
+  window.declExportCSV = function(tabId){
+    const tab=declTab(tabId); if(!tab) return; const ty=activeType(tab); const y=activeYear(tab,ty);
+    const cols=ty.cols||[]; const rows=visibleRows(ty,y);
+    const esc=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+    let csv=cols.map(c=>esc(c.label)).join(',')+'\n';
+    rows.forEach(r=>{ csv+=cols.map(c=>esc(cellText(c,r))).join(',')+'\n'; });
+    const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download=(ty.name+'_'+y).replace(/[^\w\-]+/g,'_')+'.csv';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     if(typeof toast==='function') toast('⬇ CSV exportado');
   };
 
-  // ---- Inyectar modal de carpeta una sola vez ----
-  function injectFolderModal(){
-    if(document.getElementById('decl-folder-modal')) return;
-    const wrap = document.createElement('div');
-    wrap.id = 'decl-folder-modal';
-    wrap.className = 'modal-overlay';
-    wrap.innerHTML =
-      '<div class="modal" style="width:380px;max-width:92vw;position:relative;">'
-      + '<button class="modal-close" onclick="closeModal(\'decl-folder-modal\')">×</button>'
-      + '<h3 id="decl-folder-title">Nueva carpeta</h3>'
-      + '<div class="modal-sub">Las carpetas separan tipos de declaración (IVA, IRAE, Cierres…). Se comparten con todo el equipo.</div>'
-      + '<div class="decl-mfield"><label>Nombre</label><input type="text" id="decl-folder-name" placeholder="IVA, IRAE, Cierres…"></div>'
-      + '<div class="decl-mfield" style="display:flex;gap:12px;">'
-      +   '<div style="flex:1;"><label>Ícono (emoji)</label><input type="text" id="decl-folder-icon" maxlength="3" value="📁"></div>'
-      +   '<div><label>Color</label><input type="color" id="decl-folder-color" value="#2f6f4f" style="width:52px;height:40px;border:1px solid var(--c-border,#dcdfe4);border-radius:9px;background:none;cursor:pointer;"></div>'
-      + '</div>'
-      + '<div style="display:flex;gap:8px;margin-top:18px;align-items:center;">'
-      +   '<button class="decl-btn" id="decl-folder-del" style="display:none;color:var(--c-red,#c0392b);" onclick="declDeleteFromModal()">🗑 Eliminar</button>'
-      +   '<span style="flex:1;"></span>'
-      +   '<button class="decl-btn" onclick="closeModal(\'decl-folder-modal\')">Cancelar</button>'
-      +   '<button class="decl-btn primary" onclick="declSaveFolderModal()">Guardar</button>'
-      + '</div>'
-      + '</div>';
-    document.body.appendChild(wrap);
-  }
-  window.declDeleteFromModal = function(){
-    if(!_folderCtx || !_folderCtx.folderId) return;
-    const ctx = _folderCtx;
-    closeModal('decl-folder-modal');
-    declDeleteFolder(ctx.tabId, ctx.folderId);
+  // ===== Editor de colores de estado =====
+  let _colorCtx=null;
+  window.declOpenColorModal = function(tabId, typeId, colKey){
+    const tab=declTab(tabId); if(!tab) return; const ty=types(tab).find(t=>t.id===typeId); if(!ty) return;
+    const col=(ty.cols||[]).find(c=>c.key===colKey); if(!col) return;
+    _colorCtx={tabId, typeId, colKey};
+    const body=document.getElementById('decl-color-body');
+    body.innerHTML=(col.options||[]).map((o,i)=>{ const st=tagStyle(col,o);
+      return '<div class="dcc-row"><input type="color" id="dcc-'+i+'" value="'+_toHex(st.bg)+'">'
+        + '<span class="dcc-prev" id="dccp-'+i+'" style="background:'+st.bg+';color:'+st.fg+';">'+bbEscape(o)+'</span></div>'; }).join('');
+    (col.options||[]).forEach((o,i)=>{ const inp=document.getElementById('dcc-'+i);
+      inp.addEventListener('input',function(){ const p=document.getElementById('dccp-'+i); p.style.background=inp.value; p.style.color=window.declFgFor(inp.value); }); });
+    document.getElementById('decl-color-modal').classList.add('open');
   };
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ injectFolderModal(); injectColorModal(); });
-  else { injectFolderModal(); injectColorModal(); }
+  window.declSaveColors = function(){
+    if(!_colorCtx) return; const tab=declTab(_colorCtx.tabId); if(!tab) return;
+    const ty=types(tab).find(t=>t.id===_colorCtx.typeId); if(!ty) return;
+    const col=(ty.cols||[]).find(c=>c.key===_colorCtx.colKey); if(!col) return;
+    col.tagColors=col.tagColors||{};
+    (col.options||[]).forEach((o,i)=>{ const inp=document.getElementById('dcc-'+i); if(inp) col.tagColors[o]=inp.value; });
+    saveState(); closeModal('decl-color-modal'); renderContent();
+    if(typeof toast==='function') toast('🎨 Colores guardados');
+  };
+  function _toHex(c){ if(!c) return '#cccccc'; if(c[0]==='#'&&c.length===7) return c;
+    const m=c.match(/(\d+)/g); if(m&&m.length>=3) return '#'+m.slice(0,3).map(x=>('0'+parseInt(x).toString(16)).slice(-2)).join(''); return '#cccccc'; }
+
+  // ===== Traspaso de clientes a otro año (selección de clientes + columnas) =====
+  let _carryCtx=null;
+  window.declOpenCarry = function(tabId){
+    const tab=declTab(tabId); if(!tab) return; const ty=activeType(tab); const y=activeYear(tab,ty);
+    const rows=(ty.years[y].rows||[]); if(!rows.length){ toast('No hay clientes en '+y+' para pasar'); return; }
+    _carryCtx={tabId, typeId:ty.id, fromYear:y};
+    const idCol=(ty.cols||[]).find(c=>c.ctype==='text')||ty.cols[0];
+    document.getElementById('decl-carry-sub').textContent='Tipo “'+ty.name+'” · desde el año '+y;
+    document.getElementById('decl-carry-dest').value=String(parseInt(y)+1);
+    // Clientes
+    document.getElementById('decl-carry-clients').innerHTML = rows.map((r,i)=>{
+      const nm=bbEscape(cellText(idCol,r)||'(sin nombre)');
+      return '<label class="dca-row"><input type="checkbox" class="dca-cli" data-key="'+r.__key+'" checked> '+nm+'</label>';
+    }).join('');
+    // Columnas (la identidad va fija)
+    document.getElementById('decl-carry-cols').innerHTML = (ty.cols||[]).map(c=>{
+      const isId=c.key===idCol.key;
+      const pre=isId || /medio|ejecutor/i.test(c.label);
+      return '<label class="dca-row"><input type="checkbox" class="dca-col" data-key="'+c.key+'" '+(pre?'checked':'')+(isId?' disabled':'')+'> '+bbEscape(c.label)+(isId?' <span class="dca-fix">(siempre)</span>':'')+'</label>';
+    }).join('');
+    document.getElementById('decl-carry-modal').classList.add('open');
+  };
+  window.declCarryAll = function(on){ document.querySelectorAll('#decl-carry-clients .dca-cli').forEach(c=>{ c.checked=on; }); };
+  window.declDoCarry = function(){
+    if(!_carryCtx) return; const tab=declTab(_carryCtx.tabId); if(!tab) return;
+    const ty=types(tab).find(t=>t.id===_carryCtx.typeId); if(!ty) return;
+    const fromY=_carryCtx.fromYear;
+    const destY=String(document.getElementById('decl-carry-dest').value).trim();
+    if(!/^\d{4}$/.test(destY)){ toast('Poné un año destino válido'); return; }
+    const idCol=(ty.cols||[]).find(c=>c.ctype==='text')||ty.cols[0];
+    const cliKeys=[...document.querySelectorAll('#decl-carry-clients .dca-cli:checked')].map(c=>c.dataset.key);
+    let colKeys=[...document.querySelectorAll('#decl-carry-cols .dca-col:checked')].map(c=>c.dataset.key);
+    if(!colKeys.includes(idCol.key)) colKeys.unshift(idCol.key);
+    if(!cliKeys.length){ toast('Elegí al menos un cliente'); return; }
+    if(!ty.years[destY]) ty.years[destY]={id:_id('dyr'),rows:[]};
+    const dest=ty.years[destY];
+    const existing=new Set((dest.rows||[]).map(r=>String(r[idCol.key]||'').trim().toLowerCase()).filter(Boolean));
+    const src=(ty.years[fromY].rows||[]);
+    let added=0, skipped=0;
+    cliKeys.forEach(key=>{
+      const r=src.find(x=>x.__key===key); if(!r) return;
+      const nm=String(r[idCol.key]||'').trim().toLowerCase();
+      if(nm && existing.has(nm)){ skipped++; return; }
+      const nr={__key:_rk()}; colKeys.forEach(ck=>{ if(r[ck]!==undefined) nr[ck]=r[ck]; });
+      dest.rows.push(nr); if(nm) existing.add(nm); added++;
+    });
+    userPrefs['declYear_'+tab.id+'_'+ty.id]=destY; saveUserPrefs();
+    saveState(); closeModal('decl-carry-modal'); renderContent();
+    toast('⤴ '+added+' cliente'+(added!==1?'s':'')+' pasado'+(added!==1?'s':'')+' a '+destY+(skipped?' · '+skipped+' ya existían':''));
+  };
+
+  // ===== Modales (se inyectan una vez) =====
+  function injectModals(){
+    if(!document.getElementById('decl-color-modal')){
+      const w=document.createElement('div'); w.id='decl-color-modal'; w.className='modal-overlay';
+      w.innerHTML='<div class="modal" style="width:340px;max-width:92vw;position:relative;">'
+        +'<button class="modal-close" onclick="closeModal(\'decl-color-modal\')">×</button>'
+        +'<h3>🎨 Colores de estado</h3>'
+        +'<div class="modal-sub">Asigná un color a cada estado. Se aplica en la tabla y en las tarjetas, para todo el equipo.</div>'
+        +'<div id="decl-color-body" style="margin:8px 0 4px;"></div>'
+        +'<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;"><button class="decl-btn" onclick="closeModal(\'decl-color-modal\')">Cancelar</button><button class="decl-btn primary" onclick="declSaveColors()">Guardar</button></div></div>';
+      document.body.appendChild(w);
+    }
+    if(!document.getElementById('decl-carry-modal')){
+      const w=document.createElement('div'); w.id='decl-carry-modal'; w.className='modal-overlay';
+      w.innerHTML='<div class="modal" style="width:560px;max-width:94vw;position:relative;">'
+        +'<button class="modal-close" onclick="closeModal(\'decl-carry-modal\')">×</button>'
+        +'<h3>⤴ Pasar clientes a otro año</h3>'
+        +'<div class="modal-sub" id="decl-carry-sub"></div>'
+        +'<div class="dca-dest"><label>Año destino</label> <input type="number" id="decl-carry-dest" class="dca-destinp"></div>'
+        +'<div class="dca-cols2">'
+        +  '<div class="dca-box"><div class="dca-h">Clientes a pasar <button class="dca-mini" onclick="declCarryAll(true)">Todos</button><button class="dca-mini" onclick="declCarryAll(false)">Ninguno</button></div><div id="decl-carry-clients" class="dca-list"></div></div>'
+        +  '<div class="dca-box"><div class="dca-h">Datos a copiar</div><div id="decl-carry-cols" class="dca-list"></div></div>'
+        +'</div>'
+        +'<div class="modal-sub" style="margin-top:6px;">Lo que no marques arranca en blanco en el año destino. Los clientes que ya existan en ese año no se duplican.</div>'
+        +'<div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;"><button class="decl-btn" onclick="closeModal(\'decl-carry-modal\')">Cancelar</button><button class="decl-btn primary" onclick="declDoCarry()">Pasar clientes</button></div></div>';
+      document.body.appendChild(w);
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', injectModals);
+  else injectModals();
 })();
 </script>
 <!-- =================== FIN SECCIÓN DECLARACIONES =================== -->
