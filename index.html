@@ -2165,6 +2165,10 @@ body.edit-mode .col-type-toggle { display: inline; }
       <span class="presence-avatar" style="background:#2e7d52;color:#fff;">L</span>
       <span class="presence-dot" title="En línea"></span>
       <span class="presence-name">Lorena</span>
+    </span><span class="presence-user" title="Wendy (en línea)">
+      <span class="presence-avatar" style="background:#2980b9;color:#fff;">W</span>
+      <span class="presence-dot" title="En línea"></span>
+      <span class="presence-name">Wendy</span>
     </span></div>
         <button class="panel-collapse" onclick="togglePanelZone('presence')" title="Colapsar">⊟</button>
       </div><div class="header-panel header-panel-audit collapsed" data-panel="audit" draggable="true">
@@ -2172,7 +2176,7 @@ body.edit-mode .col-type-toggle { display: inline; }
       <button class="panel-btn" onclick="openAuditLogView()" title="Audit log: ver historial de cambios">🕒</button>
     </div><div class="header-panel header-panel-notifications collapsed" data-panel="notifications" draggable="true">
       <span class="panel-handle">⠿</span>
-      <button class="panel-btn" onclick="toggleNotifPanel()" title="Notificaciones">🔔<span id="notif-unread-badge" class="chat-unread-badge" style="display:none;">0</span></button>
+      <button class="panel-btn" onclick="toggleNotifPanel()" title="Notificaciones">🔔<span id="notif-unread-badge" class="chat-unread-badge" style="display: inline-flex;">1</span></button>
     </div><div class="header-panel header-panel-chat collapsed" data-panel="chat" draggable="true">
       <span class="panel-handle">⠿</span>
       <button class="panel-btn" onclick="toggleChatPanel()" title="Chat interno">💬<span id="chat-unread-badge" class="chat-unread-badge" style="display: none;">20</span></button>
@@ -2216,189 +2220,45 @@ body.edit-mode .col-type-toggle { display: inline; }
 
 <div class="edit-banner">MODO EDICIÓN ACTIVO · Clic en títulos para editarlos · ✕ para eliminar · + para agregar</div>
 
-<div class="nav-tabs" id="nav-tabs"><div class="nav-tab" data-tab-id="dashboard" data-tab-idx="0" onclick="switchTab('dashboard')"><span>Dashboard</span></div><div class="nav-tab active" data-tab-id="mydash" data-tab-idx="1" onclick="switchTab('mydash')" ondblclick="renameTab(event,'mydash')" title="Doble clic para renombrar"><span>📌Personal</span></div><div class="nav-tab" data-tab-id="empresas" data-tab-idx="2" onclick="switchTab('empresas')" ondblclick="renameTab(event,'empresas')" title="Doble clic para renombrar"><span>🏢Empresas</span><span class="tab-x" onclick="event.stopPropagation();removeTab('empresas')">✕</span></div><div class="nav-tab" data-tab-id="sprof" data-tab-idx="3" onclick="switchTab('sprof')" ondblclick="renameTab(event,'sprof')" title="Doble clic para renombrar"><span>📋Sv.Profesionales</span><span class="tab-x" onclick="event.stopPropagation();removeTab('sprof')">✕</span></div><div class="nav-tab" data-tab-id="sueldos" data-tab-idx="4" onclick="switchTab('sueldos')" ondblclick="renameTab(event,'sueldos')" title="Doble clic para renombrar"><span>💼Sueldos</span></div><div class="nav-tab" data-tab-id="tab_1779884915309" data-tab-idx="5" onclick="switchTab('tab_1779884915309')" ondblclick="renameTab(event,'tab_1779884915309')" title="Doble clic para renombrar"><span>📊EJ Económicos</span><span class="tab-x" onclick="event.stopPropagation();removeTab('tab_1779884915309')">✕</span></div><div class="nav-tab" data-tab-id="clientes" data-tab-idx="6" onclick="switchTab('clientes')" ondblclick="renameTab(event,'clientes')" title="Doble clic para renombrar"><span>👥 Info. Clientes</span></div><div class="nav-tab" data-tab-id="calendario" data-tab-idx="7" onclick="switchTab('calendario')" ondblclick="renameTab(event,'calendario')" title="Doble clic para renombrar"><span>📅CALENDARIO</span></div><div class="nav-tab" data-tab-id="settings" data-tab-idx="8" onclick="switchTab('settings')"><span>Configuración</span></div><span class="nav-tab-add" onclick="openAddTab()">+ Nueva pestaña</span></div>
+<div class="nav-tabs" id="nav-tabs"><div class="nav-tab" data-tab-id="dashboard" data-tab-idx="0" onclick="switchTab('dashboard')"><span>Dashboard</span></div><div class="nav-tab" data-tab-id="mydash" data-tab-idx="1" onclick="switchTab('mydash')" ondblclick="renameTab(event,'mydash')" title="Doble clic para renombrar"><span>📌Personal</span></div><div class="nav-tab" data-tab-id="empresas" data-tab-idx="2" onclick="switchTab('empresas')" ondblclick="renameTab(event,'empresas')" title="Doble clic para renombrar"><span>🏢Empresas</span><span class="tab-x" onclick="event.stopPropagation();removeTab('empresas')">✕</span></div><div class="nav-tab" data-tab-id="sprof" data-tab-idx="3" onclick="switchTab('sprof')" ondblclick="renameTab(event,'sprof')" title="Doble clic para renombrar"><span>📋Sv.Profesionales</span><span class="tab-x" onclick="event.stopPropagation();removeTab('sprof')">✕</span></div><div class="nav-tab" data-tab-id="sueldos" data-tab-idx="4" onclick="switchTab('sueldos')" ondblclick="renameTab(event,'sueldos')" title="Doble clic para renombrar"><span>💼Sueldos</span></div><div class="nav-tab" data-tab-id="tab_1779884915309" data-tab-idx="5" onclick="switchTab('tab_1779884915309')" ondblclick="renameTab(event,'tab_1779884915309')" title="Doble clic para renombrar"><span>📊EJ Económicos</span><span class="tab-x" onclick="event.stopPropagation();removeTab('tab_1779884915309')">✕</span></div><div class="nav-tab" data-tab-id="clientes" data-tab-idx="6" onclick="switchTab('clientes')" ondblclick="renameTab(event,'clientes')" title="Doble clic para renombrar"><span>👥 Info. Clientes</span></div><div class="nav-tab" data-tab-id="declaraciones" data-tab-idx="7" onclick="switchTab('declaraciones')" ondblclick="renameTab(event,'declaraciones')" title="Doble clic para renombrar"><span>📋 Declaraciones</span><span class="tab-x" onclick="event.stopPropagation();removeTab('declaraciones')">✕</span></div><div class="nav-tab" data-tab-id="calendario" data-tab-idx="8" onclick="switchTab('calendario')" ondblclick="renameTab(event,'calendario')" title="Doble clic para renombrar"><span>📅CALENDARIO</span></div><div class="nav-tab active" data-tab-id="settings" data-tab-idx="9" onclick="switchTab('settings')"><span>Configuración</span></div><span class="nav-tab-add" onclick="openAddTab()">+ Nueva pestaña</span></div>
 
 <div id="presence-warning" class="presence-warning" style="display:none;"></div>
 
 <div class="main-content" id="main-content">
     <div class="section-header">
-      <div>
-        <div class="section-title">📌 Mi Dashboard <span style="font-size:14px;color:var(--c-text-muted);font-weight:400;text-transform:none;letter-spacing:normal;">— Daniela</span></div>
-        <div style="font-size:12px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px;">Tu espacio personal · solo vos lo ves</div>
+      <div class="section-title">Configuración</div>
+    </div>
+    <div class="settings-grid"><div class="settings-card"><h4>🏢Empresas</h4><ul class="entity-list"><li><span>El Rastro<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',0)">✕</button></li><li><span>Javier Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',1)">✕</button></li><li><span>Freddy Pereira<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',2)">✕</button></li><li><span>FILJO SRL<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',3)">✕</button></li><li><span>Lucas Vandes - VANDFOR<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',4)">✕</button></li><li><span>Residencial Buenos Tiempos<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',5)">✕</button></li><li><span>Residencial Galauru SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',6)">✕</button></li><li><span>Claudio Vandes<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',7)">✕</button></li><li><span>Drones del Pampa SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',8)">✕</button></li><li><span>Gualberto Seguí<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',9)">✕</button></li><li><span>Richard Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',10)">✕</button></li><li><span>Fabio de la Rosa<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',11)">✕</button></li><li><span>Nahier Hernandez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',12)">✕</button></li><li><span>Mónica Perez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',13)">✕</button></li><li><span>Cesar do Canto<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',14)">✕</button></li><li><span>Andres Pereira<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">BP DGI -IVA min</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',15)">✕</button></li></ul><div class="add-entity-form"><input type="text" id="quick-add-empresas" placeholder="Nuevo nombre..."><input type="text" id="quick-tag-empresas" placeholder="Etiqueta" style="max-width:90px;"><button class="btn btn-gold btn-sm" onclick="quickAddRow('empresas')">+</button></div></div><div class="settings-card"><h4>📋Sv.Profesionales</h4><ul class="entity-list"><li><span>Soledad Martinez</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',0)">✕</button></li><li><span>Daiana Machado</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',1)">✕</button></li><li><span>Miguel Yavarone</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',2)">✕</button></li><li><span>Alejandro (Chiche)</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',3)">✕</button></li><li><span>Alexandra Duarte</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',4)">✕</button></li><li><span>Sebastian Bordenave</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',5)">✕</button></li><li><span>Sergio Ayala</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',6)">✕</button></li><li><span>Luis Alfredo Rondeau</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',7)">✕</button></li><li><span>Marcelo Roman</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',8)">✕</button></li><li><span>Maria Victoria Cordero</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',9)">✕</button></li><li><span>Florencia de Leon</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',10)">✕</button></li><li><span>Rosangela Meneses</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',11)">✕</button></li><li><span>Wendy Machado</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',12)">✕</button></li><li><span>Fernando Corbo</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',13)">✕</button></li></ul><div class="add-entity-form"><input type="text" id="quick-add-sprof" placeholder="Nuevo nombre..."><button class="btn btn-gold btn-sm" onclick="quickAddRow('sprof')">+</button></div></div><div class="settings-card"><h4>Año fiscal</h4>
+      <div class="form-group" style="margin-top:8px;">
+        <label>Año mostrado en la cabecera</label>
+        <input type="text" value="2026" onchange="state.branding.year=this.value;saveState();applyBranding();renderContent();">
       </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-outline btn-sm" onclick="openMyDashSettings()" title="Configurar secciones">⚙ Secciones</button>
+      <p style="font-size:12px;color:var(--c-text-muted);">Tip: cuando cambies de año, exportá los datos primero como backup desde "Personalizar".</p>
+    </div><div class="settings-card"><h4>Apariencia</h4>
+      <p style="font-size:13px;color:var(--c-text-muted);margin-bottom:14px;">Cambiá logo, colores, fuentes, nombre del estudio y exportá/importá datos.</p>
+      <button class="btn btn-gold" onclick="openCustomize()">⚙ Abrir personalización</button>
+    </div><div class="settings-card"><h4>📅 Sincronización con Google Calendar</h4>
+      <p style="font-size:13px;color:var(--c-text-muted);margin-bottom:14px;">
+        Los eventos que crees en tu Google Calendar aparecerán automáticamente acá.
+        Pegá la <strong>URL secreta en formato iCal</strong> de tu calendario.
+      </p>
+      <div class="form-group">
+        <label>URL iCal de Google Calendar</label>
+        <input type="text" id="gcal-ical-url" value="https://calendar.google.com/calendar/ical/wmachadocontable%40gmail.com/private-39accac0e5df8ae5dad95f20426ba4cc/basic.ics" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics">
       </div>
-    </div>
-    <div style="font-size:11px;color:var(--c-text-muted);margin-bottom:10px;padding:6px 10px;background:var(--c-bg-alt);border-radius:3px;display:inline-block;">
-      💡 Arrastrá las secciones desde el ícono <strong>⋮⋮</strong> para reordenarlas a tu gusto
-    </div>
-  <div class="mydash-section" data-section="stickyNotes" draggable="true" ondragstart="onMyDashSectionDragStart(event,'stickyNotes')" ondragover="onMyDashSectionDragOver(event,'stickyNotes')" ondragleave="onMyDashSectionDragLeave(event,'stickyNotes')" ondrop="onMyDashSectionDrop(event,'stickyNotes')" ondragend="onMyDashSectionDragEnd(event)">
-      <div class="mydash-section-head">
-        <span class="mydash-section-title"><span class="mydash-section-drag" title="Arrastrá para reordenar">⋮⋮</span>📝 Notas adhesivas</span>
+      <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" id="gcal-auto" checked="" style="width:auto;">
+        <label for="gcal-auto" style="margin:0;cursor:pointer;">Sincronizar automáticamente cada 15 minutos</label>
       </div>
-      <div class="stickies-toolbar"><div class="stickies-search">
-        <input type="text" id="stickies-search-input" placeholder="🔍 Buscar en mis notas..." value="" oninput="onStickiesSearch(this.value)">
-        
-      </div><div class="sticky-groups-bar">
-        <button class="sticky-group-chip active" onclick="filterStickiesByGroup('')">Todos</button>
-        <button class="sticky-group-chip" style="border-left:3px solid #7fb685;" onclick="filterStickiesByGroup('sg_1780077322994_z7i')">DOSEFOR</button><button class="sticky-group-chip" style="border-left:3px solid #e8a87c;" onclick="filterStickiesByGroup('sg_1780505170936_g8c')">Personal</button><button class="sticky-group-chip" style="border-left:3px solid #85bdbf;" onclick="filterStickiesByGroup('sg_1782146641754_mho')">CCE</button>
-        <button class="sticky-group-add" onclick="openStickyGroupModal()" title="Crear grupo">+ Grupo</button>
-      </div><button class="btn btn-outline btn-sm" onclick="openStickyFeaturesModal()" title="Activar/desactivar funciones de las notas" style="margin-left:auto;font-size:11px;">⚙ Opciones</button><button class="btn btn-gold btn-sm" onclick="addMyDashStickyNote()">+ Nota</button></div>
-      <div class="mydash-stickies" id="mydash-stickies" ondragover="onStickyContainerDragOver(event)">
-        <div class="sticky-note sticky-size-m" style="background:#e1bee7;" data-id="sn_1782330774812_45i" draggable="true" ondragstart="onStickyDragStart(event,'sn_1782330774812_45i')" ondragover="onStickyDragOver(event,'sn_1782330774812_45i')" ondragleave="onStickyDragLeave(event)" ondrop="onStickyDrop(event,'sn_1782330774812_45i')" ondragend="onStickyDragEnd(event)">
-    <div class="sticky-toolbar" onmousedown="event.preventDefault();">
-      <button onclick="stickyFmt('sn_1782330774812_45i','bold',false)" title="Negrita (Ctrl+B)"><b>B</b></button>
-      <button onclick="stickyFmt('sn_1782330774812_45i','italic',false)" title="Cursiva (Ctrl+I)"><i>I</i></button>
-      <button onclick="stickyFmt('sn_1782330774812_45i','underline',false)" title="Subrayado (Ctrl+U)"><u>U</u></button>
-      <span class="sticky-toolbar-sep"></span>
-      <button onclick="stickyTitle('sn_1782330774812_45i',false)" title="Título / Encabezado" style="font-weight:700;font-size:13px;">T</button>
-      <button onclick="stickyFmt('sn_1782330774812_45i','insertUnorderedList',false)" title="Lista con viñetas">•</button>
-      <button onclick="stickyFmt('sn_1782330774812_45i','insertOrderedList',false)" title="Lista numerada">1.</button>
-      <button onclick="stickyToggleCheckbox('sn_1782330774812_45i',false)" title="Lista con casillas (☐ tachable)">☐</button>
-      <span class="sticky-toolbar-sep"></span>
-      <button onclick="stickyFmt('sn_1782330774812_45i','removeFormat',false)" title="Quitar formato" style="font-size:10px;">⌫T</button>
-    </div>
-    <div class="sticky-content" contenteditable="true" oninput="updateStickyNote('sn_1782330774812_45i', this.innerHTML)" onkeydown="stickyKeyHandler(event, 'sn_1782330774812_45i')" onclick="onStickyClick(event,'sn_1782330774812_45i',false)" data-placeholder="Escribí tu nota...">Cargas CFE de Gualberto del 01-05 al 31-05</div>
-    
-    <div class="sticky-actions">
-      <button class="sticky-color" onclick="cycleStickyColor('sn_1782330774812_45i',false)" title="Cambiar color">🎨</button><button class="sticky-share-btn" onclick="openStickyShareModal('sn_1782330774812_45i')" title="Compartir con compañera">👥</button><button class="sticky-group-btn" onclick="openStickyGroupAssign('sn_1782330774812_45i')" title="Mover a grupo">📁</button><button class="sticky-del" onclick="removeStickyNote('sn_1782330774812_45i',false)" title="Eliminar">×</button>
-    </div>
-  </div><div class="sticky-note sticky-size-m" style="background:#bbdefb;" data-id="sn_1782146660012_ep7" draggable="true" ondragstart="onStickyDragStart(event,'sn_1782146660012_ep7')" ondragover="onStickyDragOver(event,'sn_1782146660012_ep7')" ondragleave="onStickyDragLeave(event)" ondrop="onStickyDrop(event,'sn_1782146660012_ep7')" ondragend="onStickyDragEnd(event)">
-    <div class="sticky-toolbar" onmousedown="event.preventDefault();">
-      <button onclick="stickyFmt('sn_1782146660012_ep7','bold',false)" title="Negrita (Ctrl+B)"><b>B</b></button>
-      <button onclick="stickyFmt('sn_1782146660012_ep7','italic',false)" title="Cursiva (Ctrl+I)"><i>I</i></button>
-      <button onclick="stickyFmt('sn_1782146660012_ep7','underline',false)" title="Subrayado (Ctrl+U)"><u>U</u></button>
-      <span class="sticky-toolbar-sep"></span>
-      <button onclick="stickyTitle('sn_1782146660012_ep7',false)" title="Título / Encabezado" style="font-weight:700;font-size:13px;">T</button>
-      <button onclick="stickyFmt('sn_1782146660012_ep7','insertUnorderedList',false)" title="Lista con viñetas">•</button>
-      <button onclick="stickyFmt('sn_1782146660012_ep7','insertOrderedList',false)" title="Lista numerada">1.</button>
-      <button onclick="stickyToggleCheckbox('sn_1782146660012_ep7',false)" title="Lista con casillas (☐ tachable)">☐</button>
-      <span class="sticky-toolbar-sep"></span>
-      <button onclick="stickyFmt('sn_1782146660012_ep7','removeFormat',false)" title="Quitar formato" style="font-size:10px;">⌫T</button>
-    </div>
-    <div class="sticky-content" contenteditable="true" oninput="updateStickyNote('sn_1782146660012_ep7', this.innerHTML)" onkeydown="stickyKeyHandler(event, 'sn_1782146660012_ep7')" onclick="onStickyClick(event,'sn_1782146660012_ep7',false)" data-placeholder="Escribí tu nota..."><b>JAVIER MACHADO</b><div>ERROR:&nbsp;<b style="font-size: small; color: rgb(34, 34, 34); font-family: Arial, Helvetica, sans-serif; text-align: -webkit-center; background-color: rgb(255, 255, 255);"><span class="m_-1792987590360382387msgerror" style="font-size: 9pt; font-family: Arial, &quot;sans-serif&quot;; color: rgb(159, 0, 0); border: 1pt rgb(0, 0, 0); padding: 0cm;">&nbsp;Las retenciones de IRAE declaradas en F1050 y/o F2178 del ejercicio superan las informadas por los responsables</span></b></div></div>
-    
-    <div class="sticky-actions">
-      <button class="sticky-color" onclick="cycleStickyColor('sn_1782146660012_ep7',false)" title="Cambiar color">🎨</button><button class="sticky-share-btn" onclick="openStickyShareModal('sn_1782146660012_ep7')" title="Compartir con compañera">👥</button><button class="sticky-group-btn" onclick="openStickyGroupAssign('sn_1782146660012_ep7')" title="Mover a grupo">📁</button><button class="sticky-del" onclick="removeStickyNote('sn_1782146660012_ep7',false)" title="Eliminar">×</button>
-    </div>
-  </div><div class="sticky-note sticky-size-m" style="background:#f8bbd0;" data-id="sn_1782147514793_x3t" draggable="true" ondragstart="onStickyDragStart(event,'sn_1782147514793_x3t')" ondragover="onStickyDragOver(event,'sn_1782147514793_x3t')" ondragleave="onStickyDragLeave(event)" ondrop="onStickyDrop(event,'sn_1782147514793_x3t')" ondragend="onStickyDragEnd(event)">
-    <div class="sticky-toolbar" onmousedown="event.preventDefault();">
-      <button onclick="stickyFmt('sn_1782147514793_x3t','bold',false)" title="Negrita (Ctrl+B)"><b>B</b></button>
-      <button onclick="stickyFmt('sn_1782147514793_x3t','italic',false)" title="Cursiva (Ctrl+I)"><i>I</i></button>
-      <button onclick="stickyFmt('sn_1782147514793_x3t','underline',false)" title="Subrayado (Ctrl+U)"><u>U</u></button>
-      <span class="sticky-toolbar-sep"></span>
-      <button onclick="stickyTitle('sn_1782147514793_x3t',false)" title="Título / Encabezado" style="font-weight:700;font-size:13px;">T</button>
-      <button onclick="stickyFmt('sn_1782147514793_x3t','insertUnorderedList',false)" title="Lista con viñetas">•</button>
-      <button onclick="stickyFmt('sn_1782147514793_x3t','insertOrderedList',false)" title="Lista numerada">1.</button>
-      <button onclick="stickyToggleCheckbox('sn_1782147514793_x3t',false)" title="Lista con casillas (☐ tachable)">☐</button>
-      <span class="sticky-toolbar-sep"></span>
-      <button onclick="stickyFmt('sn_1782147514793_x3t','removeFormat',false)" title="Quitar formato" style="font-size:10px;">⌫T</button>
-    </div>
-    <div class="sticky-content" contenteditable="true" oninput="updateStickyNote('sn_1782147514793_x3t', this.innerHTML)" onkeydown="stickyKeyHandler(event, 'sn_1782147514793_x3t')" onclick="onStickyClick(event,'sn_1782147514793_x3t',false)" data-placeholder="Escribí tu nota..."><b>FABIO DA ROSA:</b><div>CCE Disponible</div></div>
-    
-    <div class="sticky-actions">
-      <button class="sticky-color" onclick="cycleStickyColor('sn_1782147514793_x3t',false)" title="Cambiar color">🎨</button><button class="sticky-share-btn" onclick="openStickyShareModal('sn_1782147514793_x3t')" title="Compartir con compañera">👥</button><button class="sticky-group-btn" onclick="openStickyGroupAssign('sn_1782147514793_x3t')" title="Mover a grupo">📁</button><button class="sticky-del" onclick="removeStickyNote('sn_1782147514793_x3t',false)" title="Eliminar">×</button>
-    </div>
-  </div><div class="sticky-note sticky-size-m" style="background:#c5f5d4;" data-id="sn_1780058582055_z6d" draggable="true" ondragstart="onStickyDragStart(event,'sn_1780058582055_z6d')" ondragover="onStickyDragOver(event,'sn_1780058582055_z6d')" ondragleave="onStickyDragLeave(event)" ondrop="onStickyDrop(event,'sn_1780058582055_z6d')" ondragend="onStickyDragEnd(event)">
-    <div class="sticky-toolbar" onmousedown="event.preventDefault();">
-      <button onclick="stickyFmt('sn_1780058582055_z6d','bold',false)" title="Negrita (Ctrl+B)"><b>B</b></button>
-      <button onclick="stickyFmt('sn_1780058582055_z6d','italic',false)" title="Cursiva (Ctrl+I)"><i>I</i></button>
-      <button onclick="stickyFmt('sn_1780058582055_z6d','underline',false)" title="Subrayado (Ctrl+U)"><u>U</u></button>
-      <span class="sticky-toolbar-sep"></span>
-      <button onclick="stickyTitle('sn_1780058582055_z6d',false)" title="Título / Encabezado" style="font-weight:700;font-size:13px;">T</button>
-      <button onclick="stickyFmt('sn_1780058582055_z6d','insertUnorderedList',false)" title="Lista con viñetas">•</button>
-      <button onclick="stickyFmt('sn_1780058582055_z6d','insertOrderedList',false)" title="Lista numerada">1.</button>
-      <button onclick="stickyToggleCheckbox('sn_1780058582055_z6d',false)" title="Lista con casillas (☐ tachable)">☐</button>
-      <span class="sticky-toolbar-sep"></span>
-      <button onclick="stickyFmt('sn_1780058582055_z6d','removeFormat',false)" title="Quitar formato" style="font-size:10px;">⌫T</button>
-    </div>
-    <div class="sticky-content" contenteditable="true" oninput="updateStickyNote('sn_1780058582055_z6d', this.innerHTML)" onkeydown="stickyKeyHandler(event, 'sn_1780058582055_z6d')" onclick="onStickyClick(event,'sn_1780058582055_z6d',false)" data-placeholder="Escribí tu nota...">PCONTROL DE FALTAS:<br>- Por estudio: 05/05 - 12/05<br>-  licencia: 28/05<br></div>
-    <div class="sticky-footer"><span class="sticky-meta-chip" style="border-left:3px solid #e8a87c;">Personal</span></div>
-    <div class="sticky-actions">
-      <button class="sticky-color" onclick="cycleStickyColor('sn_1780058582055_z6d',false)" title="Cambiar color">🎨</button><button class="sticky-share-btn" onclick="openStickyShareModal('sn_1780058582055_z6d')" title="Compartir con compañera">👥</button><button class="sticky-group-btn" onclick="openStickyGroupAssign('sn_1780058582055_z6d')" title="Mover a grupo">📁</button><button class="sticky-del" onclick="removeStickyNote('sn_1780058582055_z6d',false)" title="Eliminar">×</button>
-    </div>
-  </div><div class="sticky-note sticky-size-m sticky-readonly" style="background:#c5f5d4;" data-id="sn_1780077372569_6i5">
-    
-    <div class="sticky-content" onclick="onStickyClick(event,'sn_1780077372569_6i5',false)" data-placeholder="Escribí tu nota..."><div><b>Notas compartidas</b></div><div>asi se ven</div></div>
-    <div class="sticky-footer"><span class="sticky-meta-chip" style="background:#f0e6ff;color:#5b3b9e;">👤 Wendy</span></div>
-    <div class="sticky-actions">
-      <span class="sticky-readonly-badge" title="Compartida por Wendy">🔒</span>
-    </div>
-  </div>
-        
-      </div><div class="studio-stickies-wrap">
-      <div class="studio-stickies-head" onclick="toggleStudioStickies()">
-        <span class="studio-toggle-arrow">▶</span>
-        <strong>📋 Notas del estudio</strong>
-        <span class="studio-stickies-count">0</span>
-        <span style="margin-left:auto;font-size:11px;color:var(--c-text-muted);">Clic para ver</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <button class="btn btn-gold btn-sm" onclick="saveGCalSettings()">💾 Guardar</button>
+        <button class="btn btn-outline btn-sm" onclick="syncFromGoogleCalendar(true)">🔄 Sincronizar ahora</button>
+        <button class="btn btn-outline btn-sm" onclick="showGCalHelp()">❓ Cómo obtener la URL</button>
       </div>
-      
-    </div></div><div class="mydash-section" data-section="tasks" draggable="true" ondragstart="onMyDashSectionDragStart(event,'tasks')" ondragover="onMyDashSectionDragOver(event,'tasks')" ondragleave="onMyDashSectionDragLeave(event,'tasks')" ondrop="onMyDashSectionDrop(event,'tasks')" ondragend="onMyDashSectionDragEnd(event)">
-      <div class="mydash-section-head">
-        <span class="mydash-section-title"><span class="mydash-section-drag" title="Arrastrá para reordenar">⋮⋮</span>✅ Mis tareas</span>
-        <div style="display:flex;gap:6px;">
-          <input type="text" id="mydash-task-input" placeholder="Nueva tarea..." onkeydown="if(event.key==='Enter')addMyDashTask()" style="padding:5px 8px;border:1px solid var(--c-border);border-radius:3px;font-family:inherit;font-size:12px;width:240px;">
-          <button class="btn btn-gold btn-sm" onclick="addMyDashTask()">Agregar</button>
-        </div>
-      </div>
-      <div class="mydash-tasks">
-        <div class="mydash-task done">
-          <input type="checkbox" checked="" onchange="toggleMyDashTask('t_1782149572975_frc4')">
-          <span class="mydash-task-text">✅ Solicitar CCE para Veterinaria El Rastro (2025) · DJ 2178: $ 20.048</span>
-          <button class="mydash-task-del" onclick="removeMyDashTask('t_1782149572975_frc4')" title="Eliminar">×</button>
-        </div><div class="mydash-task done">
-          <input type="checkbox" checked="" onchange="toggleMyDashTask('t_1780581420657_e15')">
-          <span class="mydash-task-text">hacer conciliación bancaria Drones SAS</span>
-          <button class="mydash-task-del" onclick="removeMyDashTask('t_1780581420657_e15')" title="Eliminar">×</button>
-        </div><div class="mydash-task ">
-          <input type="checkbox" onchange="toggleMyDashTask('t_1780405510949_1voa')">
-          <span class="mydash-task-text">✅ Solicitar CCE para Gualberto Segui (2025) · Solicitud de credito automatico: $ 215.885
-</span>
-          <button class="mydash-task-del" onclick="removeMyDashTask('t_1780405510949_1voa')" title="Eliminar">×</button>
-        </div><div class="mydash-task done">
-          <input type="checkbox" checked="" onchange="toggleMyDashTask('t_1780405426518_886z')">
-          <span class="mydash-task-text">✅ Solicitar CCE para Fabio da Rosa (2025) · Solicitar credito. Hacer DJ 2181 por las compras d…</span>
-          <button class="mydash-task-del" onclick="removeMyDashTask('t_1780405426518_886z')" title="Eliminar">×</button>
-        </div><div class="mydash-task done">
-          <input type="checkbox" checked="" onchange="toggleMyDashTask('t_1780405399892_cawb')">
-          <span class="mydash-task-text">✅ Solicitar CCE para Drones del Pampa SAS (2025) · Saldo 2178 credito $ 23.264, Sdo a pagar IRAE e IP…</span>
-          <button class="mydash-task-del" onclick="removeMyDashTask('t_1780405399892_cawb')" title="Eliminar">×</button>
-        </div><div class="mydash-task ">
-          <input type="checkbox" onchange="toggleMyDashTask('t_1780404601233_0947')">
-          <span class="mydash-task-text">✅ Solicitar CCE para Javier Machado (2025) · Solicitar credito DJ 1050 $ 26.986</span>
-          <button class="mydash-task-del" onclick="removeMyDashTask('t_1780404601233_0947')" title="Eliminar">×</button>
-        </div><div class="mydash-task ">
-          <input type="checkbox" onchange="toggleMyDashTask('t_1780404426171_a4e3')">
-          <span class="mydash-task-text">✅ Solicitar CCE para Metalurgica Freddy Pereira (2025) · de la 2178 quedo un saldo a pagar de $ 49.079, lue…</span>
-          <button class="mydash-task-del" onclick="removeMyDashTask('t_1780404426171_a4e3')" title="Eliminar">×</button>
-        </div>
-        
-      </div>
-    </div><div class="mydash-section" data-section="agenda" draggable="true" ondragstart="onMyDashSectionDragStart(event,'agenda')" ondragover="onMyDashSectionDragOver(event,'agenda')" ondragleave="onMyDashSectionDragLeave(event,'agenda')" ondrop="onMyDashSectionDrop(event,'agenda')" ondragend="onMyDashSectionDragEnd(event)">
-      <div class="mydash-section-head">
-        <span class="mydash-section-title"><span class="mydash-section-drag" title="Arrastrá para reordenar">⋮⋮</span>📅 Agenda de hoy</span>
-        <button class="btn btn-outline btn-sm" onclick="switchTab('calendario')">Ver calendario</button>
-      </div>
-      <div class="agenda-mode-toggle" style="display:inline-flex;gap:0;margin-bottom:10px;border:1px solid var(--c-border);border-radius:3px;overflow:hidden;font-size:11px;">
-    <button class="agenda-mode-btn active" onclick="setAgendaMode('mine')" title="Solo eventos donde estás asignada">👤 Mis asignados</button>
-    <button class="agenda-mode-btn" onclick="setAgendaMode('all')" title="Todos los eventos del estudio para hoy">🌐 Todo el estudio</button>
-  </div><div class="mydash-empty">No tenés eventos asignados a vos para hoy 🎉<br><span style="font-size:11px;opacity:.7;">Tip: revisá "Todo el estudio" para ver eventos generales</span></div>
-    </div><div class="mydash-section" data-section="shortcuts" draggable="true" ondragstart="onMyDashSectionDragStart(event,'shortcuts')" ondragover="onMyDashSectionDragOver(event,'shortcuts')" ondragleave="onMyDashSectionDragLeave(event,'shortcuts')" ondrop="onMyDashSectionDrop(event,'shortcuts')" ondragend="onMyDashSectionDragEnd(event)">
-      <div class="mydash-section-head">
-        <span class="mydash-section-title"><span class="mydash-section-drag" title="Arrastrá para reordenar">⋮⋮</span>🔗 Atajos rápidos</span>
-        <button class="btn btn-gold btn-sm" onclick="addMyDashShortcut()">+ Atajo</button>
-      </div>
-      <div class="mydash-shortcuts">
-        <div class="mydash-shortcut" style="border-left:3px solid #b8c1cc;" onclick="openShortcut('sc_1779908530083_z3g')">
-    <span class="mydash-shortcut-icon" style="color:#b8c1cc;">🔗</span>
-    <span class="mydash-shortcut-label">DGI</span>
-    <button class="mydash-shortcut-del" onclick="event.stopPropagation();removeMyDashShortcut('sc_1779908530083_z3g')" title="Eliminar">×</button>
-  </div>
-        
-      </div>
-    </div></div>
+      <p style="font-size:11px;color:var(--c-text-muted);margin-top:10px;">
+        Última sincronización: <strong>30/6/2026, 9:44:41 a. m.</strong>
+      </p>
+    </div></div></div>
 
 <!-- CELL EDIT MODAL -->
 <div class="modal-overlay" id="modal-cell">
@@ -14415,6 +14275,38 @@ body.edit-mode .hon-edit-name { display:inline; }
   #decl-folder-modal input[type=text] { width:100%; padding:9px 11px; border:1px solid var(--c-border,#dcdfe4);
     border-radius:9px; font-size:14px; box-sizing:border-box; }
   @media (max-width:560px){ .decl-folder .fcount{ display:none; } }
+
+  /* ===== Edición directa (inline) en la tabla de declaraciones ===== */
+  /* Inputs que se ven como texto hasta que los tocás: editar sin ir al lápiz */
+  .decl-inp{ width:100%; box-sizing:border-box; border:1px solid transparent; background:transparent;
+    font:inherit; color:var(--c-text); padding:5px 7px; border-radius:7px; transition:border-color .12s, background .12s; }
+  .decl-inp:hover{ border-color:var(--c-border,#dcdfe4); background:#fff; }
+  .decl-inp:focus{ outline:none; border-color:var(--c-accent,#b8c1cc); background:#fff;
+    box-shadow:0 0 0 3px rgba(184,193,204,.25); }
+  .decl-inp::placeholder{ color:#b6bcc4; }
+  .decl-num{ text-align:right; }
+  .decl-date{ max-width:150px; color:var(--c-text); }
+  .decl-money{ display:flex; align-items:center; gap:3px; }
+  .decl-money .decl-cur{ font-size:11px; color:var(--c-text-muted,#8a93a0); flex:0 0 auto; }
+  .decl-chk{ width:18px; height:18px; cursor:pointer; accent-color:#1f7a4d; }
+  /* Chip de estado coloreado, que también es desplegable */
+  .decl-state{ font:inherit; font-weight:700; font-size:12px; border:1px solid #dfe3e8; border-radius:20px;
+    padding:4px 24px 4px 12px; cursor:pointer; background:#eef0f3; color:#3a414b;
+    -webkit-appearance:none; appearance:none; transition:filter .12s;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' fill='none' stroke='%23555' stroke-width='1.4'/></svg>");
+    background-repeat:no-repeat; background-position:right 9px center; }
+  .decl-state:hover{ filter:brightness(.96); }
+  .decl-state:focus{ outline:none; box-shadow:0 0 0 3px rgba(184,193,204,.30); }
+  /* Chip de estado coloreado en vista TARJETAS */
+  .decl-chip.tagged{ font-weight:700; border:1px solid transparent; }
+  /* Botón "+ Año" en la barra de carpetas */
+  .decl-addyear{ border:1px dashed var(--c-accent,#b8c1cc); background:transparent; color:var(--c-accent-dark,#8a95a3);
+    border-radius:20px; padding:5px 13px; font-size:12.5px; font-weight:700; cursor:pointer; margin-left:6px; }
+  .decl-addyear:hover{ background:rgba(184,193,204,.15); }
+  /* Modal de colores de estado */
+  #decl-color-modal .dcc-row{ display:flex; align-items:center; gap:12px; margin-bottom:9px; }
+  #decl-color-modal .dcc-row .dcc-prev{ flex:1; font-weight:700; font-size:12px; border-radius:20px; padding:5px 12px; text-align:center; }
+  #decl-color-modal input[type=color]{ width:46px; height:34px; border:1px solid var(--c-border,#dcdfe4); border-radius:8px; background:none; cursor:pointer; padding:0; }
 </style>
 <script>
 (function(){
@@ -14449,6 +14341,174 @@ body.edit-mode .hon-edit-name { display:inline; }
   }
   function rowMatchesUnused(){ return true; }
 
+  // ===== Colores de estado y edición directa de celdas =====
+  // Paleta por defecto (se puede sobrescribir por columna en col.tagColors).
+  const STATE_PALETTE = {
+    'pendiente':  {bg:'#fdecc8', fg:'#8a5a00', bd:'#f0cf86'},
+    'en curso':   {bg:'#dbe8fb', fg:'#1e4e84', bd:'#a9c6ef'},
+    'en proceso': {bg:'#dbe8fb', fg:'#1e4e84', bd:'#a9c6ef'},
+    'presentada': {bg:'#d6f0df', fg:'#1d7a48', bd:'#9ad6b2'},
+    'presentado': {bg:'#d6f0df', fg:'#1d7a48', bd:'#9ad6b2'},
+    'cobrada':    {bg:'#d4eef1', fg:'#10707c', bd:'#9fd6dd'},
+    'cobrado':    {bg:'#d4eef1', fg:'#10707c', bd:'#9fd6dd'},
+    'si':         {bg:'#d6f0df', fg:'#1d7a48', bd:'#9ad6b2'},
+    'no':         {bg:'#fbe0df', fg:'#a13530', bd:'#f0b3b0'},
+    'n/a':        {bg:'#eceef1', fg:'#6b7280', bd:'#d8dce2'}
+  };
+  // Color de texto legible según el fondo elegido.
+  window.declFgFor = function(bg){
+    try{ const c=bg.replace('#',''); const r=parseInt(c.substr(0,2),16), g=parseInt(c.substr(2,2),16), b=parseInt(c.substr(4,2),16);
+      return ((0.299*r+0.587*g+0.114*b)/255) > 0.62 ? '#1b1f24' : '#ffffff'; }catch(e){ return '#1b1f24'; }
+  };
+  function tagStyle(col, val){
+    if(val==null || val==='') return null;
+    const custom = col && col.tagColors && col.tagColors[val];
+    if(custom) return { bg:custom, fg:window.declFgFor(custom), bd:custom };
+    const p = STATE_PALETTE[String(val).toLowerCase()];
+    if(p) return p;
+    return { bg:'#eef0f3', fg:'#3a414b', bd:'#dfe3e8' };
+  }
+
+  // Renderizador de celda con EDICIÓN DIRECTA (no necesita el modo estructura).
+  function declCell(tab, blk, col, row){
+    const v = row[col.key]; const k = col.key;
+    const ref = "'"+tab.id+"','"+blk.id+"','"+row.__key+"','"+k+"'";
+    switch(col.ctype){
+      case 'text':
+        return '<input class="decl-inp" type="text" value="'+bbEscape(v||'')+'" placeholder="—" onchange="setCTableCell('+ref+',this.value)">';
+      case 'number':
+        return '<input class="decl-inp decl-num" type="number" step="any" placeholder="—" value="'+(v!=null?v:'')+'" onchange="setCTableCell('+ref+',this.value===\'\'?null:parseFloat(this.value))">';
+      case 'money': {
+        const curr = col.currency || '$U';
+        return '<span class="decl-money"><span class="decl-cur">'+bbEscape(curr)+'</span><input class="decl-inp decl-num" type="number" step="any" placeholder="0" value="'+(v!=null?v:'')+'" onchange="setCTableCell('+ref+',this.value===\'\'?null:parseFloat(this.value))"></span>';
+      }
+      case 'date':
+        return '<input class="decl-inp decl-date" type="date" value="'+(v||'')+'" onchange="setCTableCell('+ref+',this.value)">';
+      case 'checkbox':
+        return '<input type="checkbox" class="decl-chk" '+(v?'checked':'')+' onchange="setCTableCell('+ref+',this.checked)">';
+      case 'tag': {
+        const opts = col.options || []; const st = tagStyle(col, v);
+        const sa = st ? ' style="background:'+st.bg+';color:'+st.fg+';border-color:'+st.bd+';"' : '';
+        return '<select class="decl-state"'+sa+' onchange="declOnTag(this,'+ref+')"><option value="">—</option>'
+          + opts.map(o=>'<option value="'+bbEscape(o)+'"'+(v===o?' selected':'')+'>'+bbEscape(o)+'</option>').join('')
+          + '</select>';
+      }
+      case 'person': {
+        const opts = (typeof getValidUsers==='function') ? getValidUsers() : [];
+        return '<select class="decl-inp" onchange="setCTableCell('+ref+',this.value)"><option value="">—</option>'
+          + opts.map(u=>'<option value="'+bbEscape(u.name)+'"'+(v===u.name?' selected':'')+'>'+bbEscape(u.displayName||u.name)+'</option>').join('')
+          + '</select>';
+      }
+      default:
+        // Tipos especiales (fórmula, archivo, rating, etc.): usamos el motor general.
+        return renderCTableCell(tab, blk, col, row);
+    }
+  }
+
+  // Al elegir un estado: guarda y recolorea el chip al instante (sin recargar la tabla).
+  window.declOnTag = function(sel, tabId, blkId, rowKey, colKey){
+    setCTableCell(tabId, blkId, rowKey, colKey, sel.value);
+    const tab = declTab(tabId);
+    const folder = tab && declFolders(tab).find(f=>f.block && f.block.id===blkId);
+    const col = folder && (folder.block.cols||[]).find(c=>c.key===colKey);
+    const st = col ? tagStyle(col, sel.value) : null;
+    if(st){ sel.style.background=st.bg; sel.style.color=st.fg; sel.style.borderColor=st.bd; }
+    else { sel.style.background=''; sel.style.color=''; sel.style.borderColor=''; }
+  };
+
+  // ---- Editor de colores de estado ----
+  let _colorCtx = null;
+  window.declOpenColorModal = function(tabId, blkId, colKey){
+    const tab = declTab(tabId); if(!tab) return;
+    const folder = declFolders(tab).find(f=>f.block && f.block.id===blkId); if(!folder) return;
+    const col = (folder.block.cols||[]).find(c=>c.key===colKey); if(!col) return;
+    _colorCtx = { tabId, blkId, colKey };
+    const body = document.getElementById('decl-color-body');
+    body.innerHTML = (col.options||[]).map((o,i)=>{
+      const st = tagStyle(col, o);
+      return '<div class="dcc-row">'
+        + '<input type="color" id="dcc-'+i+'" value="'+_toHex(st.bg)+'">'
+        + '<span class="dcc-prev" id="dccp-'+i+'" style="background:'+st.bg+';color:'+st.fg+';">'+bbEscape(o)+'</span>'
+        + '</div>';
+    }).join('');
+    // Vista previa en vivo
+    (col.options||[]).forEach((o,i)=>{
+      const inp = document.getElementById('dcc-'+i);
+      inp.addEventListener('input', function(){
+        const prev = document.getElementById('dccp-'+i);
+        prev.style.background = inp.value; prev.style.color = window.declFgFor(inp.value);
+      });
+    });
+    document.getElementById('decl-color-modal').classList.add('open');
+  };
+  window.declSaveColors = function(){
+    if(!_colorCtx) return;
+    const tab = declTab(_colorCtx.tabId); if(!tab) return;
+    const folder = declFolders(tab).find(f=>f.block && f.block.id===_colorCtx.blkId); if(!folder) return;
+    const col = (folder.block.cols||[]).find(c=>c.key===_colorCtx.colKey); if(!col) return;
+    col.tagColors = col.tagColors || {};
+    (col.options||[]).forEach((o,i)=>{ const inp=document.getElementById('dcc-'+i); if(inp) col.tagColors[o]=inp.value; });
+    saveState(); closeModal('decl-color-modal'); renderContent();
+    if(typeof toast==='function') toast('🎨 Colores guardados');
+  };
+  function _toHex(c){ // normaliza a #rrggbb para el input color
+    if(!c) return '#cccccc';
+    if(c[0]==='#' && c.length===7) return c;
+    const m = c.match(/(\d+)/g); if(m && m.length>=3){ return '#'+m.slice(0,3).map(x=>('0'+parseInt(x).toString(16)).slice(-2)).join(''); }
+    return '#cccccc';
+  }
+  function injectColorModal(){
+    if(document.getElementById('decl-color-modal')) return;
+    const w = document.createElement('div');
+    w.id='decl-color-modal'; w.className='modal-overlay';
+    w.innerHTML = '<div class="modal" style="width:340px;max-width:92vw;position:relative;">'
+      + '<button class="modal-close" onclick="closeModal(\'decl-color-modal\')">×</button>'
+      + '<h3>🎨 Colores de estado</h3>'
+      + '<div class="modal-sub">Asigná un color a cada estado. Se aplica en la tabla y en las tarjetas, para todo el equipo.</div>'
+      + '<div id="decl-color-body" style="margin:8px 0 4px;"></div>'
+      + '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">'
+      +   '<button class="decl-btn" onclick="closeModal(\'decl-color-modal\')">Cancelar</button>'
+      +   '<button class="decl-btn primary" onclick="declSaveColors()">Guardar</button>'
+      + '</div></div>';
+    document.body.appendChild(w);
+  }
+
+  // ---- Crear carpeta por AÑO con las columnas de declaraciones ya armadas ----
+  window.declAddYear = function(tabId){
+    const tab = declTab(tabId); if(!tab) return;
+    const def = new Date().getFullYear();
+    const y = prompt('¿De qué año es la carpeta?', String(def));
+    if(y===null) return;
+    const yr = String(y).trim(); if(!yr){ toast('Poné un año'); return; }
+    const fs = declFolders(tab);
+    if(fs.some(f=>String(f.year)===yr || f.name===('IRPF '+yr))){
+      if(!confirm('Ya existe una carpeta para '+yr+'. ¿Crear otra igual?')) return;
+    }
+    const now = Date.now();
+    const ck = (s)=> 'c_'+now+'_'+s;
+    const folder = {
+      id:'fld_'+now, name:'IRPF '+yr, icon:'📄', color:'#2f6f4f', year:yr,
+      block:{ id:'blk_'+now, type:'cTable', title:'IRPF '+yr, cols:[
+        {key:ck('cli'),   label:'Cliente',        ctype:'text'},
+        {key:ck('hirpf'), label:'Hecho IRPF',     ctype:'checkbox'},
+        {key:ck('hiva'),  label:'Hecho IVA',      ctype:'tag', options:['SI','No','N/A']},
+        {key:ck('pres'),  label:'Presentado',     ctype:'date'},
+        {key:ck('imp'),   label:'Importe',        ctype:'money', currency:'$U'},
+        {key:ck('medio'), label:'Medio de pago',  ctype:'tag', options:['Scotia','BBVA','Itaú','Santander','BROU','Efectivo','Transferencia']},
+        {key:ck('pago'),  label:'Fecha de pago',  ctype:'date'},
+        {key:ck('ejec'),  label:'Ejecutor',       ctype:'person'},
+        {key:ck('timb'),  label:'Timbre',         ctype:'money', currency:'$U'},
+        {key:ck('saldo'), label:'Saldo / Notas',  ctype:'text'},
+        {key:ck('est'),   label:'Estado',         ctype:'tag', options:['Pendiente','En curso','Presentada','Cobrada'],
+          tagColors:{ 'Pendiente':'#fdecc8','En curso':'#dbe8fb','Presentada':'#d6f0df','Cobrada':'#d4eef1' } }
+      ], rows:[] }
+    };
+    fs.push(folder);
+    userPrefs['declFolder_'+tab.id] = folder.id; saveUserPrefs();
+    saveState(); renderContent();
+    if(typeof toast==='function') toast('📅 Carpeta '+yr+' creada');
+  };
+
   // ---- Render principal ----
   window.renderDeclaraciones = function(tab){
     const fs = declFolders(tab);
@@ -14473,6 +14533,7 @@ body.edit-mode .hon-edit-name { display:inline; }
         + '</span></div>';
     });
     h += '<button class="decl-addfolder" onclick="declOpenFolderModal(\''+tab.id+'\',null)">+ Carpeta</button>';
+    h += '<button class="decl-addyear" title="Crear una carpeta por año con las columnas de declaraciones ya armadas" onclick="declAddYear(\''+tab.id+'\')">📅 + Año</button>';
     h += '</div>';
 
     const folder = declActiveFolder(tab);
@@ -14495,9 +14556,12 @@ body.edit-mode .hon-edit-name { display:inline; }
     }
     h += '<button class="decl-btn'+(view==='table'?' active':'')+'" onclick="declSetView(\''+folder.id+'\',\'table\')">📊 Tabla</button>';
     h += '<button class="decl-btn'+(view==='cards'?' active':'')+'" onclick="declSetView(\''+folder.id+'\',\'cards\')">🗂️ Tarjetas</button>';
+    if(estadoCol){
+      h += '<button class="decl-btn" title="Cambiar los colores de los estados" onclick="declOpenColorModal(\''+tab.id+'\',\''+folder.block.id+'\',\''+estadoCol.key+'\')">🎨 Colores</button>';
+    }
     h += '<button class="decl-btn" onclick="declExportCSV(\''+tab.id+'\',\''+folder.id+'\')">⬇ Excel/CSV</button>';
     const editing = userPrefs.editMode;
-    h += '<button class="decl-btn'+(editing?' active':'')+'" onclick="toggleEditMode()">✏ '+(editing?'Listo':'Editar')+'</button>';
+    h += '<button class="decl-btn'+(editing?' active':'')+'" title="Agregar o quitar columnas/filas" onclick="toggleEditMode()">⚙ '+(editing?'Listo':'Estructura')+'</button>';
     h += '</div>';
 
     h += '<div class="decl-table-host" id="decl-table-host">'+ declRenderFolder(tab, folder) +'</div>';
@@ -14547,7 +14611,7 @@ body.edit-mode .hon-edit-name { display:inline; }
       rows.forEach(row=>{
         h += '<tr data-row-key="'+row.__key+'">';
         if(editing) h += '<td><button class="row-remove" title="Eliminar fila" onclick="removeCTableRow(\''+tab.id+'\',\''+blk.id+'\',\''+row.__key+'\')">✕</button></td>';
-        cols.forEach(col=>{ h += '<td>'+renderCTableCell(tab, blk, col, row)+'</td>'; });
+        cols.forEach(col=>{ h += '<td>'+declCell(tab, blk, col, row)+'</td>'; });
         if(editing) h += '<td></td>';
         h += '</tr>';
       });
@@ -14570,7 +14634,10 @@ body.edit-mode .hon-edit-name { display:inline; }
     }
     h += '</tbody></table>';
 
-    if(editing) h += '<div class="bb-ctable-footer" style="margin-top:8px;"><button class="decl-btn" onclick="addCTableRow(\''+tab.id+'\',\''+blk.id+'\')">+ Cliente</button> <button class="decl-btn" onclick="openColConfig(\''+tab.id+'\',\''+blk.id+'\',null)">+ Columna</button></div>';
+    // "+ Cliente" siempre disponible (agregar fila es carga de datos, no estructura).
+    h += '<div class="bb-ctable-footer" style="margin-top:8px;"><button class="decl-btn" onclick="addCTableRow(\''+tab.id+'\',\''+blk.id+'\')">+ Cliente</button>';
+    if(editing) h += ' <button class="decl-btn" onclick="openColConfig(\''+tab.id+'\',\''+blk.id+'\',null)">+ Columna</button>';
+    h += '</div>';
 
     // Neto Importe − Timbre (si existen ambas columnas)
     const impCol = cols.find(c=>/importe/i.test(c.label));
@@ -14597,7 +14664,7 @@ body.edit-mode .hon-edit-name { display:inline; }
         if(col===titleCol) return;
         const txt = cellText(col,row); if(!txt) return;
         let val = bbEscape(txt);
-        if(col.ctype==='tag') val = '<span class="decl-chip">'+val+'</span>';
+        if(col.ctype==='tag'){ const st=tagStyle(col,row[col.key]); const sa = st?(' style="background:'+st.bg+';color:'+st.fg+';border-color:'+st.bd+';"'):''; val = '<span class="decl-chip tagged"'+sa+'>'+val+'</span>'; }
         if(col.ctype==='checkbox') val = (row[col.key]?'✅':'⬜');
         h += '<div class="row"><span class="lab">'+bbEscape(col.label)+'</span><span class="val">'+val+'</span></div>';
       });
@@ -14724,10 +14791,10 @@ body.edit-mode .hon-edit-name { display:inline; }
     closeModal('decl-folder-modal');
     declDeleteFolder(ctx.tabId, ctx.folderId);
   };
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', injectFolderModal);
-  else injectFolderModal();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ injectFolderModal(); injectColorModal(); });
+  else { injectFolderModal(); injectColorModal(); }
 })();
 </script>
 <!-- =================== FIN SECCIÓN DECLARACIONES =================== -->
 
-</body></html>
+<div id="decl-folder-modal" class="modal-overlay"><div class="modal" style="width:380px;max-width:92vw;position:relative;"><button class="modal-close" onclick="closeModal('decl-folder-modal')">×</button><h3 id="decl-folder-title">Nueva carpeta</h3><div class="modal-sub">Las carpetas separan tipos de declaración (IVA, IRAE, Cierres…). Se comparten con todo el equipo.</div><div class="decl-mfield"><label>Nombre</label><input type="text" id="decl-folder-name" placeholder="IVA, IRAE, Cierres…"></div><div class="decl-mfield" style="display:flex;gap:12px;"><div style="flex:1;"><label>Ícono (emoji)</label><input type="text" id="decl-folder-icon" maxlength="3" value="📁"></div><div><label>Color</label><input type="color" id="decl-folder-color" value="#2f6f4f" style="width:52px;height:40px;border:1px solid var(--c-border,#dcdfe4);border-radius:9px;background:none;cursor:pointer;"></div></div><div style="display:flex;gap:8px;margin-top:18px;align-items:center;"><button class="decl-btn" id="decl-folder-del" style="display:none;color:var(--c-red,#c0392b);" onclick="declDeleteFromModal()">🗑 Eliminar</button><span style="flex:1;"></span><button class="decl-btn" onclick="closeModal('decl-folder-modal')">Cancelar</button><button class="decl-btn primary" onclick="declSaveFolderModal()">Guardar</button></div></div></div></body></html>
