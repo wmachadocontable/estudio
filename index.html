@@ -5275,7 +5275,7 @@ function buildSueldosDashboardDescriptor() {
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">`;
     [...groups.enviado, ...groups.finalizado].forEach(it => {
       const stinfo = getSueldoStateInfo(it.status||'enviado');
-      body += `<span class="tag-pill" style="background:${stinfo.bg};color:${stinfo.color};font-size:11px;padding:4px 10px;">${stinfo.icon} ${it.name}</span>`;
+      body += `<span class="tag-pill" style="background:${stinfo.bg};color:${stinfo.color};font-size:11px;padding:4px 10px;">${stinfo.icon} ${it.name}${sueldoSentChip(it)}</span>`;
     });
     body += `</div></div>`;
   }
@@ -5535,7 +5535,7 @@ function renderSueldosDashboardSection() {
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">`;
     [...groups.enviado, ...groups.finalizado].forEach(it => {
       const stinfo = getSueldoStateInfo(it.status||'enviado');
-      html += `<span class="tag-pill" style="background:${stinfo.bg};color:${stinfo.color};font-size:11px;padding:4px 10px;">${stinfo.icon} ${it.name}</span>`;
+      html += `<span class="tag-pill" style="background:${stinfo.bg};color:${stinfo.color};font-size:11px;padding:4px 10px;">${stinfo.icon} ${it.name}${sueldoSentChip(it)}</span>`;
     });
     html += `</div></div>`;
   }
@@ -12703,9 +12703,17 @@ function changeSueldoStatus(subtab, rowIdx, newStatus) {
   row.status = newStatus;
   // Auto-set flags based on transitions (optional convenience)
   if (newStatus === 'pronto' && !row.prontos) row.prontos = true;
-  if (newStatus === 'enviado') { row.prontos = true; row.avisadoEnviado = true; }
+  if (newStatus === 'enviado') { row.prontos = true; row.avisadoEnviado = true; autoSetSueldoSentDate(row); }
   saveState();
   renderContent();
+}
+
+// Si se marca como enviado y no hay etiqueta/fecha cargada, registrar la fecha de hoy automáticamente
+function autoSetSueldoSentDate(row) {
+  if (!row.flagLabels) row.flagLabels = {};
+  if (!row.flagLabels.avisadoEnviado) {
+    row.flagLabels.avisadoEnviado = { d: new Date().toISOString().slice(0,10), auto: true };
+  }
 }
 
 function toggleSueldoFlag(subtab, rowIdx, flagKey, checked) {
@@ -12717,6 +12725,13 @@ function toggleSueldoFlag(subtab, rowIdx, flagKey, checked) {
   // Convenience: if user manually checks "Prontos", set status to 'pronto' if it was 'pendiente'
   if (flagKey === 'prontos' && checked && (!row.status || row.status === 'pendiente')) row.status = 'pronto';
   if (flagKey === 'avisadoEnviado' && checked && row.status !== 'finalizado') row.status = 'enviado';
+  // Fecha de envío automática al tildar Avisado/Enviado; si se destilda, borrar solo la automática
+  if (flagKey === 'avisadoEnviado') {
+    if (checked) autoSetSueldoSentDate(row);
+    else if (row.flagLabels && row.flagLabels.avisadoEnviado && row.flagLabels.avisadoEnviado.auto && !row.flagLabels.avisadoEnviado.t) {
+      delete row.flagLabels.avisadoEnviado;
+    }
+  }
   saveState();
   renderContent();
 }
@@ -12770,6 +12785,17 @@ function clearSueldoFlagLabel() {
   closeModal('modal-sueldo-flag');
   _sueldoFlagCtx = null;
   renderContent();
+}
+
+// Chip con la etiqueta/fecha de envío (celda Avisado/Enviado) — estilo Empresas, para el Dashboard
+function sueldoSentChip(it) {
+  const fl = (it.flagLabels || {}).avisadoEnviado;
+  if (!fl) return '';
+  const raw = fl.t || (fl.d ? fmtDate(fl.d) : '');
+  if (!raw) return '';
+  const txt = raw.replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  const title = fl.t && fl.d ? (txt + ' — ' + fmtDate(fl.d)) : txt;
+  return `<span class="cell-date-only" style="font-size:10px;padding:2px 7px;min-width:0;margin-left:4px;vertical-align:middle;" title="Enviado: ${title}">📤 ${txt}</span>`;
 }
 
 function updateSueldoField(subtab, rowIdx, field, value) {
