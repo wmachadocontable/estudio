@@ -1350,6 +1350,37 @@ tr.cli-archived-sep:hover td { background: var(--c-bg-alt) !important; }
 }
 .cell-date-only:hover { background: var(--c-accent-light, #e8ecf0); }
 
+/* Sueldos: etiqueta/fecha personalizada en celdas de check (estilo Empresas) */
+.sueldos-flag-cell { display:flex; flex-direction:column; align-items:center; gap:3px; position:relative; }
+.sueldos-flag-chip {
+  background: var(--c-bg-alt);
+  color: var(--c-blue);
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sueldos-flag-chip:hover { background: var(--c-accent-light, #e8ecf0); }
+.sueldos-flag-edit {
+  position: absolute;
+  top: -2px;
+  right: -16px;
+  font-size: 11px;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity .15s;
+  color: var(--c-text-muted);
+  padding: 2px;
+  line-height: 1;
+}
+td:hover .sueldos-flag-edit { opacity: .8; }
+.sueldos-flag-edit:hover { opacity: 1 !important; color: var(--c-blue); }
+
 /* Celdas tipo comentario contable (saldo a pagar / no aplica / CCE a solicitar) */
 .cell-comment-state {
   padding: 4px 10px;
@@ -1746,8 +1777,8 @@ body.edit-mode .col-type-toggle { display: inline; }
       </div>
       <select onchange="setPanelZone('audit', this.value)" style="padding:6px 8px;border:1px solid var(--c-border);border-radius:3px;font-family:inherit;font-size:12px;">
         <option value="main">📍 Anclado expandido</option>
-        <option value="collapsed">📌 Colapsado (solo ícono)</option>
-        <option value="hidden" selected="">🚫 Oculto</option>
+        <option value="collapsed" selected="">📌 Colapsado (solo ícono)</option>
+        <option value="hidden">🚫 Oculto</option>
       </select>
     </div>
   
@@ -2094,9 +2125,33 @@ body.edit-mode .col-type-toggle { display: inline; }
 <div class="modal-overlay" id="modal-dash-drill">
   <div class="modal" style="width:580px;max-width:96vw;max-height:88vh;overflow:auto;">
     <button class="modal-close" onclick="closeModal('modal-dash-drill')">×</button>
-    <h3 id="dash-drill-title">Detalle por sector</h3>
+    <h3 id="dash-drill-title">📤 Finalizados / enviados — por sector <span style="color:var(--c-text-muted);font-weight:400;">(41)</span></h3>
     <div class="modal-sub">Tocá un nombre o el botón “Ir →” para abrir esa pestaña.</div>
-    <div id="dash-drill-body" style="margin-top:14px;"></div>
+    <div id="dash-drill-body" style="margin-top:14px;"><div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--c-bg-alt);border-radius:4px;border-left:3px solid #0066cc;">
+          <span><strong>🏢Empresas</strong> <span style="color:var(--c-text-muted);font-size:11px;">· Junio</span></span>
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span class="tag-pill" style="background:var(--c-card);color:var(--c-text);font-weight:700;">11</span>
+            <button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="closeModal('modal-dash-drill');switchTab('empresas')">Ir →</button>
+          </span>
+        </div>
+        <ul class="pending-list" style="margin:6px 0 0;"><li style="cursor:pointer;" title="Ir a 🏢Empresas" onclick="closeModal('modal-dash-drill');switchTab('empresas')"><span class="pending-name">El Rastro<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 10/07</span></li><li style="cursor:pointer;" title="Ir a 🏢Empresas" onclick="closeModal('modal-dash-drill');switchTab('empresas')"><span class="pending-name">Javier Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 10/07</span></li><li style="cursor:pointer;" title="Ir a 🏢Empresas" onclick="closeModal('modal-dash-drill');switchTab('empresas')"><span class="pending-name">Residencial Buenos Tiempos<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 10/07</span></li><li style="cursor:pointer;" title="Ir a 🏢Empresas" onclick="closeModal('modal-dash-drill');switchTab('empresas')"><span class="pending-name">Residencial Galauru SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 13/07</span></li><li style="cursor:pointer;" title="Ir a 🏢Empresas" onclick="closeModal('modal-dash-drill');switchTab('empresas')"><span class="pending-name">Drones del Pampa SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 10/07</span></li><li style="cursor:pointer;" title="Ir a 🏢Empresas" onclick="closeModal('modal-dash-drill');switchTab('empresas')"><span class="pending-name">Richard Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 10/07</span></li><li style="cursor:pointer;" title="Ir a 🏢Empresas" onclick="closeModal('modal-dash-drill');switchTab('empresas')"><span class="pending-name">Fabio de la Rosa<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 10/07</span></li><li style="cursor:pointer;" title="Ir a 🏢Empresas" onclick="closeModal('modal-dash-drill');switchTab('empresas')"><span class="pending-name">Nahier Hernandez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 10/07</span></li><li style="cursor:pointer;" title="Ir a 🏢Empresas" onclick="closeModal('modal-dash-drill');switchTab('empresas')"><span class="pending-name">Mónica Perez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 10/07</span></li><li style="cursor:pointer;" title="Ir a 🏢Empresas" onclick="closeModal('modal-dash-drill');switchTab('empresas')"><span class="pending-name">Cesar do Canto<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 09/07</span></li><li style="cursor:pointer;" title="Ir a 🏢Empresas" onclick="closeModal('modal-dash-drill');switchTab('empresas')"><span class="pending-name">Andres Pereira<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">BP DGI -IVA min</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 09/07</span></li></ul></div><div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--c-bg-alt);border-radius:4px;border-left:3px solid #0066cc;">
+          <span><strong>📋Sv.Profesionales</strong> <span style="color:var(--c-text-muted);font-size:11px;">· Junio</span></span>
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span class="tag-pill" style="background:var(--c-card);color:var(--c-text);font-weight:700;">7</span>
+            <button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="closeModal('modal-dash-drill');switchTab('sprof')">Ir →</button>
+          </span>
+        </div>
+        <ul class="pending-list" style="margin:6px 0 0;"><li style="cursor:pointer;" title="Ir a 📋Sv.Profesionales" onclick="closeModal('modal-dash-drill');switchTab('sprof')"><span class="pending-name">Soledad Martinez</span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 10/07</span></li><li style="cursor:pointer;" title="Ir a 📋Sv.Profesionales" onclick="closeModal('modal-dash-drill');switchTab('sprof')"><span class="pending-name">Miguel Yavarone</span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📤 enviado</span></li><li style="cursor:pointer;" title="Ir a 📋Sv.Profesionales" onclick="closeModal('modal-dash-drill');switchTab('sprof')"><span class="pending-name">Alexandra Duarte</span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 10/07</span></li><li style="cursor:pointer;" title="Ir a 📋Sv.Profesionales" onclick="closeModal('modal-dash-drill');switchTab('sprof')"><span class="pending-name">Sebastian Bordenave</span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 10/07</span></li><li style="cursor:pointer;" title="Ir a 📋Sv.Profesionales" onclick="closeModal('modal-dash-drill');switchTab('sprof')"><span class="pending-name">Marcelo Roman</span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 10/07</span></li><li style="cursor:pointer;" title="Ir a 📋Sv.Profesionales" onclick="closeModal('modal-dash-drill');switchTab('sprof')"><span class="pending-name">Rosangela Meneses</span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📅 10/07</span></li><li style="cursor:pointer;" title="Ir a 📋Sv.Profesionales" onclick="closeModal('modal-dash-drill');switchTab('sprof')"><span class="pending-name">Wendy Machado</span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">📤 enviado</span></li></ul></div><div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--c-bg-alt);border-radius:4px;border-left:3px solid #0066cc;">
+          <span><strong>Sueldos</strong> <span style="color:var(--c-text-muted);font-size:11px;">· Junio 2026</span></span>
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span class="tag-pill" style="background:var(--c-card);color:var(--c-text);font-weight:700;">23</span>
+            <button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="closeModal('modal-dash-drill');switchTab('sueldos')">Ir →</button>
+          </span>
+        </div>
+        <ul class="pending-list" style="margin:6px 0 0;"><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Gualberto Segui<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 24</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Enviado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Dosefor<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 24</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Enviado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Drones<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 22</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Enviado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Drones SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Enviado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Vandford<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 24</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Finalizado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Galauru<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 15 - 4</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Enviado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Residencial BT<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 15 - 4</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Enviado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Richard Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 8 - 5.1</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Finalizado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Filjo<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 8 - 5.1</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Enviado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Fabio Transporte<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 13-7</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Enviado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Freddy Pereira<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 8 - 1</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Enviado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Javier Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 8 - 3</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Finalizado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Veterinaria el Rastro<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 7 - 7</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Finalizado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Gino Duarte Construccion<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 9</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Enviado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Julio Ucha<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo · Grupo 8 - 1</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Finalizado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Marcia Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Finalizado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Estudio WMachado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Finalizado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Yakeline - Instituto IETI<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Sueldo</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Finalizado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Noelia Bejerez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Serv. Doméstico · Grupo 21</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Finalizado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Ruben Nuñez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Serv. Doméstico · Grupo 21</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Finalizado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Freddy Pereira<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Serv. Doméstico · Grupo 21</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Finalizado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Maria Soledad<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Serv. Doméstico · Grupo 21</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Finalizado</span></li><li style="cursor:pointer;" title="Ir a Sueldos" onclick="closeModal('modal-dash-drill');switchTab('sueldos')"><span class="pending-name">Nelida Souza<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">Serv. Doméstico · Grupo 21</span></span><span class="tag-pill" style="background:var(--c-bg-alt);color:var(--c-text-muted);">Finalizado</span></li></ul></div></div>
     <div class="form-actions">
       <button class="btn btn-gold" onclick="closeModal('modal-dash-drill')">Cerrar</button>
     </div>
@@ -2198,7 +2253,7 @@ body.edit-mode .col-type-toggle { display: inline; }
     </div>
   </div>
   <div class="header-right">
-    <span id="sync-indicator">🟢 Sincronizado</span>
+    <span id="sync-indicator">🟢 Guardado</span>
     <span id="build-version" title="Version de la app instalada. Si dice v2-clientes, estas en la version con el arreglo de clientes." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v2-clientes</span>
     <span class="year-badge" id="year-badge" onclick="openYearSettings()">2026</span>
     <div id="header-panels" class="header-panels"><div class="header-panel header-panel-presence" data-panel="presence" draggable="true">
@@ -2219,7 +2274,7 @@ body.edit-mode .col-type-toggle { display: inline; }
       <button class="panel-btn" onclick="openAuditLogView()" title="Audit log: ver historial de cambios">🕒</button>
     </div><div class="header-panel header-panel-notifications collapsed" data-panel="notifications" draggable="true">
       <span class="panel-handle">⠿</span>
-      <button class="panel-btn" onclick="toggleNotifPanel()" title="Notificaciones">🔔<span id="notif-unread-badge" class="chat-unread-badge" style="display: none;">1</span></button>
+      <button class="panel-btn" onclick="toggleNotifPanel()" title="Notificaciones">🔔<span id="notif-unread-badge" class="chat-unread-badge" style="display:none;">0</span></button>
     </div><div class="header-panel header-panel-chat collapsed" data-panel="chat" draggable="true">
       <span class="panel-handle">⠿</span>
       <button class="panel-btn" onclick="toggleChatPanel()" title="Chat interno">💬<span id="chat-unread-badge" class="chat-unread-badge" style="display: none;">20</span></button>
@@ -2263,52 +2318,115 @@ body.edit-mode .col-type-toggle { display: inline; }
 
 <div class="edit-banner">MODO EDICIÓN ACTIVO · Clic en títulos para editarlos · ✕ para eliminar · + para agregar</div>
 
-<div class="nav-tabs" id="nav-tabs"><div class="nav-tab" data-tab-id="dashboard" data-tab-idx="0" onclick="switchTab('dashboard')"><span>Dashboard</span></div><div class="nav-tab" data-tab-id="mydash" data-tab-idx="1" onclick="switchTab('mydash')" ondblclick="renameTab(event,'mydash')" title="Doble clic para renombrar"><span>📌Personal</span></div><div class="nav-tab" data-tab-id="empresas" data-tab-idx="2" onclick="switchTab('empresas')" ondblclick="renameTab(event,'empresas')" title="Doble clic para renombrar"><span>🏢Empresas</span><span class="tab-x" onclick="event.stopPropagation();removeTab('empresas')">✕</span></div><div class="nav-tab" data-tab-id="sprof" data-tab-idx="3" onclick="switchTab('sprof')" ondblclick="renameTab(event,'sprof')" title="Doble clic para renombrar"><span>📋Sv.Profesionales</span><span class="tab-x" onclick="event.stopPropagation();removeTab('sprof')">✕</span></div><div class="nav-tab" data-tab-id="sueldos" data-tab-idx="4" onclick="switchTab('sueldos')" ondblclick="renameTab(event,'sueldos')" title="Doble clic para renombrar"><span>💼Sueldos</span></div><div class="nav-tab" data-tab-id="tab_1779884915309" data-tab-idx="5" onclick="switchTab('tab_1779884915309')" ondblclick="renameTab(event,'tab_1779884915309')" title="Doble clic para renombrar"><span>📊EJ Económicos</span><span class="tab-x" onclick="event.stopPropagation();removeTab('tab_1779884915309')">✕</span></div><div class="nav-tab" data-tab-id="clientes" data-tab-idx="6" onclick="switchTab('clientes')" ondblclick="renameTab(event,'clientes')" title="Doble clic para renombrar"><span>👥 Info. Clientes</span></div><div class="nav-tab" data-tab-id="declaraciones" data-tab-idx="7" onclick="declTabClick('declaraciones')" ondblclick="renameTab(event,'declaraciones')" title="Doble clic para renombrar"><span>📋 Declaraciones</span><span class="tab-x" onclick="event.stopPropagation();removeTab('declaraciones')">✕</span></div><div class="nav-tab" data-tab-id="calendario" data-tab-idx="8" onclick="switchTab('calendario')" ondblclick="renameTab(event,'calendario')" title="Doble clic para renombrar"><span>📅CALENDARIO</span></div><div class="nav-tab active" data-tab-id="settings" data-tab-idx="9" onclick="switchTab('settings')"><span>Configuración</span></div><span class="nav-tab-add" onclick="openAddTab()">+ Nueva pestaña</span></div>
+<div class="nav-tabs" id="nav-tabs"><div class="nav-tab active" data-tab-id="dashboard" data-tab-idx="0" onclick="switchTab('dashboard')"><span>Dashboard</span></div><div class="nav-tab" data-tab-id="mydash" data-tab-idx="1" onclick="switchTab('mydash')" ondblclick="renameTab(event,'mydash')" title="Doble clic para renombrar"><span>📌Personal</span></div><div class="nav-tab" data-tab-id="empresas" data-tab-idx="2" onclick="switchTab('empresas')" ondblclick="renameTab(event,'empresas')" title="Doble clic para renombrar"><span>🏢Empresas</span><span class="tab-x" onclick="event.stopPropagation();removeTab('empresas')">✕</span></div><div class="nav-tab" data-tab-id="sprof" data-tab-idx="3" onclick="switchTab('sprof')" ondblclick="renameTab(event,'sprof')" title="Doble clic para renombrar"><span>📋Sv.Profesionales</span><span class="tab-x" onclick="event.stopPropagation();removeTab('sprof')">✕</span></div><div class="nav-tab" data-tab-id="sueldos" data-tab-idx="4" onclick="switchTab('sueldos')" ondblclick="renameTab(event,'sueldos')" title="Doble clic para renombrar"><span>💼Sueldos</span></div><div class="nav-tab" data-tab-id="tab_1779884915309" data-tab-idx="5" onclick="switchTab('tab_1779884915309')" ondblclick="renameTab(event,'tab_1779884915309')" title="Doble clic para renombrar"><span>📊EJ Económicos</span><span class="tab-x" onclick="event.stopPropagation();removeTab('tab_1779884915309')">✕</span></div><div class="nav-tab" data-tab-id="clientes" data-tab-idx="6" onclick="switchTab('clientes')" ondblclick="renameTab(event,'clientes')" title="Doble clic para renombrar"><span>👥 Info. Clientes</span></div><div class="nav-tab" data-tab-id="declaraciones" data-tab-idx="7" onclick="declTabClick('declaraciones')" ondblclick="renameTab(event,'declaraciones')" title="Doble clic para renombrar"><span>📋 Declaraciones</span><span class="tab-x" onclick="event.stopPropagation();removeTab('declaraciones')">✕</span></div><div class="nav-tab" data-tab-id="calendario" data-tab-idx="8" onclick="switchTab('calendario')" ondblclick="renameTab(event,'calendario')" title="Doble clic para renombrar"><span>📅CALENDARIO</span></div><div class="nav-tab" data-tab-id="settings" data-tab-idx="9" onclick="switchTab('settings')"><span>Configuración</span></div><span class="nav-tab-add" onclick="openAddTab()">+ Nueva pestaña</span></div>
 
 <div id="presence-warning" class="presence-warning" style="display:none;"></div>
 
 <div class="main-content" id="main-content">
     <div class="section-header">
-      <div class="section-title">Configuración</div>
+      <div>
+        <div class="section-title">Resumen <span>2026</span></div>
+        <div style="font-size:12px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px;">Período: <strong style="color:var(--c-accent)">Junio</strong></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <label style="font-size:11px;color:var(--c-text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;">Mes:</label>
+        <select id="dash-month-select" onchange="setDashMonth(this.value)" style="padding:8px 14px;border:1px solid var(--c-border);background:var(--c-card);border-radius:2px;font-family:inherit;font-size:13px;font-weight:700;color:var(--c-text);cursor:pointer;min-width:170px;">
+          <option value="">— Año completo —</option>
+          <option value="Enero">Enero</option><option value="Febrero">Febrero</option><option value="Marzo">Marzo</option><option value="Abril">Abril</option><option value="Mayo">Mayo</option><option value="Junio" selected="">Junio</option><option value="Julio">Julio</option><option value="Agosto">Agosto</option><option value="Septiembre">Septiembre</option><option value="Octubre">Octubre</option><option value="Noviembre">Noviembre</option><option value="Diciembre">Diciembre</option>
+        </select>
+        <button class="btn btn-outline" onclick="expandAllDashSections()" title="Expandir todas">⊞ Todas</button>
+        <button class="btn btn-outline" onclick="collapseAllDashSections()" title="Colapsar todas">⊟ Ninguna</button>
+        <button class="btn btn-outline" onclick="resetDashLayout()" title="Reset orden y colapso">↺</button>
+      </div>
     </div>
-    <div class="settings-grid"><div class="settings-card"><h4>🏢Empresas</h4><ul class="entity-list"><li><span>El Rastro<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',0)">✕</button></li><li><span>Javier Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',1)">✕</button></li><li><span>Freddy Pereira<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',2)">✕</button></li><li><span>FILJO SRL<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',3)">✕</button></li><li><span>Lucas Vandes - VANDFOR<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',4)">✕</button></li><li><span>Residencial Buenos Tiempos<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',5)">✕</button></li><li><span>Residencial Galauru SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',6)">✕</button></li><li><span>Claudio Vandes<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',7)">✕</button></li><li><span>Drones del Pampa SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',8)">✕</button></li><li><span>Gualberto Seguí<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',9)">✕</button></li><li><span>Richard Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',10)">✕</button></li><li><span>Fabio de la Rosa<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',11)">✕</button></li><li><span>Nahier Hernandez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',12)">✕</button></li><li><span>Mónica Perez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',13)">✕</button></li><li><span>Cesar do Canto<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',14)">✕</button></li><li><span>Andres Pereira<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">BP DGI -IVA min</span></span><button class="btn btn-outline btn-sm" onclick="removeRow('empresas',15)">✕</button></li></ul><div class="add-entity-form"><input type="text" id="quick-add-empresas" placeholder="Nuevo nombre..."><input type="text" id="quick-tag-empresas" placeholder="Etiqueta" style="max-width:90px;"><button class="btn btn-gold btn-sm" onclick="quickAddRow('empresas')">+</button></div></div><div class="settings-card"><h4>📋Sv.Profesionales</h4><ul class="entity-list"><li><span>Soledad Martinez</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',0)">✕</button></li><li><span>Daiana Machado</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',1)">✕</button></li><li><span>Miguel Yavarone</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',2)">✕</button></li><li><span>Alejandro (Chiche)</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',3)">✕</button></li><li><span>Alexandra Duarte</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',4)">✕</button></li><li><span>Sebastian Bordenave</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',5)">✕</button></li><li><span>Sergio Ayala</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',6)">✕</button></li><li><span>Luis Alfredo Rondeau</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',7)">✕</button></li><li><span>Marcelo Roman</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',8)">✕</button></li><li><span>Maria Victoria Cordero</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',9)">✕</button></li><li><span>Florencia de Leon</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',10)">✕</button></li><li><span>Rosangela Meneses</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',11)">✕</button></li><li><span>Wendy Machado</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',12)">✕</button></li><li><span>Fernando Corbo</span><button class="btn btn-outline btn-sm" onclick="removeRow('sprof',13)">✕</button></li></ul><div class="add-entity-form"><input type="text" id="quick-add-sprof" placeholder="Nuevo nombre..."><button class="btn btn-gold btn-sm" onclick="quickAddRow('sprof')">+</button></div></div><div class="settings-card"><h4>Año fiscal</h4>
-      <div class="form-group" style="margin-top:8px;">
-        <label>Año mostrado en la cabecera</label>
-        <input type="text" value="2026" onchange="state.branding.year=this.value;saveState();applyBranding();renderContent();">
+    <div class="stats-bar" style="margin-bottom:24px;">
+      <div class="stat-card green" style="cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('realizado')"><div class="stat-num">8</div><div class="stat-label">Realizados (15%) <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
+      <div class="stat-card" style="border-left:3px solid #4a9eff;cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('finalizado')"><div class="stat-num" style="color:#0066cc;">41</div><div class="stat-label">📤 Finalizados / enviados (77%) <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
+      <div class="stat-card red" style="cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('pendiente')"><div class="stat-num">4</div><div class="stat-label">Pendientes <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
+      <div class="stat-card"><div class="stat-num">92%</div><div class="stat-label">Completado</div></div>
+      <div class="stat-card blue"><div class="stat-num">30</div><div class="stat-label">Registros activos</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--c-text-muted);margin-bottom:10px;letter-spacing:0.3px;">
+      💡 Arrastrá las secciones desde el ícono <strong>⋮⋮</strong> para reordenarlas. Clic en el título para colapsar/expandir.
+    </div>
+    <div id="dash-sections-wrap" class="dash-sections-wrap"><div class="dash-section collapsed" data-section-id="tab_op_empresas" draggable="true">
+      <div class="dash-section-header" onclick="toggleDashSection('tab_op_empresas')">
+        <span class="dash-drag-handle" title="Arrastrar para mover">⋮⋮</span>
+        <span class="dash-section-title">🏢 🏢Empresas — Vista operativa (Junio)</span>
+        
+        <span class="dash-section-toggle">▸</span>
       </div>
-      <p style="font-size:12px;color:var(--c-text-muted);">Tip: cuando cambies de año, exportá los datos primero como backup desde "Personalizar".</p>
-    </div><div class="settings-card"><h4>Apariencia</h4>
-      <p style="font-size:13px;color:var(--c-text-muted);margin-bottom:14px;">Cambiá logo, colores, fuentes, nombre del estudio y exportá/importá datos.</p>
-      <button class="btn btn-gold" onclick="openCustomize()">⚙ Abrir personalización</button>
-    </div><div class="settings-card"><h4>📅 Sincronización con Google Calendar</h4>
-      <p style="font-size:13px;color:var(--c-text-muted);margin-bottom:14px;">
-        Los eventos que crees en tu Google Calendar aparecerán automáticamente acá.
-        Pegá la <strong>URL secreta en formato iCal</strong> de tu calendario.
-      </p>
-      <div class="form-group">
-        <label>URL iCal de Google Calendar</label>
-        <input type="text" id="gcal-ical-url" value="https://calendar.google.com/calendar/ical/wmachadocontable%40gmail.com/private-39accac0e5df8ae5dad95f20426ba4cc/basic.ics" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics">
+      <div class="dash-section-body"><div class="stats-bar" style="margin-bottom:16px;">
+    <div class="stat-card green" style="border-left-color:var(--c-green);"><div class="stat-num" style="color:var(--c-green);">3</div><div class="stat-label">Realizados (sin enviar)</div></div>
+    <div class="stat-card" style="border-left:3px solid #4a9eff;"><div class="stat-num" style="color:#0066cc;">11</div><div class="stat-label">📤 Finalizados (enviados)</div></div>
+    <div class="stat-card" style="border-left-color:var(--c-pending);"><div class="stat-num" style="color:var(--c-pending);">0</div><div class="stat-label">En proceso</div></div>
+    <div class="stat-card red" style="border-left-color:var(--c-red);"><div class="stat-num" style="color:var(--c-red);">2</div><div class="stat-label">Sin registrar</div></div>
+    <div class="stat-card" style="border-left-color:var(--c-accent);"><div class="stat-num">88%</div><div class="stat-label">Completado</div></div>
+  </div><div class="dashboard-grid"><div class="dash-card" style="border-left:3px solid var(--c-pending,#d4860a);">
+    <h4 style="color:var(--c-pending,#d4860a);">⏳ Pendientes / Sin registrar <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">2</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">Freddy Pereira<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li><li><span class="pending-name">Gualberto Seguí<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li></ul></div><div class="dash-card" style="border-left:3px solid var(--c-green,#2e7d52);">
+    <h4 style="color:var(--c-green,#2e7d52);">✅ Realizados <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">3</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">FILJO SRL<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">01/07</span></li><li><span class="pending-name">Lucas Vandes - VANDFOR<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">02/07</span></li><li><span class="pending-name">Claudio Vandes<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">01/07</span></li></ul></div></div><div class="dash-card" style="margin-top:16px;border-left:3px solid #4a9eff;">
+    <h4 style="color:#0066cc;">📤 Finalizados — Enviados al cliente <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">11</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">El Rastro<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Javier Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Residencial Buenos Tiempos<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Residencial Galauru SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 13/07</span></li><li><span class="pending-name">Drones del Pampa SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Richard Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Fabio de la Rosa<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Nahier Hernandez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Mónica Perez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Cesar do Canto<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 09/07</span></li><li><span class="pending-name">Andres Pereira<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">BP DGI -IVA min</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 09/07</span></li></ul></div></div>
+    </div><div class="dash-section" data-section-id="tab_op_sprof" draggable="true">
+      <div class="dash-section-header" onclick="toggleDashSection('tab_op_sprof')">
+        <span class="dash-drag-handle" title="Arrastrar para mover">⋮⋮</span>
+        <span class="dash-section-title">👤 📋Sv.Profesionales — Vista operativa (Junio)</span>
+        
+        <span class="dash-section-toggle">▾</span>
       </div>
-      <div class="form-group" style="display:flex;align-items:center;gap:10px;">
-        <input type="checkbox" id="gcal-auto" checked="" style="width:auto;">
-        <label for="gcal-auto" style="margin:0;cursor:pointer;">Sincronizar automáticamente cada 15 minutos</label>
+      <div class="dash-section-body"><div class="stats-bar" style="margin-bottom:16px;">
+    <div class="stat-card green" style="border-left-color:var(--c-green);"><div class="stat-num" style="color:var(--c-green);">5</div><div class="stat-label">Realizados (sin enviar)</div></div>
+    <div class="stat-card" style="border-left:3px solid #4a9eff;"><div class="stat-num" style="color:#0066cc;">7</div><div class="stat-label">📤 Finalizados (enviados)</div></div>
+    <div class="stat-card" style="border-left-color:var(--c-pending);"><div class="stat-num" style="color:var(--c-pending);">0</div><div class="stat-label">En proceso</div></div>
+    <div class="stat-card red" style="border-left-color:var(--c-red);"><div class="stat-num" style="color:var(--c-red);">2</div><div class="stat-label">Sin registrar</div></div>
+    <div class="stat-card" style="border-left-color:var(--c-accent);"><div class="stat-num">86%</div><div class="stat-label">Completado</div></div>
+  </div><div class="dashboard-grid"><div class="dash-card" style="border-left:3px solid var(--c-pending,#d4860a);">
+    <h4 style="color:var(--c-pending,#d4860a);">⏳ Pendientes / Sin registrar <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">2</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">Luis Alfredo Rondeau</span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li><li><span class="pending-name">Fernando Corbo</span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li></ul></div><div class="dash-card" style="border-left:3px solid var(--c-green,#2e7d52);">
+    <h4 style="color:var(--c-green,#2e7d52);">✅ Realizados <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">5</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">Daiana Machado</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Alejandro (Chiche)</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Sergio Ayala</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Maria Victoria Cordero</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Florencia de Leon</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li></ul></div></div><div class="dash-card" style="margin-top:16px;border-left:3px solid #4a9eff;">
+    <h4 style="color:#0066cc;">📤 Finalizados — Enviados al cliente <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">7</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">Soledad Martinez</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Miguel Yavarone</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📤 enviado</span></li><li><span class="pending-name">Alexandra Duarte</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Sebastian Bordenave</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Marcelo Roman</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Rosangela Meneses</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Wendy Machado</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📤 enviado</span></li></ul></div></div>
+    </div><div class="dash-section collapsed" data-section-id="sueldos_dashboard" draggable="true">
+      <div class="dash-section-header" onclick="toggleDashSection('sueldos_dashboard')">
+        <span class="dash-drag-handle" title="Arrastrar para mover">⋮⋮</span>
+        <span class="dash-section-title">💼 Sueldos — Vista operativa</span>
+        
+        <span class="dash-section-toggle">▸</span>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-        <button class="btn btn-gold btn-sm" onclick="saveGCalSettings()">💾 Guardar</button>
-        <button class="btn btn-outline btn-sm" onclick="syncFromGoogleCalendar(true)">🔄 Sincronizar ahora</button>
-        <button class="btn btn-outline btn-sm" onclick="showGCalHelp()">❓ Cómo obtener la URL</button>
-      </div>
-      <p style="font-size:11px;color:var(--c-text-muted);margin-top:10px;">
-        Última sincronización: <strong>30/6/2026, 12:02:33 p. m.</strong>
-      </p>
+      <div class="dash-section-body"><div style="font-size:11px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Período: <strong style="color:var(--c-accent)">Junio 2026</strong> · <span onclick="switchTab('sueldos')" style="color:var(--c-accent);cursor:pointer;font-weight:700;">Ir a Sueldos →</span></div>
+    <div class="stats-bar" style="margin-bottom:16px;"><div class="stat-card" style="border-left-color:#888;cursor:pointer;" onclick="switchTab('sueldos')">
+      <div class="stat-num" style="color:#888">0</div>
+      <div class="stat-label">Pendiente</div>
+    </div><div class="stat-card" style="border-left-color:#d4860a;cursor:pointer;" onclick="switchTab('sueldos')">
+      <div class="stat-num" style="color:#d4860a">0</div>
+      <div class="stat-label">En proceso</div>
+    </div><div class="stat-card" style="border-left-color:#2e7d52;cursor:pointer;" onclick="switchTab('sueldos')">
+      <div class="stat-num" style="color:#2e7d52">0</div>
+      <div class="stat-label">Pronto</div>
+    </div><div class="stat-card" style="border-left-color:#1a4a7a;cursor:pointer;" onclick="switchTab('sueldos')">
+      <div class="stat-num" style="color:#1a4a7a">10</div>
+      <div class="stat-label">Enviado</div>
+    </div><div class="stat-card" style="border-left-color:#5b2c6f;cursor:pointer;" onclick="switchTab('sueldos')">
+      <div class="stat-num" style="color:#5b2c6f">13</div>
+      <div class="stat-label">Finalizado</div>
+    </div></div><div class="dashboard-grid"><div class="dash-card" style="border-left:3px solid var(--c-green,#2e7d52);">
+    <h4 style="color:var(--c-green,#2e7d52);">✅ Prontos para enviar <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">0</span></h4>
+    <ul class="pending-list"><li style="color:var(--c-text-muted);padding:14px 0;font-style:italic;">Ningún sueldo pronto este mes</li></ul></div><div class="dash-card" style="border-left:3px solid var(--c-pending,#d4860a);">
+    <h4 style="color:var(--c-pending,#d4860a);">⏳ Pendientes / en proceso <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">0</span></h4>
+    <ul class="pending-list"><li style="color:var(--c-green);padding:14px 0;">✓ Todos avanzados</li></ul></div></div><div class="dash-card" style="border-left:3px solid var(--c-blue,#1a4a7a);margin-top:16px;">
+      <h4 style="color:var(--c-blue,#1a4a7a);">✈ Enviados / finalizados <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">23</span></h4>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Gualberto Segui</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Dosefor</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Drones</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Drones SAS</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Galauru</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Residencial BT</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Filjo</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Fabio Transporte</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Freddy Pereira</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Gino Duarte Construccion</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Vandford</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Richard Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Javier Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Veterinaria el Rastro</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Julio Ucha</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Marcia Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Estudio WMachado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Yakeline - Instituto IETI</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Noelia Bejerez</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Ruben Nuñez</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Freddy Pereira</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Maria Soledad</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Nelida Souza</span></div></div></div>
     </div></div></div>
 
 <!-- CELL EDIT MODAL -->
 <div class="modal-overlay" id="modal-cell">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modal-cell')">×</button>
-    <h3 id="modal-cell-title">Sergio Ayala</h3>
-    <div class="modal-sub" id="modal-cell-sub">Mayo · 2026</div>
+    <h3 id="modal-cell-title">Florencia de Leon</h3>
+    <div class="modal-sub" id="modal-cell-sub">Junio · 2026</div>
     <div class="form-group">
       <label>Estado</label>
       <select id="modal-cell-status" onchange="updateCellModalFields()" data-mode="normal" data-supports-sent="1">
@@ -2428,6 +2546,36 @@ body.edit-mode .col-type-toggle { display: inline; }
       <button class="btn btn-outline" onclick="clearAnnualDateCell()" style="color:var(--c-red);">🗑 Vaciar</button>
       <button class="btn btn-outline" onclick="closeModal('modal-annual-date')">Cancelar</button>
       <button class="btn btn-gold" onclick="saveAnnualDateCell()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUELDOS FLAG LABEL MODAL (etiqueta/fecha en celdas de check, estilo Empresas) -->
+<div class="modal-overlay" id="modal-sueldo-flag">
+  <div class="modal" style="width:440px;">
+    <button class="modal-close" onclick="closeModal('modal-sueldo-flag')">×</button>
+    <h3>✎ Etiqueta en celda</h3>
+    <div class="modal-sub">
+      Podés poner un texto corto o una fecha que se muestra debajo del check — igual que en <strong>Empresas</strong>. El check sigue funcionando como siempre.
+    </div>
+    <div style="background:var(--c-bg-alt);padding:10px 14px;border-radius:4px;margin:10px 0;font-size:12px;">
+      <strong id="sueldo-flag-row-name"></strong>
+      <span style="color:var(--c-text-muted);"> · </span>
+      <span id="sueldo-flag-col-name" style="color:var(--c-blue);font-weight:700;"></span>
+    </div>
+    <div class="form-group">
+      <label>Etiqueta corta <span style="font-size:11px;color:var(--c-text-muted);font-weight:400;">(opcional, hasta 12 caracteres)</span></label>
+      <input type="text" id="sueldo-flag-label" maxlength="12" placeholder="Ej: Pago 18/06, x mail, parcial...">
+    </div>
+    <div class="form-group">
+      <label>Fecha (opcional)</label>
+      <input type="date" id="sueldo-flag-date">
+      <small style="color:var(--c-text-muted);font-size:11px;display:block;margin-top:4px;">Si no ponés etiqueta, en la celda se muestra la fecha (dd/mm).</small>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="clearSueldoFlagLabel()" style="color:var(--c-red);">🗑 Vaciar</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-sueldo-flag')">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveSueldoFlagLabel()">Guardar</button>
     </div>
   </div>
 </div>
@@ -2765,7 +2913,7 @@ body.edit-mode .col-type-toggle { display: inline; }
   </div>
 </div>
 
-<div class="tooltip-msg" id="tooltip-msg">No hay clientes en 2025 para pasar</div>
+<div class="tooltip-msg" id="tooltip-msg">Guardado</div>
 
 </div> <!-- /app-container -->
 
@@ -12493,7 +12641,12 @@ function renderSueldos() {
         cols.forEach(c => {
           if (subtab === 'sd' && !['prontos','avisadoEnviado','fosmetal','bps'].includes(c.key)) return;
           const checked = item[c.key] ? 'checked' : '';
-          html += `<td style="text-align:center;"><label class="sueldos-check-wrap"><input type="checkbox" class="sueldos-check" ${checked} onchange="toggleSueldoFlag('${subtab}',${item._idx},'${c.key}',this.checked)"><span class="sueldos-check-box"></span></label></td>`;
+          const fl = (item.flagLabels || {})[c.key];
+          const flText = fl ? (fl.t || (fl.d ? fmtDate(fl.d) : '')) : '';
+          const flTextSafe = flText.replace(/</g,'&lt;').replace(/"/g,'&quot;');
+          const flTitle = fl && fl.t && fl.d ? (flTextSafe + ' — ' + fmtDate(fl.d)) : flTextSafe;
+          const chip = flText ? `<span class="sueldos-flag-chip" title="${flTitle} · Clic para editar" onclick="openSueldoFlagModal('${subtab}',${item._idx},'${c.key}')">${flTextSafe}</span>` : '';
+          html += `<td style="text-align:center;"><div class="sueldos-flag-cell"><label class="sueldos-check-wrap"><input type="checkbox" class="sueldos-check" ${checked} onchange="toggleSueldoFlag('${subtab}',${item._idx},'${c.key}',this.checked)"><span class="sueldos-check-box"></span></label>${chip}<span class="sueldos-flag-edit" title="Agregar etiqueta o fecha en esta celda (como en Empresas)" onclick="openSueldoFlagModal('${subtab}',${item._idx},'${c.key}')">✎</span></div></td>`;
         });
       } else {
         html += `<td><input type="text" value="${(item.concepto||'').replace(/"/g,'&quot;')}" onblur="updateReliqField(${item._idx},'concepto',this.value)" style="width:100%;padding:5px 8px;border:1px solid var(--c-border);border-radius:3px;font-size:12px;"></td>`;
@@ -12565,6 +12718,57 @@ function toggleSueldoFlag(subtab, rowIdx, flagKey, checked) {
   if (flagKey === 'prontos' && checked && (!row.status || row.status === 'pendiente')) row.status = 'pronto';
   if (flagKey === 'avisadoEnviado' && checked && row.status !== 'finalizado') row.status = 'enviado';
   saveState();
+  renderContent();
+}
+
+// ===== Etiqueta/fecha personalizada en celdas de Sueldos (estilo Empresas) =====
+let _sueldoFlagCtx = null;
+function openSueldoFlagModal(subtab, rowIdx, flagKey) {
+  const ym = getCurrentSueldosMonth();
+  const row = state.sueldos[ym] && state.sueldos[ym][subtab] ? state.sueldos[ym][subtab][rowIdx] : null;
+  if (!row) return;
+  _sueldoFlagCtx = { subtab, rowIdx, flagKey };
+  const colDef = (state.sueldosColumns || []).find(c => c.key === flagKey);
+  document.getElementById('sueldo-flag-row-name').textContent = row.name || '—';
+  document.getElementById('sueldo-flag-col-name').textContent = (colDef ? colDef.label : flagKey) + ' · ' + ym;
+  const fl = (row.flagLabels || {})[flagKey] || {};
+  document.getElementById('sueldo-flag-label').value = fl.t || '';
+  document.getElementById('sueldo-flag-date').value = fl.d || '';
+  document.getElementById('modal-sueldo-flag').classList.add('open');
+  setTimeout(() => document.getElementById('sueldo-flag-label').focus(), 100);
+}
+
+function saveSueldoFlagLabel() {
+  if (!_sueldoFlagCtx) return;
+  const { subtab, rowIdx, flagKey } = _sueldoFlagCtx;
+  const ym = getCurrentSueldosMonth();
+  const row = state.sueldos[ym] && state.sueldos[ym][subtab] ? state.sueldos[ym][subtab][rowIdx] : null;
+  if (!row) return;
+  const t = document.getElementById('sueldo-flag-label').value.trim();
+  const d = document.getElementById('sueldo-flag-date').value;
+  if (!row.flagLabels) row.flagLabels = {};
+  if (!t && !d) {
+    delete row.flagLabels[flagKey];
+  } else {
+    row.flagLabels[flagKey] = {};
+    if (t) row.flagLabels[flagKey].t = t;
+    if (d) row.flagLabels[flagKey].d = d;
+  }
+  saveState();
+  closeModal('modal-sueldo-flag');
+  _sueldoFlagCtx = null;
+  renderContent();
+}
+
+function clearSueldoFlagLabel() {
+  if (!_sueldoFlagCtx) return;
+  const { subtab, rowIdx, flagKey } = _sueldoFlagCtx;
+  const ym = getCurrentSueldosMonth();
+  const row = state.sueldos[ym] && state.sueldos[ym][subtab] ? state.sueldos[ym][subtab][rowIdx] : null;
+  if (row && row.flagLabels) delete row.flagLabels[flagKey];
+  saveState();
+  closeModal('modal-sueldo-flag');
+  _sueldoFlagCtx = null;
   renderContent();
 }
 
@@ -12657,7 +12861,7 @@ function copySueldosFromPreviousMonth() {
     toast('No hay datos del mes anterior (' + prevYm + ')');
     return;
   }
-  if (!confirm(`Esto copiará todas las filas y observaciones de ${prevYm} a ${ym}.\nLos estados volverán a "Pendiente" y los checkboxes se desmarcarán.\n¿Continuar?`)) return;
+  if (!confirm(`Esto copiará todas las filas y observaciones de ${prevYm} a ${ym}.\nLos estados volverán a "Pendiente", los checkboxes se desmarcarán y las etiquetas de celda se borrarán.\n¿Continuar?`)) return;
   const src = state.sueldos[prevYm];
   const dst = { sueldos: [], sd: [], reliq: [] };
   ['sueldos','sd','reliq'].forEach(k => {
@@ -12666,6 +12870,7 @@ function copySueldosFromPreviousMonth() {
       // Reset flags
       copy.status = 'pendiente';
       ['prontos','avisadoEnviado','fosmetal','bps','contabilizado','controlFacturaBps','auditoria'].forEach(f => copy[f] = false);
+      delete copy.flagLabels;
       dst[k].push(copy);
     });
   });
@@ -14239,32 +14444,32 @@ body.edit-mode .hon-edit-name { display:inline; }
 
 <div class="modal-overlay" id="modal-cli-edit"><div class="modal cliente-edit-modal">
     <button class="modal-close" onclick="closeModal('modal-cli-edit')">×</button>
-    <h3>Sergio Alejandro Ayala Guruceaga</h3>
+    <h3>Claudia Daiana Machado Lozada Paula</h3>
     <div class="modal-sub">Editá los datos. Los cambios se guardan al cerrar.</div>
     <div class="cli-edit-grid">
       <label>Tipo<select id="cli-tipo"><option value="IyC">IyC</option><option value="IyC-pequeña empresa">IyC pequeña</option><option value="IyC-monotributo">IyC monotrib</option><option value="IyC-monotributo mides">IyC mono MIDES</option><option value="IyC-Rural">IyC Rural</option><option value="IyC-contruccion">IyC Constr.</option><option value="IyC- Transporte carga">IyC Transp.</option><option value="S.Prof" selected="">Serv. Prof.</option><option value="PF">PF</option><option value="SD">SD</option><option value="As. Civil">Asoc. Civil</option><option value="I.Primaria">I. Primaria</option></select></label>
-      <label class="full">Nombre<input id="cli-nombre" type="text" value="Sergio Alejandro Ayala Guruceaga"></label>
-      <label>RUT<input id="cli-rut" type="text" value="217802670013"></label>
-      <label>BPS<input id="cli-bps" type="text" value="6712802"></label>
-      <label>CI<input id="cli-ci" type="text" value="18419473"></label>
-      <label>Fecha de nacimiento<input id="cli-fecha" type="date" value="1957-07-15"></label>
-      <label>Contraseña BPS<input id="cli-passbps" type="text" value="Cacho3000"></label>
-      <label>Contraseña Gub.uy<input id="cli-passgub" type="text" value="cacho3000"></label>
+      <label class="full">Nombre<input id="cli-nombre" type="text" value="Claudia Daiana Machado Lozada Paula"></label>
+      <label>RUT<input id="cli-rut" type="text" value="216637310011"></label>
+      <label>BPS<input id="cli-bps" type="text" value="5637451"></label>
+      <label>CI<input id="cli-ci" type="text" value="34850924"></label>
+      <label>Fecha de nacimiento<input id="cli-fecha" type="date" value="1981-11-27"></label>
+      <label>Contraseña BPS<input id="cli-passbps" type="text" value="Daiana2018"></label>
+      <label>Contraseña Gub.uy<input id="cli-passgub" type="text" value="valentina"></label>
       <label class="full">Códigos identificador Gub.uy<input id="cli-codgub" type="text" value=""></label>
       <label class="full">Correo electrónico<input id="cli-correo" type="email" value=""></label>
-      <label class="full">Dirección<input id="cli-direccion" type="text" value="Mercedes 1144 apto 101"></label>
+      <label class="full">Dirección<input id="cli-direccion" type="text" value="26 de Marzo 3375 apartamento 905"></label>
       <label class="full">Sistema de Facturación<input id="cli-facturacion" type="text" value=""></label>
       <label>N° CJPPU<input id="cli-cjppu" type="text" value=""></label>
-      <label>Contraseña CJPPU<input id="cli-passcjppu" type="text" value=""></label>
-      <label>RUPE<input id="cli-rupe" type="text" value=""></label>
+      <label>Contraseña CJPPU<input id="cli-passcjppu" type="text" value="117636"></label>
+      <label>RUPE<input id="cli-rupe" type="text" value="117636"></label>
       <label>FOSMETAL<input id="cli-fosmetal" type="text" value=""></label>
       <label class="full">Otros<textarea id="cli-otros" rows="2"></textarea></label>
     </div>
     <div class="form-actions">
-      <button class="btn btn-outline" onclick="deleteCliente('cli_mq6lydcw_67_6v0ya5')" style="color:var(--c-red);border-color:var(--c-red);">🗑 Eliminar</button>
-      <button class="btn btn-outline" onclick="toggleClienteArchived('cli_mq6lydcw_67_6v0ya5')" title="Archivar — queda visible pero atenuado al final">📦 Archivar</button>
+      <button class="btn btn-outline" onclick="deleteCliente('cli_mq6lydcw_11_51ilm8')" style="color:var(--c-red);border-color:var(--c-red);">🗑 Eliminar</button>
+      <button class="btn btn-outline" onclick="toggleClienteArchived('cli_mq6lydcw_11_51ilm8')" title="Archivar — queda visible pero atenuado al final">📦 Archivar</button>
       <button class="btn btn-outline" onclick="closeModal('modal-cli-edit')">Cancelar</button>
-      <button class="btn btn-gold" onclick="saveClienteFromModal('cli_mq6lydcw_67_6v0ya5')">Guardar</button>
+      <button class="btn btn-gold" onclick="saveClienteFromModal('cli_mq6lydcw_11_51ilm8')">Guardar</button>
     </div>
   </div></div><!-- ===================== SECCIÓN DECLARACIONES (aditiva) ===================== -->
 <style>
@@ -14869,4 +15074,4 @@ body.edit-mode .hon-edit-name { display:inline; }
 </script>
 <!-- =================== FIN SECCIÓN DECLARACIONES =================== -->
 
-<div id="decl-folder-modal" class="modal-overlay"><div class="modal" style="width:380px;max-width:92vw;position:relative;"><button class="modal-close" onclick="closeModal('decl-folder-modal')">×</button><h3 id="decl-folder-title">Nueva carpeta</h3><div class="modal-sub">Las carpetas separan tipos de declaración (IVA, IRAE, Cierres…). Se comparten con todo el equipo.</div><div class="decl-mfield"><label>Nombre</label><input type="text" id="decl-folder-name" placeholder="IVA, IRAE, Cierres…"></div><div class="decl-mfield" style="display:flex;gap:12px;"><div style="flex:1;"><label>Ícono (emoji)</label><input type="text" id="decl-folder-icon" maxlength="3" value="📁"></div><div><label>Color</label><input type="color" id="decl-folder-color" value="#2f6f4f" style="width:52px;height:40px;border:1px solid var(--c-border,#dcdfe4);border-radius:9px;background:none;cursor:pointer;"></div></div><div style="display:flex;gap:8px;margin-top:18px;align-items:center;"><button class="decl-btn" id="decl-folder-del" style="display:none;color:var(--c-red,#c0392b);" onclick="declDeleteFromModal()">🗑 Eliminar</button><span style="flex:1;"></span><button class="decl-btn" onclick="closeModal('decl-folder-modal')">Cancelar</button><button class="decl-btn primary" onclick="declSaveFolderModal()">Guardar</button></div></div></div><div id="decl-color-modal" class="modal-overlay"><div class="modal" style="width:340px;max-width:92vw;position:relative;"><button class="modal-close" onclick="closeModal('decl-color-modal')">×</button><h3>🎨 Colores de estado</h3><div class="modal-sub">Asigná un color a cada estado. Se aplica en la tabla y en las tarjetas.</div><div id="decl-color-body" style="margin:8px 0 4px;"></div><div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;"><button class="decl-btn" onclick="closeModal('decl-color-modal')">Cancelar</button><button class="decl-btn primary" onclick="declSaveColors()">Guardar</button></div></div></div><div id="decl-carry-modal" class="modal-overlay"><div class="modal" style="width:560px;max-width:94vw;position:relative;"><button class="modal-close" onclick="closeModal('decl-carry-modal')">×</button><h3>⤴ Pasar clientes a otro año</h3><div class="modal-sub" id="decl-carry-sub">Tipo “Fonasa” · desde el año 2025</div><div class="dca-dest"><label>Año destino</label> <input type="number" id="decl-carry-dest" class="dca-destinp"></div><div class="dca-cols2"><div class="dca-box"><div class="dca-h">Clientes a pasar <button class="dca-mini" onclick="declCarryAll(true)">Todos</button><button class="dca-mini" onclick="declCarryAll(false)">Ninguno</button></div><div id="decl-carry-clients" class="dca-list"><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830487605_k2i08" checked=""> Daiana Machado</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830540988_jk9j4" checked=""> Soledad Martinez</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830562484_ermu7" checked=""> Miguel Yavarone</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830583772_q3bnd" checked=""> Rosangela Meneses </label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830602395_ovuu2" checked=""> Sebastian Bordenave</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830635966_lwoj5" checked=""> Sergio Ayala</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830669876_577gg" checked=""> Luis Alfredo Rondeau</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830759862_yxd9o" checked=""> Marcelo Roman</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830800206_6wtuz" checked=""> María José </label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830855198_pwtpb" checked=""> Victoria Cordero</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830909783_l7el5" checked=""> Florencia de Leon</label></div></div><div class="dca-box"><div class="dca-h">Datos a copiar</div><div id="decl-carry-cols" class="dca-list"><label class="dca-row"><input type="checkbox" class="dca-col" data-key="col_1782830150528_xmm6a" checked="" disabled=""> Cliente <span class="dca-fix">(siempre)</span></label><label class="dca-row"><input type="checkbox" class="dca-col" data-key="col_1782830150528_47k37"> Presentado</label><label class="dca-row"><input type="checkbox" class="dca-col" data-key="col_1782830150528_ha8t8"> Importe</label><label class="dca-row"><input type="checkbox" class="dca-col" data-key="col_1782830150528_2dvgl"> Saldo / Notas</label><label class="dca-row"><input type="checkbox" class="dca-col" data-key="col_1782830150528_knq4x"> Estado</label></div></div></div><div class="modal-sub" style="margin-top:6px;">Lo que no marques arranca en blanco en el año destino. Los clientes que ya existan en ese año no se duplican.</div><div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;"><button class="decl-btn" onclick="closeModal('decl-carry-modal')">Cancelar</button><button class="decl-btn primary" onclick="declDoCarry()">Pasar clientes</button></div></div></div></body></html>
+<div id="decl-folder-modal" class="modal-overlay"><div class="modal" style="width:380px;max-width:92vw;position:relative;"><button class="modal-close" onclick="closeModal('decl-folder-modal')">×</button><h3 id="decl-folder-title">Nueva carpeta</h3><div class="modal-sub">Las carpetas separan tipos de declaración (IVA, IRAE, Cierres…). Se comparten con todo el equipo.</div><div class="decl-mfield"><label>Nombre</label><input type="text" id="decl-folder-name" placeholder="IVA, IRAE, Cierres…"></div><div class="decl-mfield" style="display:flex;gap:12px;"><div style="flex:1;"><label>Ícono (emoji)</label><input type="text" id="decl-folder-icon" maxlength="3" value="📁"></div><div><label>Color</label><input type="color" id="decl-folder-color" value="#2f6f4f" style="width:52px;height:40px;border:1px solid var(--c-border,#dcdfe4);border-radius:9px;background:none;cursor:pointer;"></div></div><div style="display:flex;gap:8px;margin-top:18px;align-items:center;"><button class="decl-btn" id="decl-folder-del" style="display:none;color:var(--c-red,#c0392b);" onclick="declDeleteFromModal()">🗑 Eliminar</button><span style="flex:1;"></span><button class="decl-btn" onclick="closeModal('decl-folder-modal')">Cancelar</button><button class="decl-btn primary" onclick="declSaveFolderModal()">Guardar</button></div></div></div><div id="decl-color-modal" class="modal-overlay"><div class="modal" style="width:340px;max-width:92vw;position:relative;"><button class="modal-close" onclick="closeModal('decl-color-modal')">×</button><h3>🎨 Colores de estado</h3><div class="modal-sub">Asigná un color a cada estado. Se aplica en la tabla y en las tarjetas.</div><div id="decl-color-body" style="margin:8px 0 4px;"></div><div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;"><button class="decl-btn" onclick="closeModal('decl-color-modal')">Cancelar</button><button class="decl-btn primary" onclick="declSaveColors()">Guardar</button></div></div></div><div id="decl-carry-modal" class="modal-overlay"><div class="modal" style="width:560px;max-width:94vw;position:relative;"><button class="modal-close" onclick="closeModal('decl-carry-modal')">×</button><h3>⤴ Pasar clientes a otro año</h3><div class="modal-sub" id="decl-carry-sub">Tipo “Fonasa” · desde el año 2025</div><div class="dca-dest"><label>Año destino</label> <input type="number" id="decl-carry-dest" class="dca-destinp"></div><div class="dca-cols2"><div class="dca-box"><div class="dca-h">Clientes a pasar <button class="dca-mini" onclick="declCarryAll(true)">Todos</button><button class="dca-mini" onclick="declCarryAll(false)">Ninguno</button></div><div id="decl-carry-clients" class="dca-list"><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830487605_k2i08" checked=""> Daiana Machado</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830540988_jk9j4" checked=""> Soledad Martinez</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830562484_ermu7" checked=""> Miguel Yavarone</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830583772_q3bnd" checked=""> Rosangela Meneses </label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830602395_ovuu2" checked=""> Sebastian Bordenave</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830635966_lwoj5" checked=""> Sergio Ayala</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830669876_577gg" checked=""> Luis Alfredo Rondeau</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830759862_yxd9o" checked=""> Marcelo Roman</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830800206_6wtuz" checked=""> María José </label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830855198_pwtpb" checked=""> Victoria Cordero</label><label class="dca-row"><input type="checkbox" class="dca-cli" data-key="row_1782830909783_l7el5" checked=""> Florencia de Leon</label></div></div><div class="dca-box"><div class="dca-h">Datos a copiar</div><div id="decl-carry-cols" class="dca-list"><label class="dca-row"><input type="checkbox" class="dca-col" data-key="col_1782830150528_xmm6a" checked="" disabled=""> Cliente <span class="dca-fix">(siempre)</span></label><label class="dca-row"><input type="checkbox" class="dca-col" data-key="col_1782830150528_47k37"> Presentado</label><label class="dca-row"><input type="checkbox" class="dca-col" data-key="col_1782830150528_ha8t8"> Importe</label><label class="dca-row"><input type="checkbox" class="dca-col" data-key="col_1782830150528_2dvgl"> Saldo / Notas</label><label class="dca-row"><input type="checkbox" class="dca-col" data-key="col_1782830150528_knq4x"> Estado</label></div></div></div><div class="modal-sub" style="margin-top:6px;">Lo que no marques arranca en blanco en el año destino. Los clientes que ya existan en ese año no se duplican.</div><div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;"><button class="decl-btn" onclick="closeModal('decl-carry-modal')">Cancelar</button><button class="decl-btn primary" onclick="declDoCarry()">Pasar clientes</button></div></div></div><div id="decl-trash-modal" class="modal-overlay"><div class="modal" style="width:440px;max-width:92vw;position:relative;"><button class="modal-close" onclick="closeModal('decl-trash-modal')">×</button><h3>🗑 Papelera</h3><div class="modal-sub">Filas que salieron de IVA al desmarcar el “SI” en IRPF. Podés restaurarlas (con su fecha y nota) o eliminarlas para siempre.</div><div id="decl-trash-body" style="margin:8px 0 4px;max-height:320px;overflow:auto;"></div><div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;"><button class="decl-btn" onclick="closeModal('decl-trash-modal')">Cerrar</button></div></div></div></body></html>
