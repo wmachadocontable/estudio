@@ -544,6 +544,10 @@
 .cli-panel-item.selected { background:var(--c-card); border-left-color:var(--c-accent); }
 .cli-panel-name { font-size:13px; color:var(--c-text); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .cli-panel-detail { padding:24px; overflow-y:auto; max-height:600px; }
+.cli-panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--c-border); }
+.cli-panel-head-left { display:flex; align-items:center; gap:12px; min-width:0; }
+.cli-panel-title { font-family:var(--font-display); font-weight:700; font-size:26px; line-height:1.15; color:var(--c-text); word-break:break-word; user-select:all; -webkit-user-select:all; cursor:text; }
+.cli-panel-title:hover { background:rgba(26,74,122,.06); border-radius:4px; }
 .cli-panel-detail .cli-exp-section { margin-bottom:14px; }
 .cli-panel-detail .cli-exp-grid { grid-template-columns:1fr 1fr; }
 
@@ -2253,7 +2257,7 @@ body.edit-mode .col-type-toggle { display: inline; }
     </div>
   </div>
   <div class="header-right">
-    <span id="sync-indicator">🟢 Guardado</span>
+    <span id="sync-indicator">🟢 Sincronizado</span>
     <span id="build-version" title="Version de la app instalada. Si dice v2-clientes, estas en la version con el arreglo de clientes." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v2-clientes</span>
     <span class="year-badge" id="year-badge" onclick="openYearSettings()">2026</span>
     <div id="header-panels" class="header-panels"><div class="header-panel header-panel-presence" data-panel="presence" draggable="true">
@@ -2340,8 +2344,8 @@ body.edit-mode .col-type-toggle { display: inline; }
       </div>
     </div>
     <div class="stats-bar" style="margin-bottom:24px;">
-      <div class="stat-card green" style="cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('realizado')"><div class="stat-num">8</div><div class="stat-label">Realizados (15%) <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
-      <div class="stat-card" style="border-left:3px solid #4a9eff;cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('finalizado')"><div class="stat-num" style="color:#0066cc;">41</div><div class="stat-label">📤 Finalizados / enviados (77%) <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
+      <div class="stat-card green" style="cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('realizado')"><div class="stat-num">5</div><div class="stat-label">Realizados (9%) <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
+      <div class="stat-card" style="border-left:3px solid #4a9eff;cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('finalizado')"><div class="stat-num" style="color:#0066cc;">44</div><div class="stat-label">📤 Finalizados / enviados (83%) <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
       <div class="stat-card red" style="cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('pendiente')"><div class="stat-num">4</div><div class="stat-label">Pendientes <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
       <div class="stat-card"><div class="stat-num">92%</div><div class="stat-label">Completado</div></div>
       <div class="stat-card blue"><div class="stat-num">30</div><div class="stat-label">Registros activos</div></div>
@@ -2377,24 +2381,24 @@ body.edit-mode .col-type-toggle { display: inline; }
         <span class="dash-section-toggle">▾</span>
       </div>
       <div class="dash-section-body"><div class="stats-bar" style="margin-bottom:16px;">
-    <div class="stat-card green" style="border-left-color:var(--c-green);"><div class="stat-num" style="color:var(--c-green);">5</div><div class="stat-label">Realizados (sin enviar)</div></div>
-    <div class="stat-card" style="border-left:3px solid #4a9eff;"><div class="stat-num" style="color:#0066cc;">7</div><div class="stat-label">📤 Finalizados (enviados)</div></div>
+    <div class="stat-card green" style="border-left-color:var(--c-green);"><div class="stat-num" style="color:var(--c-green);">2</div><div class="stat-label">Realizados (sin enviar)</div></div>
+    <div class="stat-card" style="border-left:3px solid #4a9eff;"><div class="stat-num" style="color:#0066cc;">10</div><div class="stat-label">📤 Finalizados (enviados)</div></div>
     <div class="stat-card" style="border-left-color:var(--c-pending);"><div class="stat-num" style="color:var(--c-pending);">0</div><div class="stat-label">En proceso</div></div>
     <div class="stat-card red" style="border-left-color:var(--c-red);"><div class="stat-num" style="color:var(--c-red);">2</div><div class="stat-label">Sin registrar</div></div>
     <div class="stat-card" style="border-left-color:var(--c-accent);"><div class="stat-num">86%</div><div class="stat-label">Completado</div></div>
   </div><div class="dashboard-grid"><div class="dash-card" style="border-left:3px solid var(--c-pending,#d4860a);">
     <h4 style="color:var(--c-pending,#d4860a);">⏳ Pendientes / Sin registrar <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">2</span></h4>
     <ul class="pending-list"><li><span class="pending-name">Luis Alfredo Rondeau</span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li><li><span class="pending-name">Fernando Corbo</span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li></ul></div><div class="dash-card" style="border-left:3px solid var(--c-green,#2e7d52);">
-    <h4 style="color:var(--c-green,#2e7d52);">✅ Realizados <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">5</span></h4>
-    <ul class="pending-list"><li><span class="pending-name">Daiana Machado</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Alejandro (Chiche)</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Sergio Ayala</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Maria Victoria Cordero</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Florencia de Leon</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li></ul></div></div><div class="dash-card" style="margin-top:16px;border-left:3px solid #4a9eff;">
-    <h4 style="color:#0066cc;">📤 Finalizados — Enviados al cliente <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">7</span></h4>
-    <ul class="pending-list"><li><span class="pending-name">Soledad Martinez</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Miguel Yavarone</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📤 enviado</span></li><li><span class="pending-name">Alexandra Duarte</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Sebastian Bordenave</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Marcelo Roman</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Rosangela Meneses</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Wendy Machado</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📤 enviado</span></li></ul></div></div>
-    </div><div class="dash-section collapsed" data-section-id="sueldos_dashboard" draggable="true">
+    <h4 style="color:var(--c-green,#2e7d52);">✅ Realizados <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">2</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">Alejandro (Chiche)</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Florencia de Leon</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li></ul></div></div><div class="dash-card" style="margin-top:16px;border-left:3px solid #4a9eff;">
+    <h4 style="color:#0066cc;">📤 Finalizados — Enviados al cliente <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">10</span></h4>
+    <ul class="pending-list"><li><span class="pending-name">Soledad Martinez</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Daiana Machado</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 16/07</span></li><li><span class="pending-name">Miguel Yavarone</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📤 enviado</span></li><li><span class="pending-name">Alexandra Duarte</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Sebastian Bordenave</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Sergio Ayala</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 16/07</span></li><li><span class="pending-name">Marcelo Roman</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Maria Victoria Cordero</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 15/07</span></li><li><span class="pending-name">Rosangela Meneses</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Wendy Machado</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📤 enviado</span></li></ul></div></div>
+    </div><div class="dash-section" data-section-id="sueldos_dashboard" draggable="true">
       <div class="dash-section-header" onclick="toggleDashSection('sueldos_dashboard')">
         <span class="dash-drag-handle" title="Arrastrar para mover">⋮⋮</span>
         <span class="dash-section-title">💼 Sueldos — Vista operativa</span>
         
-        <span class="dash-section-toggle">▸</span>
+        <span class="dash-section-toggle">▾</span>
       </div>
       <div class="dash-section-body"><div style="font-size:11px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Período: <strong style="color:var(--c-accent)">Junio 2026</strong> · <span onclick="switchTab('sueldos')" style="color:var(--c-accent);cursor:pointer;font-weight:700;">Ir a Sueldos →</span></div>
     <div class="stats-bar" style="margin-bottom:16px;"><div class="stat-card" style="border-left-color:#888;cursor:pointer;" onclick="switchTab('sueldos')">
@@ -2407,10 +2411,10 @@ body.edit-mode .col-type-toggle { display: inline; }
       <div class="stat-num" style="color:#2e7d52">0</div>
       <div class="stat-label">Pronto</div>
     </div><div class="stat-card" style="border-left-color:#1a4a7a;cursor:pointer;" onclick="switchTab('sueldos')">
-      <div class="stat-num" style="color:#1a4a7a">10</div>
+      <div class="stat-num" style="color:#1a4a7a">9</div>
       <div class="stat-label">Enviado</div>
     </div><div class="stat-card" style="border-left-color:#5b2c6f;cursor:pointer;" onclick="switchTab('sueldos')">
-      <div class="stat-num" style="color:#5b2c6f">13</div>
+      <div class="stat-num" style="color:#5b2c6f">14</div>
       <div class="stat-label">Finalizado</div>
     </div></div><div class="dashboard-grid"><div class="dash-card" style="border-left:3px solid var(--c-green,#2e7d52);">
     <h4 style="color:var(--c-green,#2e7d52);">✅ Prontos para enviar <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">0</span></h4>
@@ -2418,7 +2422,7 @@ body.edit-mode .col-type-toggle { display: inline; }
     <h4 style="color:var(--c-pending,#d4860a);">⏳ Pendientes / en proceso <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">0</span></h4>
     <ul class="pending-list"><li style="color:var(--c-green);padding:14px 0;">✓ Todos avanzados</li></ul></div></div><div class="dash-card" style="border-left:3px solid var(--c-blue,#1a4a7a);margin-top:16px;">
       <h4 style="color:var(--c-blue,#1a4a7a);">✈ Enviados / finalizados <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">23</span></h4>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Gualberto Segui</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Dosefor</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Drones</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Drones SAS</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Galauru</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Residencial BT</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Filjo</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Fabio Transporte</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Freddy Pereira</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Gino Duarte Construccion</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Vandford</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Richard Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Javier Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Veterinaria el Rastro</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Julio Ucha</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Marcia Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Estudio WMachado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Yakeline - Instituto IETI</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Noelia Bejerez</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Ruben Nuñez</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Freddy Pereira</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Maria Soledad</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Nelida Souza</span></div></div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Gualberto Segui</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Drones</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Drones SAS</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Galauru</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Residencial BT</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Filjo</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Fabio Transporte</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Freddy Pereira</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Gino Duarte Construccion</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Dosefor</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Vandford</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Richard Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Javier Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Veterinaria el Rastro</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Julio Ucha</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Marcia Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Estudio WMachado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Yakeline - Instituto IETI</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Noelia Bejerez</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Ruben Nuñez</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Freddy Pereira</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Maria Soledad</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Nelida Souza</span></div></div></div>
     </div></div></div>
 
 <!-- CELL EDIT MODAL -->
@@ -2913,7 +2917,7 @@ body.edit-mode .col-type-toggle { display: inline; }
   </div>
 </div>
 
-<div class="tooltip-msg" id="tooltip-msg">Guardado</div>
+<div class="tooltip-msg" id="tooltip-msg">📋 Copiado</div>
 
 </div> <!-- /app-container -->
 
@@ -13327,12 +13331,21 @@ function renderClientesLayout3(filtered) {
   if (!selected) {
     html += `<div style="padding:40px;text-align:center;color:var(--c-text-muted);">Seleccioná un cliente de la lista</div>`;
   } else {
-    html += `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--c-border);">
-      <div>
-        <div class="cli-exp-name" style="font-size:18px;">${selected.nombre}</div>
-        <div style="margin-top:6px;">${tipoBadge(selected.tipo)}</div>
+    const nomSel = selected.nombre || '—';
+    const nomAttr = nomSel.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    html += `<div class="cli-panel-head">
+      <div class="cli-panel-head-left">
+        <div class="cli-avatar-md">${initials(selected.nombre)}</div>
+        <div style="min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div class="cli-panel-title" title="Clic para seleccionar todo el nombre">${nomSel}</div>
+            <button class="pass-btn" onclick="copyToClipboard('${nomAttr}')" title="Copiar nombre">⎘</button>
+            ${selected.archived?'<span class="cliente-archived-badge">📦 ARCHIVADO</span>':''}
+          </div>
+          <div style="margin-top:6px;">${tipoBadge(selected.tipo)}</div>
+        </div>
       </div>
-      <div style="display:flex;gap:6px;">
+      <div style="display:flex;gap:6px;flex-shrink:0;">
         <button class="btn btn-outline" onclick="openEditCliente('${clienteId(selected)}')">✎ Editar</button>
         <button class="btn btn-outline" onclick="deleteCliente('${clienteId(selected)}')" style="color:var(--c-red);border-color:var(--c-red);">🗑</button>
       </div>
