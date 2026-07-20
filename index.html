@@ -2258,7 +2258,7 @@ body.edit-mode .col-type-toggle { display: inline; }
   </div>
   <div class="header-right">
     <span id="sync-indicator">🟢 Sincronizado</span>
-    <span id="build-version" title="Version de la app instalada. Si dice v2-clientes, estas en la version con el arreglo de clientes." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v2-clientes</span>
+    <span id="build-version" title="Version de la app instalada. v3-antipisado = con la proteccion contra pisado de datos." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v3-antipisado</span>
     <span class="year-badge" id="year-badge" onclick="openYearSettings()">2026</span>
     <div id="header-panels" class="header-panels"><div class="header-panel header-panel-presence" data-panel="presence" draggable="true">
         <span class="panel-handle">⠿</span>
@@ -3052,6 +3052,7 @@ let firebaseSaveTimeout = null;
 // Traba de seguridad: recién permitimos subir a la nube DESPUÉS de haberla leído
 // una vez. Evita que una copia vieja/vacía pise la versión buena al abrir la página.
 let cloudSynced = false;
+let lastSeenRev = 0; // versión más nueva que vimos de la nube (guard anti-pisado)
 
 function initFirebase() {
   try {
@@ -3064,6 +3065,10 @@ function initFirebase() {
       const data = snapshot.val();
       if (data) {
         const incoming = typeof data === 'string' ? JSON.parse(data) : data;
+        // Guard anti-pisado: registrar la versión de la nube que estamos viendo.
+        const incomingRev = (incoming && incoming._rev) || 0;
+        if (incomingRev >= lastSeenRev) lastSeenRev = incomingRev;
+        if (incoming && ('_rev' in incoming)) delete incoming._rev;
         // Strip any view-state that legacy versions might still send,
         // so it doesn't override this user's navigation.
         ['activeTabId','editMode','monthFilters','dashMonth'].forEach(k => { if (k in incoming) delete incoming[k]; });
@@ -3115,9 +3120,36 @@ function saveState() {
     clearTimeout(firebaseSaveTimeout);
     firebaseSaveTimeout = setTimeout(function() {
       showSyncIndicator('⏳ Guardando...');
-      firebaseDB.ref('wm_app_v2').set(JSON.stringify(state))
-        .then(function() { showSyncIndicator('🟢 Guardado'); })
-        .catch(function(e) { showSyncIndicator('🔴 Error al guardar'); });
+      firebaseDB.ref('wm_app_v2').transaction(function(current) {
+        // GUARD ANTI-PISADO: nunca sobreescribir una versión más nueva que la última que vimos.
+        var curRev = 0;
+        if (current != null) {
+          try {
+            var parsed = typeof current === 'string' ? JSON.parse(current) : current;
+            curRev = (parsed && parsed._rev) || 0;
+          } catch(e) { curRev = 0; }
+          if (curRev > lastSeenRev) {
+            // La nube tiene cambios más nuevos que esta pestaña no vio: abortar para no pisarlos.
+            return; // aborta la transacción
+          }
+        }
+        var newRev = Math.max(curRev, lastSeenRev) + 1;
+        var toWrite = Object.assign({}, state, { _rev: newRev });
+        return JSON.stringify(toWrite);
+      }, function(error, committed, snapshot) {
+        if (error) { showSyncIndicator('🔴 Error al guardar'); return; }
+        if (!committed) {
+          // Se abortó porque la nube tenía algo más nuevo; el listener ya traerá esa versión.
+          showSyncIndicator('🟡 Otra sesión tenía cambios más nuevos — sincronizando');
+          return;
+        }
+        try {
+          var v = snapshot && snapshot.val();
+          var p = typeof v === 'string' ? JSON.parse(v) : v;
+          if (p && p._rev) lastSeenRev = p._rev;
+        } catch(e) {}
+        showSyncIndicator('🟢 Guardado');
+      }, false); // applyLocally=false: no re-disparar el render local con datos crudos
     }, 600);
   }
 }
