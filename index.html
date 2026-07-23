@@ -1221,6 +1221,35 @@ mark.sticky-match { background: #ffeb3b; padding: 0 2px; border-radius: 2px; }
 .mydash-task-del { background: transparent; border: none; cursor: pointer; color: var(--c-text-muted); font-size: 14px; padding: 0 4px; opacity: 0; transition: opacity .15s; }
 .mydash-task:hover .mydash-task-del { opacity: 1; }
 .mydash-task-del:hover { color: var(--c-red); }
+/* ---- Tareas: filtros y acciones (Sesión filtros/archivo/asignar) ---- */
+.mydash-task-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.mydash-task-chip { background: var(--c-bg-alt); border: 1px solid var(--c-border); border-radius: 20px; padding: 4px 12px; font-size: 11.5px; font-family: inherit; cursor: pointer; color: var(--c-text-muted); letter-spacing: .3px; transition: all .15s; }
+.mydash-task-chip:hover { border-color: var(--c-accent); color: var(--c-text); }
+.mydash-task-chip.active { background: var(--c-accent, #1a4a7a); border-color: var(--c-accent, #1a4a7a); color: #fff; font-weight: 600; }
+.mydash-task-chip-n { display: inline-block; background: rgba(0,0,0,.10); border-radius: 10px; padding: 0 6px; margin-left: 4px; font-size: 10.5px; }
+.mydash-task-chip.active .mydash-task-chip-n { background: rgba(255,255,255,.25); }
+.mydash-task-acts { display: flex; gap: 2px; opacity: 0; transition: opacity .15s; }
+.mydash-task:hover .mydash-task-acts { opacity: 1; }
+.mydash-task-act { background: transparent; border: none; cursor: pointer; font-size: 12.5px; line-height: 1; padding: 3px 5px; border-radius: 3px; opacity: .65; }
+.mydash-task-act:hover { opacity: 1; background: rgba(0,0,0,.07); }
+.mydash-task.archived { opacity: .55; background: repeating-linear-gradient(45deg, var(--c-bg-alt), var(--c-bg-alt) 8px, rgba(0,0,0,.025) 8px, rgba(0,0,0,.025) 16px); }
+.mydash-task-badge { font-size: 10px; letter-spacing: .3px; padding: 2px 7px; border-radius: 10px; background: #e8eef5; color: #1a4a7a; white-space: nowrap; }
+.mydash-task-badge.in { background: #e8f5e9; color: #2e7d32; }
+.mydash-task-badge.arch { background: #ececec; color: #666; }
+.mydash-task-edit { flex: 1; font-family: inherit; font-size: 13px; padding: 4px 7px; border: 1px solid var(--c-accent, #1a4a7a); border-radius: 3px; outline: none; }
+/* ---- Autocompletado de clientes ---- */
+.cli-ac { position: relative; margin: 10px 0 4px; }
+.cli-ac input { width: 100%; padding: 9px 10px; border: 1px solid var(--c-border); border-radius: 3px; font-family: inherit; font-size: 13px; box-sizing: border-box; }
+.cli-ac input:focus { outline: none; border-color: var(--c-accent, #1a4a7a); }
+.cli-ac-list { max-height: 230px; overflow-y: auto; border: 1px solid var(--c-border); border-top: none; border-radius: 0 0 3px 3px; background: #fff; }
+.cli-ac-list:empty { display: none; }
+.cli-ac-item { padding: 7px 10px; font-size: 13px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,.05); display: flex; align-items: center; gap: 8px; }
+.cli-ac-item:last-child { border-bottom: none; }
+.cli-ac-item:hover, .cli-ac-item.sel { background: #eaf1f8; }
+.cli-ac-item b { color: var(--c-accent, #1a4a7a); }
+.cli-ac-item-tipo { margin-left: auto; font-size: 10px; color: var(--c-text-muted); text-transform: uppercase; letter-spacing: .5px; }
+.cli-ac-more { padding: 6px 10px; font-size: 11px; color: var(--c-text-muted); font-style: italic; }
+.cli-ac-current { font-size: 12.5px; padding: 8px 0 2px; min-height: 20px; }
 
 /* Kanban */
 .mydash-kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -2257,8 +2286,8 @@ body.edit-mode .col-type-toggle { display: inline; }
     </div>
   </div>
   <div class="header-right">
-    <span id="sync-indicator">🟢 Sincronizado</span>
-    <span id="build-version" title="Version de la app instalada. v3-antipisado = con la proteccion contra pisado de datos." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v3-antipisado</span>
+    <span id="sync-indicator">🟢 Guardado</span>
+    <span id="build-version" title="Version de la app instalada. v4-tareas = filtros/archivar/asignar en tareas, notas sin cortes y buscador de clientes." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v4-tareas</span>
     <span class="year-badge" id="year-badge" onclick="openYearSettings()">2026</span>
     <div id="header-panels" class="header-panels"><div class="header-panel header-panel-presence" data-panel="presence" draggable="true">
         <span class="panel-handle">⠿</span>
@@ -2322,108 +2351,205 @@ body.edit-mode .col-type-toggle { display: inline; }
 
 <div class="edit-banner">MODO EDICIÓN ACTIVO · Clic en títulos para editarlos · ✕ para eliminar · + para agregar</div>
 
-<div class="nav-tabs" id="nav-tabs"><div class="nav-tab active" data-tab-id="dashboard" data-tab-idx="0" onclick="switchTab('dashboard')"><span>Dashboard</span></div><div class="nav-tab" data-tab-id="mydash" data-tab-idx="1" onclick="switchTab('mydash')" ondblclick="renameTab(event,'mydash')" title="Doble clic para renombrar"><span>📌Personal</span></div><div class="nav-tab" data-tab-id="empresas" data-tab-idx="2" onclick="switchTab('empresas')" ondblclick="renameTab(event,'empresas')" title="Doble clic para renombrar"><span>🏢Empresas</span><span class="tab-x" onclick="event.stopPropagation();removeTab('empresas')">✕</span></div><div class="nav-tab" data-tab-id="sprof" data-tab-idx="3" onclick="switchTab('sprof')" ondblclick="renameTab(event,'sprof')" title="Doble clic para renombrar"><span>📋Sv.Profesionales</span><span class="tab-x" onclick="event.stopPropagation();removeTab('sprof')">✕</span></div><div class="nav-tab" data-tab-id="sueldos" data-tab-idx="4" onclick="switchTab('sueldos')" ondblclick="renameTab(event,'sueldos')" title="Doble clic para renombrar"><span>💼Sueldos</span></div><div class="nav-tab" data-tab-id="tab_1779884915309" data-tab-idx="5" onclick="switchTab('tab_1779884915309')" ondblclick="renameTab(event,'tab_1779884915309')" title="Doble clic para renombrar"><span>📊EJ Económicos</span><span class="tab-x" onclick="event.stopPropagation();removeTab('tab_1779884915309')">✕</span></div><div class="nav-tab" data-tab-id="clientes" data-tab-idx="6" onclick="switchTab('clientes')" ondblclick="renameTab(event,'clientes')" title="Doble clic para renombrar"><span>👥 Info. Clientes</span></div><div class="nav-tab" data-tab-id="declaraciones" data-tab-idx="7" onclick="declTabClick('declaraciones')" ondblclick="renameTab(event,'declaraciones')" title="Doble clic para renombrar"><span>📋 Declaraciones</span><span class="tab-x" onclick="event.stopPropagation();removeTab('declaraciones')">✕</span></div><div class="nav-tab" data-tab-id="calendario" data-tab-idx="8" onclick="switchTab('calendario')" ondblclick="renameTab(event,'calendario')" title="Doble clic para renombrar"><span>📅CALENDARIO</span></div><div class="nav-tab" data-tab-id="settings" data-tab-idx="9" onclick="switchTab('settings')"><span>Configuración</span></div><span class="nav-tab-add" onclick="openAddTab()">+ Nueva pestaña</span></div>
+<div class="nav-tabs" id="nav-tabs"><div class="nav-tab" data-tab-id="dashboard" data-tab-idx="0" onclick="switchTab('dashboard')"><span>Dashboard</span></div><div class="nav-tab active" data-tab-id="mydash" data-tab-idx="1" onclick="switchTab('mydash')" ondblclick="renameTab(event,'mydash')" title="Doble clic para renombrar"><span>📌Personal</span></div><div class="nav-tab" data-tab-id="empresas" data-tab-idx="2" onclick="switchTab('empresas')" ondblclick="renameTab(event,'empresas')" title="Doble clic para renombrar"><span>🏢Empresas</span><span class="tab-x" onclick="event.stopPropagation();removeTab('empresas')">✕</span></div><div class="nav-tab" data-tab-id="sprof" data-tab-idx="3" onclick="switchTab('sprof')" ondblclick="renameTab(event,'sprof')" title="Doble clic para renombrar"><span>📋Sv.Profesionales</span><span class="tab-x" onclick="event.stopPropagation();removeTab('sprof')">✕</span></div><div class="nav-tab" data-tab-id="sueldos" data-tab-idx="4" onclick="switchTab('sueldos')" ondblclick="renameTab(event,'sueldos')" title="Doble clic para renombrar"><span>💼Sueldos</span></div><div class="nav-tab" data-tab-id="tab_1779884915309" data-tab-idx="5" onclick="switchTab('tab_1779884915309')" ondblclick="renameTab(event,'tab_1779884915309')" title="Doble clic para renombrar"><span>📊EJ Económicos</span><span class="tab-x" onclick="event.stopPropagation();removeTab('tab_1779884915309')">✕</span></div><div class="nav-tab" data-tab-id="clientes" data-tab-idx="6" onclick="switchTab('clientes')" ondblclick="renameTab(event,'clientes')" title="Doble clic para renombrar"><span>👥 Info. Clientes</span></div><div class="nav-tab" data-tab-id="declaraciones" data-tab-idx="7" onclick="declTabClick('declaraciones')" ondblclick="renameTab(event,'declaraciones')" title="Doble clic para renombrar"><span>📋 Declaraciones</span><span class="tab-x" onclick="event.stopPropagation();removeTab('declaraciones')">✕</span></div><div class="nav-tab" data-tab-id="calendario" data-tab-idx="8" onclick="switchTab('calendario')" ondblclick="renameTab(event,'calendario')" title="Doble clic para renombrar"><span>📅CALENDARIO</span></div><div class="nav-tab" data-tab-id="settings" data-tab-idx="9" onclick="switchTab('settings')"><span>Configuración</span></div><span class="nav-tab-add" onclick="openAddTab()">+ Nueva pestaña</span></div>
 
 <div id="presence-warning" class="presence-warning" style="display:none;"></div>
 
 <div class="main-content" id="main-content">
     <div class="section-header">
       <div>
-        <div class="section-title">Resumen <span>2026</span></div>
-        <div style="font-size:12px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px;">Período: <strong style="color:var(--c-accent)">Junio</strong></div>
+        <div class="section-title">📌 Mi Dashboard <span style="font-size:14px;color:var(--c-text-muted);font-weight:400;text-transform:none;letter-spacing:normal;">— Daniela</span></div>
+        <div style="font-size:12px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px;">Tu espacio personal · solo vos lo ves</div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <label style="font-size:11px;color:var(--c-text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;">Mes:</label>
-        <select id="dash-month-select" onchange="setDashMonth(this.value)" style="padding:8px 14px;border:1px solid var(--c-border);background:var(--c-card);border-radius:2px;font-family:inherit;font-size:13px;font-weight:700;color:var(--c-text);cursor:pointer;min-width:170px;">
-          <option value="">— Año completo —</option>
-          <option value="Enero">Enero</option><option value="Febrero">Febrero</option><option value="Marzo">Marzo</option><option value="Abril">Abril</option><option value="Mayo">Mayo</option><option value="Junio" selected="">Junio</option><option value="Julio">Julio</option><option value="Agosto">Agosto</option><option value="Septiembre">Septiembre</option><option value="Octubre">Octubre</option><option value="Noviembre">Noviembre</option><option value="Diciembre">Diciembre</option>
-        </select>
-        <button class="btn btn-outline" onclick="expandAllDashSections()" title="Expandir todas">⊞ Todas</button>
-        <button class="btn btn-outline" onclick="collapseAllDashSections()" title="Colapsar todas">⊟ Ninguna</button>
-        <button class="btn btn-outline" onclick="resetDashLayout()" title="Reset orden y colapso">↺</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="openMyDashSettings()" title="Configurar secciones">⚙ Secciones</button>
       </div>
     </div>
-    <div class="stats-bar" style="margin-bottom:24px;">
-      <div class="stat-card green" style="cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('realizado')"><div class="stat-num">5</div><div class="stat-label">Realizados (9%) <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
-      <div class="stat-card" style="border-left:3px solid #4a9eff;cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('finalizado')"><div class="stat-num" style="color:#0066cc;">44</div><div class="stat-label">📤 Finalizados / enviados (83%) <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
-      <div class="stat-card red" style="cursor:pointer;" title="Tocar para ver el detalle por sector" onclick="openDashDrill('pendiente')"><div class="stat-num">4</div><div class="stat-label">Pendientes <span style="opacity:.5;font-size:11px;">🔍</span></div></div>
-      <div class="stat-card"><div class="stat-num">92%</div><div class="stat-label">Completado</div></div>
-      <div class="stat-card blue"><div class="stat-num">30</div><div class="stat-label">Registros activos</div></div>
+    <div style="font-size:11px;color:var(--c-text-muted);margin-bottom:10px;padding:6px 10px;background:var(--c-bg-alt);border-radius:3px;display:inline-block;">
+      💡 Arrastrá las secciones desde el ícono <strong>⋮⋮</strong> para reordenarlas a tu gusto
     </div>
-    <div style="font-size:11px;color:var(--c-text-muted);margin-bottom:10px;letter-spacing:0.3px;">
-      💡 Arrastrá las secciones desde el ícono <strong>⋮⋮</strong> para reordenarlas. Clic en el título para colapsar/expandir.
+  <div class="mydash-section" data-section="stickyNotes" draggable="true" ondragstart="onMyDashSectionDragStart(event,'stickyNotes')" ondragover="onMyDashSectionDragOver(event,'stickyNotes')" ondragleave="onMyDashSectionDragLeave(event,'stickyNotes')" ondrop="onMyDashSectionDrop(event,'stickyNotes')" ondragend="onMyDashSectionDragEnd(event)">
+      <div class="mydash-section-head">
+        <span class="mydash-section-title"><span class="mydash-section-drag" title="Arrastrá para reordenar">⋮⋮</span>📝 Notas adhesivas</span>
+      </div>
+      <div class="stickies-toolbar"><div class="stickies-search">
+        <input type="text" id="stickies-search-input" placeholder="🔍 Buscar en mis notas..." value="" oninput="onStickiesSearch(this.value)">
+        
+      </div><div class="sticky-groups-bar">
+        <button class="sticky-group-chip active" onclick="filterStickiesByGroup('')">Todos</button>
+        <button class="sticky-group-chip" style="border-left:3px solid #7fb685;" onclick="filterStickiesByGroup('sg_1780077322994_z7i')">DOSEFOR</button><button class="sticky-group-chip" style="border-left:3px solid #e8a87c;" onclick="filterStickiesByGroup('sg_1780505170936_g8c')">Personal</button><button class="sticky-group-chip" style="border-left:3px solid #85bdbf;" onclick="filterStickiesByGroup('sg_1782146641754_mho')">CCE</button>
+        <button class="sticky-group-add" onclick="openStickyGroupModal()" title="Crear grupo">+ Grupo</button>
+      </div><button class="btn btn-outline btn-sm" onclick="openStickyFeaturesModal()" title="Activar/desactivar funciones de las notas" style="margin-left:auto;font-size:11px;">⚙ Opciones</button><button class="btn btn-gold btn-sm" onclick="addMyDashStickyNote()">+ Nota</button></div>
+      <div class="mydash-stickies" id="mydash-stickies" ondragover="onStickyContainerDragOver(event)">
+        <div class="sticky-note sticky-size-m" style="background:#bbdefb;" data-id="sn_1782146660012_ep7" draggable="true" ondragstart="onStickyDragStart(event,'sn_1782146660012_ep7')" ondragover="onStickyDragOver(event,'sn_1782146660012_ep7')" ondragleave="onStickyDragLeave(event)" ondrop="onStickyDrop(event,'sn_1782146660012_ep7')" ondragend="onStickyDragEnd(event)">
+    <div class="sticky-toolbar" onmousedown="event.preventDefault();">
+      <button onclick="stickyFmt('sn_1782146660012_ep7','bold',false)" title="Negrita (Ctrl+B)"><b>B</b></button>
+      <button onclick="stickyFmt('sn_1782146660012_ep7','italic',false)" title="Cursiva (Ctrl+I)"><i>I</i></button>
+      <button onclick="stickyFmt('sn_1782146660012_ep7','underline',false)" title="Subrayado (Ctrl+U)"><u>U</u></button>
+      <span class="sticky-toolbar-sep"></span>
+      <button onclick="stickyTitle('sn_1782146660012_ep7',false)" title="Título / Encabezado" style="font-weight:700;font-size:13px;">T</button>
+      <button onclick="stickyFmt('sn_1782146660012_ep7','insertUnorderedList',false)" title="Lista con viñetas">•</button>
+      <button onclick="stickyFmt('sn_1782146660012_ep7','insertOrderedList',false)" title="Lista numerada">1.</button>
+      <button onclick="stickyToggleCheckbox('sn_1782146660012_ep7',false)" title="Lista con casillas (☐ tachable)">☐</button>
+      <span class="sticky-toolbar-sep"></span>
+      <button onclick="stickyFmt('sn_1782146660012_ep7','removeFormat',false)" title="Quitar formato" style="font-size:10px;">⌫T</button>
     </div>
-    <div id="dash-sections-wrap" class="dash-sections-wrap"><div class="dash-section collapsed" data-section-id="tab_op_empresas" draggable="true">
-      <div class="dash-section-header" onclick="toggleDashSection('tab_op_empresas')">
-        <span class="dash-drag-handle" title="Arrastrar para mover">⋮⋮</span>
-        <span class="dash-section-title">🏢 🏢Empresas — Vista operativa (Junio)</span>
+    <div class="sticky-content" contenteditable="true" oninput="updateStickyNote('sn_1782146660012_ep7', this.innerHTML)" onkeydown="stickyKeyHandler(event, 'sn_1782146660012_ep7')" onclick="onStickyClick(event,'sn_1782146660012_ep7',false)" data-placeholder="Escribí tu nota..."><b>JAVIER MACHADO</b><div>ERROR:&nbsp;<b style="font-size: small; color: rgb(34, 34, 34); font-family: Arial, Helvetica, sans-serif; text-align: -webkit-center; background-color: rgb(255, 255, 255);"><span class="m_-1792987590360382387msgerror" style="font-size: 9pt; font-family: Arial, &quot;sans-serif&quot;; color: rgb(159, 0, 0); border: 1pt rgb(0, 0, 0); padding: 0cm;">&nbsp;Las retenciones de IRAE declaradas en F1050 y/o F2178 del ejercicio superan las informadas por los responsables</span></b></div></div>
+    
+    <div class="sticky-actions">
+      <button class="sticky-color" onclick="cycleStickyColor('sn_1782146660012_ep7',false)" title="Cambiar color">🎨</button><button class="sticky-share-btn" onclick="openStickyShareModal('sn_1782146660012_ep7')" title="Compartir con compañera">👥</button><button class="sticky-group-btn" onclick="openStickyGroupAssign('sn_1782146660012_ep7')" title="Mover a grupo">📁</button><button class="sticky-del" onclick="removeStickyNote('sn_1782146660012_ep7',false)" title="Eliminar">×</button>
+    </div>
+  </div><div class="sticky-note sticky-size-m" style="background:#c5f5d4;" data-id="sn_1780058582055_z6d" draggable="true" ondragstart="onStickyDragStart(event,'sn_1780058582055_z6d')" ondragover="onStickyDragOver(event,'sn_1780058582055_z6d')" ondragleave="onStickyDragLeave(event)" ondrop="onStickyDrop(event,'sn_1780058582055_z6d')" ondragend="onStickyDragEnd(event)">
+    <div class="sticky-toolbar" onmousedown="event.preventDefault();">
+      <button onclick="stickyFmt('sn_1780058582055_z6d','bold',false)" title="Negrita (Ctrl+B)"><b>B</b></button>
+      <button onclick="stickyFmt('sn_1780058582055_z6d','italic',false)" title="Cursiva (Ctrl+I)"><i>I</i></button>
+      <button onclick="stickyFmt('sn_1780058582055_z6d','underline',false)" title="Subrayado (Ctrl+U)"><u>U</u></button>
+      <span class="sticky-toolbar-sep"></span>
+      <button onclick="stickyTitle('sn_1780058582055_z6d',false)" title="Título / Encabezado" style="font-weight:700;font-size:13px;">T</button>
+      <button onclick="stickyFmt('sn_1780058582055_z6d','insertUnorderedList',false)" title="Lista con viñetas">•</button>
+      <button onclick="stickyFmt('sn_1780058582055_z6d','insertOrderedList',false)" title="Lista numerada">1.</button>
+      <button onclick="stickyToggleCheckbox('sn_1780058582055_z6d',false)" title="Lista con casillas (☐ tachable)">☐</button>
+      <span class="sticky-toolbar-sep"></span>
+      <button onclick="stickyFmt('sn_1780058582055_z6d','removeFormat',false)" title="Quitar formato" style="font-size:10px;">⌫T</button>
+    </div>
+    <div class="sticky-content" contenteditable="true" oninput="updateStickyNote('sn_1780058582055_z6d', this.innerHTML)" onkeydown="stickyKeyHandler(event, 'sn_1780058582055_z6d')" onclick="onStickyClick(event,'sn_1780058582055_z6d',false)" data-placeholder="Escribí tu nota...">PCONTROL DE FALTAS:<br><br><div>- Por estudio: 05/05 - 12/05<br>-  licencia: 28/05<br></div></div>
+    <div class="sticky-footer"><span class="sticky-meta-chip" style="border-left:3px solid #e8a87c;">Personal</span></div>
+    <div class="sticky-actions">
+      <button class="sticky-color" onclick="cycleStickyColor('sn_1780058582055_z6d',false)" title="Cambiar color">🎨</button><button class="sticky-share-btn" onclick="openStickyShareModal('sn_1780058582055_z6d')" title="Compartir con compañera">👥</button><button class="sticky-group-btn" onclick="openStickyGroupAssign('sn_1780058582055_z6d')" title="Mover a grupo">📁</button><button class="sticky-del" onclick="removeStickyNote('sn_1780058582055_z6d',false)" title="Eliminar">×</button>
+    </div>
+  </div><div class="sticky-note sticky-size-m" style="background:#f8bbd0;" data-id="sn_1783516276678_gwv" draggable="true" ondragstart="onStickyDragStart(event,'sn_1783516276678_gwv')" ondragover="onStickyDragOver(event,'sn_1783516276678_gwv')" ondragleave="onStickyDragLeave(event)" ondrop="onStickyDrop(event,'sn_1783516276678_gwv')" ondragend="onStickyDragEnd(event)">
+    <div class="sticky-toolbar" onmousedown="event.preventDefault();">
+      <button onclick="stickyFmt('sn_1783516276678_gwv','bold',false)" title="Negrita (Ctrl+B)"><b>B</b></button>
+      <button onclick="stickyFmt('sn_1783516276678_gwv','italic',false)" title="Cursiva (Ctrl+I)"><i>I</i></button>
+      <button onclick="stickyFmt('sn_1783516276678_gwv','underline',false)" title="Subrayado (Ctrl+U)"><u>U</u></button>
+      <span class="sticky-toolbar-sep"></span>
+      <button onclick="stickyTitle('sn_1783516276678_gwv',false)" title="Título / Encabezado" style="font-weight:700;font-size:13px;">T</button>
+      <button onclick="stickyFmt('sn_1783516276678_gwv','insertUnorderedList',false)" title="Lista con viñetas">•</button>
+      <button onclick="stickyFmt('sn_1783516276678_gwv','insertOrderedList',false)" title="Lista numerada">1.</button>
+      <button onclick="stickyToggleCheckbox('sn_1783516276678_gwv',false)" title="Lista con casillas (☐ tachable)">☐</button>
+      <span class="sticky-toolbar-sep"></span>
+      <button onclick="stickyFmt('sn_1783516276678_gwv','removeFormat',false)" title="Quitar formato" style="font-size:10px;">⌫T</button>
+    </div>
+    <div class="sticky-content" contenteditable="true" oninput="updateStickyNote('sn_1783516276678_gwv', this.innerHTML)" onkeydown="stickyKeyHandler(event, 'sn_1783516276678_gwv')" onclick="onStickyClick(event,'sn_1783516276678_gwv',false)" data-placeholder="Escribí tu nota..."><b>FALTAS - Facultad</b><div><b>- </b>Primer Semestre:</div></div>
+    
+    <div class="sticky-actions">
+      <button class="sticky-color" onclick="cycleStickyColor('sn_1783516276678_gwv',false)" title="Cambiar color">🎨</button><button class="sticky-share-btn" onclick="openStickyShareModal('sn_1783516276678_gwv')" title="Compartir con compañera">👥</button><button class="sticky-group-btn" onclick="openStickyGroupAssign('sn_1783516276678_gwv')" title="Mover a grupo">📁</button><button class="sticky-del" onclick="removeStickyNote('sn_1783516276678_gwv',false)" title="Eliminar">×</button>
+    </div>
+  </div><div class="sticky-note sticky-size-m" style="background:#f8bbd0;" data-id="sn_1783606078201_615" draggable="true" ondragstart="onStickyDragStart(event,'sn_1783606078201_615')" ondragover="onStickyDragOver(event,'sn_1783606078201_615')" ondragleave="onStickyDragLeave(event)" ondrop="onStickyDrop(event,'sn_1783606078201_615')" ondragend="onStickyDragEnd(event)">
+    <div class="sticky-toolbar" onmousedown="event.preventDefault();">
+      <button onclick="stickyFmt('sn_1783606078201_615','bold',false)" title="Negrita (Ctrl+B)"><b>B</b></button>
+      <button onclick="stickyFmt('sn_1783606078201_615','italic',false)" title="Cursiva (Ctrl+I)"><i>I</i></button>
+      <button onclick="stickyFmt('sn_1783606078201_615','underline',false)" title="Subrayado (Ctrl+U)"><u>U</u></button>
+      <span class="sticky-toolbar-sep"></span>
+      <button onclick="stickyTitle('sn_1783606078201_615',false)" title="Título / Encabezado" style="font-weight:700;font-size:13px;">T</button>
+      <button onclick="stickyFmt('sn_1783606078201_615','insertUnorderedList',false)" title="Lista con viñetas">•</button>
+      <button onclick="stickyFmt('sn_1783606078201_615','insertOrderedList',false)" title="Lista numerada">1.</button>
+      <button onclick="stickyToggleCheckbox('sn_1783606078201_615',false)" title="Lista con casillas (☐ tachable)">☐</button>
+      <span class="sticky-toolbar-sep"></span>
+      <button onclick="stickyFmt('sn_1783606078201_615','removeFormat',false)" title="Quitar formato" style="font-size:10px;">⌫T</button>
+    </div>
+    <div class="sticky-content" contenteditable="true" oninput="updateStickyNote('sn_1783606078201_615', this.innerHTML)" onkeydown="stickyKeyHandler(event, 'sn_1783606078201_615')" onclick="onStickyClick(event,'sn_1783606078201_615',false)" data-placeholder="Escribí tu nota...">Para RBT&nbsp; - Rosario pasa al 10%<div><br></div></div>
+    
+    <div class="sticky-actions">
+      <button class="sticky-color" onclick="cycleStickyColor('sn_1783606078201_615',false)" title="Cambiar color">🎨</button><button class="sticky-share-btn" onclick="openStickyShareModal('sn_1783606078201_615')" title="Compartir con compañera">👥</button><button class="sticky-group-btn" onclick="openStickyGroupAssign('sn_1783606078201_615')" title="Mover a grupo">📁</button><button class="sticky-del" onclick="removeStickyNote('sn_1783606078201_615',false)" title="Eliminar">×</button>
+    </div>
+  </div><div class="sticky-note sticky-size-m sticky-readonly" style="background:#c5f5d4;" data-id="sn_1780077372569_6i5">
+    
+    <div class="sticky-content" onclick="onStickyClick(event,'sn_1780077372569_6i5',false)" data-placeholder="Escribí tu nota..."><div><b>Notas compartidas</b></div><div>asi se ven</div></div>
+    <div class="sticky-footer"><span class="sticky-meta-chip" style="background:#f0e6ff;color:#5b3b9e;">👤 Wendy</span></div>
+    <div class="sticky-actions">
+      <span class="sticky-readonly-badge" title="Compartida por Wendy">🔒</span>
+    </div>
+  </div><div class="sticky-note sticky-size-m sticky-readonly" style="background:#f8bbd0;" data-id="sn_1780077479194_14o">
+    
+    <div class="sticky-content" onclick="onStickyClick(event,'sn_1780077479194_14o',false)" data-placeholder="Escribí tu nota...">Cuando este pronta la empresa en&nbsp; GNS contable registrar las compras y ventas del 2024 y 2025&nbsp;<div><br></div></div>
+    <div class="sticky-footer"><span class="sticky-meta-chip" style="background:#f0e6ff;color:#5b3b9e;">👤 Wendy</span></div>
+    <div class="sticky-actions">
+      <span class="sticky-readonly-badge" title="Compartida por Wendy">🔒</span>
+    </div>
+  </div>
         
-        <span class="dash-section-toggle">▸</span>
+      </div><div class="studio-stickies-wrap">
+      <div class="studio-stickies-head" onclick="toggleStudioStickies()">
+        <span class="studio-toggle-arrow">▶</span>
+        <strong>📋 Notas del estudio</strong>
+        <span class="studio-stickies-count">0</span>
+        <span style="margin-left:auto;font-size:11px;color:var(--c-text-muted);">Clic para ver</span>
       </div>
-      <div class="dash-section-body"><div class="stats-bar" style="margin-bottom:16px;">
-    <div class="stat-card green" style="border-left-color:var(--c-green);"><div class="stat-num" style="color:var(--c-green);">3</div><div class="stat-label">Realizados (sin enviar)</div></div>
-    <div class="stat-card" style="border-left:3px solid #4a9eff;"><div class="stat-num" style="color:#0066cc;">11</div><div class="stat-label">📤 Finalizados (enviados)</div></div>
-    <div class="stat-card" style="border-left-color:var(--c-pending);"><div class="stat-num" style="color:var(--c-pending);">0</div><div class="stat-label">En proceso</div></div>
-    <div class="stat-card red" style="border-left-color:var(--c-red);"><div class="stat-num" style="color:var(--c-red);">2</div><div class="stat-label">Sin registrar</div></div>
-    <div class="stat-card" style="border-left-color:var(--c-accent);"><div class="stat-num">88%</div><div class="stat-label">Completado</div></div>
-  </div><div class="dashboard-grid"><div class="dash-card" style="border-left:3px solid var(--c-pending,#d4860a);">
-    <h4 style="color:var(--c-pending,#d4860a);">⏳ Pendientes / Sin registrar <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">2</span></h4>
-    <ul class="pending-list"><li><span class="pending-name">Freddy Pereira<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li><li><span class="pending-name">Gualberto Seguí<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li></ul></div><div class="dash-card" style="border-left:3px solid var(--c-green,#2e7d52);">
-    <h4 style="color:var(--c-green,#2e7d52);">✅ Realizados <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">3</span></h4>
-    <ul class="pending-list"><li><span class="pending-name">FILJO SRL<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">01/07</span></li><li><span class="pending-name">Lucas Vandes - VANDFOR<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">02/07</span></li><li><span class="pending-name">Claudio Vandes<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">01/07</span></li></ul></div></div><div class="dash-card" style="margin-top:16px;border-left:3px solid #4a9eff;">
-    <h4 style="color:#0066cc;">📤 Finalizados — Enviados al cliente <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">11</span></h4>
-    <ul class="pending-list"><li><span class="pending-name">El Rastro<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Javier Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">DGI</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Residencial Buenos Tiempos<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Residencial Galauru SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 13/07</span></li><li><span class="pending-name">Drones del Pampa SAS<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Richard Machado<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Fabio de la Rosa<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Nahier Hernandez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Mónica Perez<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Cesar do Canto<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">GNS+DGI</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 09/07</span></li><li><span class="pending-name">Andres Pereira<span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);margin-left:6px;">BP DGI -IVA min</span></span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 09/07</span></li></ul></div></div>
-    </div><div class="dash-section" data-section-id="tab_op_sprof" draggable="true">
-      <div class="dash-section-header" onclick="toggleDashSection('tab_op_sprof')">
-        <span class="dash-drag-handle" title="Arrastrar para mover">⋮⋮</span>
-        <span class="dash-section-title">👤 📋Sv.Profesionales — Vista operativa (Junio)</span>
+      
+    </div></div><div class="mydash-section" data-section="tasks" draggable="true" ondragstart="onMyDashSectionDragStart(event,'tasks')" ondragover="onMyDashSectionDragOver(event,'tasks')" ondragleave="onMyDashSectionDragLeave(event,'tasks')" ondrop="onMyDashSectionDrop(event,'tasks')" ondragend="onMyDashSectionDragEnd(event)">
+      <div class="mydash-section-head">
+        <span class="mydash-section-title"><span class="mydash-section-drag" title="Arrastrá para reordenar">⋮⋮</span>✅ Mis tareas</span>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="mydash-task-input" placeholder="Nueva tarea..." onkeydown="if(event.key==='Enter')addMyDashTask()" style="padding:5px 8px;border:1px solid var(--c-border);border-radius:3px;font-family:inherit;font-size:12px;width:240px;">
+          <button class="btn btn-gold btn-sm" onclick="addMyDashTask()">Agregar</button>
+        </div>
+      </div>
+      <div class="mydash-tasks">
+        <div class="mydash-task done">
+          <input type="checkbox" checked="" onchange="toggleMyDashTask('t_1782842883906_y0bs')">
+          <span class="mydash-task-text">✅ Solicitar CCE para Filjo (2025) · DJ 2178: Certificado tipo D disponible 08/06/2026
+…</span>
+          <button class="mydash-task-del" onclick="removeMyDashTask('t_1782842883906_y0bs')" title="Eliminar">×</button>
+        </div><div class="mydash-task done">
+          <input type="checkbox" checked="" onchange="toggleMyDashTask('t_1782821542771_72a7')">
+          <span class="mydash-task-text">✅ Solicitar CCE para Filjo (2025) · Certificado tipo D disponible 08/06/2026</span>
+          <button class="mydash-task-del" onclick="removeMyDashTask('t_1782821542771_72a7')" title="Eliminar">×</button>
+        </div><div class="mydash-task done">
+          <input type="checkbox" checked="" onchange="toggleMyDashTask('t_1782149572975_frc4')">
+          <span class="mydash-task-text">✅ Solicitar CCE para Veterinaria El Rastro (2025) · DJ 2178: $ 20.048</span>
+          <button class="mydash-task-del" onclick="removeMyDashTask('t_1782149572975_frc4')" title="Eliminar">×</button>
+        </div><div class="mydash-task done">
+          <input type="checkbox" checked="" onchange="toggleMyDashTask('t_1780581420657_e15')">
+          <span class="mydash-task-text">hacer conciliación bancaria Drones SAS</span>
+          <button class="mydash-task-del" onclick="removeMyDashTask('t_1780581420657_e15')" title="Eliminar">×</button>
+        </div><div class="mydash-task done">
+          <input type="checkbox" checked="" onchange="toggleMyDashTask('t_1780405510949_1voa')">
+          <span class="mydash-task-text">✅ Solicitar CCE para Gualberto Segui (2025) · Solicitud de credito automatico: $ 215.885
+</span>
+          <button class="mydash-task-del" onclick="removeMyDashTask('t_1780405510949_1voa')" title="Eliminar">×</button>
+        </div><div class="mydash-task done">
+          <input type="checkbox" checked="" onchange="toggleMyDashTask('t_1780405426518_886z')">
+          <span class="mydash-task-text">✅ Solicitar CCE para Fabio da Rosa (2025) · Solicitar credito. Hacer DJ 2181 por las compras d…</span>
+          <button class="mydash-task-del" onclick="removeMyDashTask('t_1780405426518_886z')" title="Eliminar">×</button>
+        </div><div class="mydash-task done">
+          <input type="checkbox" checked="" onchange="toggleMyDashTask('t_1780405399892_cawb')">
+          <span class="mydash-task-text">✅ Solicitar CCE para Drones del Pampa SAS (2025) · Saldo 2178 credito $ 23.264, Sdo a pagar IRAE e IP…</span>
+          <button class="mydash-task-del" onclick="removeMyDashTask('t_1780405399892_cawb')" title="Eliminar">×</button>
+        </div><div class="mydash-task ">
+          <input type="checkbox" onchange="toggleMyDashTask('t_1780404601233_0947')">
+          <span class="mydash-task-text">✅ Solicitar CCE para Javier Machado (2025) · Solicitar credito DJ 1050 $ 26.986</span>
+          <button class="mydash-task-del" onclick="removeMyDashTask('t_1780404601233_0947')" title="Eliminar">×</button>
+        </div><div class="mydash-task done">
+          <input type="checkbox" checked="" onchange="toggleMyDashTask('t_1780404426171_a4e3')">
+          <span class="mydash-task-text">✅ Solicitar CCE para Metalurgica Freddy Pereira (2025) · de la 2178 quedo un saldo a pagar de $ 49.079, lue…</span>
+          <button class="mydash-task-del" onclick="removeMyDashTask('t_1780404426171_a4e3')" title="Eliminar">×</button>
+        </div>
         
-        <span class="dash-section-toggle">▾</span>
       </div>
-      <div class="dash-section-body"><div class="stats-bar" style="margin-bottom:16px;">
-    <div class="stat-card green" style="border-left-color:var(--c-green);"><div class="stat-num" style="color:var(--c-green);">2</div><div class="stat-label">Realizados (sin enviar)</div></div>
-    <div class="stat-card" style="border-left:3px solid #4a9eff;"><div class="stat-num" style="color:#0066cc;">10</div><div class="stat-label">📤 Finalizados (enviados)</div></div>
-    <div class="stat-card" style="border-left-color:var(--c-pending);"><div class="stat-num" style="color:var(--c-pending);">0</div><div class="stat-label">En proceso</div></div>
-    <div class="stat-card red" style="border-left-color:var(--c-red);"><div class="stat-num" style="color:var(--c-red);">2</div><div class="stat-label">Sin registrar</div></div>
-    <div class="stat-card" style="border-left-color:var(--c-accent);"><div class="stat-num">86%</div><div class="stat-label">Completado</div></div>
-  </div><div class="dashboard-grid"><div class="dash-card" style="border-left:3px solid var(--c-pending,#d4860a);">
-    <h4 style="color:var(--c-pending,#d4860a);">⏳ Pendientes / Sin registrar <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">2</span></h4>
-    <ul class="pending-list"><li><span class="pending-name">Luis Alfredo Rondeau</span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li><li><span class="pending-name">Fernando Corbo</span><span class="tag-pill" style="background:#f0eee9;color:var(--c-text-muted);">○ Sin registrar</span></li></ul></div><div class="dash-card" style="border-left:3px solid var(--c-green,#2e7d52);">
-    <h4 style="color:var(--c-green,#2e7d52);">✅ Realizados <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">2</span></h4>
-    <ul class="pending-list"><li><span class="pending-name">Alejandro (Chiche)</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li><li><span class="pending-name">Florencia de Leon</span><span class="tag-pill" style="background:var(--c-green-light);color:var(--c-green);">✓</span></li></ul></div></div><div class="dash-card" style="margin-top:16px;border-left:3px solid #4a9eff;">
-    <h4 style="color:#0066cc;">📤 Finalizados — Enviados al cliente <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">10</span></h4>
-    <ul class="pending-list"><li><span class="pending-name">Soledad Martinez</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Daiana Machado</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 16/07</span></li><li><span class="pending-name">Miguel Yavarone</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📤 enviado</span></li><li><span class="pending-name">Alexandra Duarte</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Sebastian Bordenave</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Sergio Ayala</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 16/07</span></li><li><span class="pending-name">Marcelo Roman</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Maria Victoria Cordero</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 15/07</span></li><li><span class="pending-name">Rosangela Meneses</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📅 10/07</span></li><li><span class="pending-name">Wendy Machado</span><span class="tag-pill" style="background:#e8f0f8;color:#0066cc;">📤 enviado</span></li></ul></div></div>
-    </div><div class="dash-section" data-section-id="sueldos_dashboard" draggable="true">
-      <div class="dash-section-header" onclick="toggleDashSection('sueldos_dashboard')">
-        <span class="dash-drag-handle" title="Arrastrar para mover">⋮⋮</span>
-        <span class="dash-section-title">💼 Sueldos — Vista operativa</span>
+    </div><div class="mydash-section" data-section="agenda" draggable="true" ondragstart="onMyDashSectionDragStart(event,'agenda')" ondragover="onMyDashSectionDragOver(event,'agenda')" ondragleave="onMyDashSectionDragLeave(event,'agenda')" ondrop="onMyDashSectionDrop(event,'agenda')" ondragend="onMyDashSectionDragEnd(event)">
+      <div class="mydash-section-head">
+        <span class="mydash-section-title"><span class="mydash-section-drag" title="Arrastrá para reordenar">⋮⋮</span>📅 Agenda de hoy</span>
+        <button class="btn btn-outline btn-sm" onclick="switchTab('calendario')">Ver calendario</button>
+      </div>
+      <div class="agenda-mode-toggle" style="display:inline-flex;gap:0;margin-bottom:10px;border:1px solid var(--c-border);border-radius:3px;overflow:hidden;font-size:11px;">
+    <button class="agenda-mode-btn active" onclick="setAgendaMode('mine')" title="Solo eventos donde estás asignada">👤 Mis asignados</button>
+    <button class="agenda-mode-btn" onclick="setAgendaMode('all')" title="Todos los eventos del estudio para hoy">🌐 Todo el estudio</button>
+  </div><div class="mydash-empty">No tenés eventos asignados a vos para hoy 🎉<br><span style="font-size:11px;opacity:.7;">Tip: revisá "Todo el estudio" para ver eventos generales</span></div>
+    </div><div class="mydash-section" data-section="shortcuts" draggable="true" ondragstart="onMyDashSectionDragStart(event,'shortcuts')" ondragover="onMyDashSectionDragOver(event,'shortcuts')" ondragleave="onMyDashSectionDragLeave(event,'shortcuts')" ondrop="onMyDashSectionDrop(event,'shortcuts')" ondragend="onMyDashSectionDragEnd(event)">
+      <div class="mydash-section-head">
+        <span class="mydash-section-title"><span class="mydash-section-drag" title="Arrastrá para reordenar">⋮⋮</span>🔗 Atajos rápidos</span>
+        <button class="btn btn-gold btn-sm" onclick="addMyDashShortcut()">+ Atajo</button>
+      </div>
+      <div class="mydash-shortcuts">
+        <div class="mydash-shortcut" style="border-left:3px solid #b8c1cc;" onclick="openShortcut('sc_1779908530083_z3g')">
+    <span class="mydash-shortcut-icon" style="color:#b8c1cc;">🔗</span>
+    <span class="mydash-shortcut-label">DGI</span>
+    <button class="mydash-shortcut-del" onclick="event.stopPropagation();removeMyDashShortcut('sc_1779908530083_z3g')" title="Eliminar">×</button>
+  </div>
         
-        <span class="dash-section-toggle">▾</span>
       </div>
-      <div class="dash-section-body"><div style="font-size:11px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Período: <strong style="color:var(--c-accent)">Junio 2026</strong> · <span onclick="switchTab('sueldos')" style="color:var(--c-accent);cursor:pointer;font-weight:700;">Ir a Sueldos →</span></div>
-    <div class="stats-bar" style="margin-bottom:16px;"><div class="stat-card" style="border-left-color:#888;cursor:pointer;" onclick="switchTab('sueldos')">
-      <div class="stat-num" style="color:#888">0</div>
-      <div class="stat-label">Pendiente</div>
-    </div><div class="stat-card" style="border-left-color:#d4860a;cursor:pointer;" onclick="switchTab('sueldos')">
-      <div class="stat-num" style="color:#d4860a">0</div>
-      <div class="stat-label">En proceso</div>
-    </div><div class="stat-card" style="border-left-color:#2e7d52;cursor:pointer;" onclick="switchTab('sueldos')">
-      <div class="stat-num" style="color:#2e7d52">0</div>
-      <div class="stat-label">Pronto</div>
-    </div><div class="stat-card" style="border-left-color:#1a4a7a;cursor:pointer;" onclick="switchTab('sueldos')">
-      <div class="stat-num" style="color:#1a4a7a">9</div>
-      <div class="stat-label">Enviado</div>
-    </div><div class="stat-card" style="border-left-color:#5b2c6f;cursor:pointer;" onclick="switchTab('sueldos')">
-      <div class="stat-num" style="color:#5b2c6f">14</div>
-      <div class="stat-label">Finalizado</div>
-    </div></div><div class="dashboard-grid"><div class="dash-card" style="border-left:3px solid var(--c-green,#2e7d52);">
-    <h4 style="color:var(--c-green,#2e7d52);">✅ Prontos para enviar <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">0</span></h4>
-    <ul class="pending-list"><li style="color:var(--c-text-muted);padding:14px 0;font-style:italic;">Ningún sueldo pronto este mes</li></ul></div><div class="dash-card" style="border-left:3px solid var(--c-pending,#d4860a);">
-    <h4 style="color:var(--c-pending,#d4860a);">⏳ Pendientes / en proceso <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">0</span></h4>
-    <ul class="pending-list"><li style="color:var(--c-green);padding:14px 0;">✓ Todos avanzados</li></ul></div></div><div class="dash-card" style="border-left:3px solid var(--c-blue,#1a4a7a);margin-top:16px;">
-      <h4 style="color:var(--c-blue,#1a4a7a);">✈ Enviados / finalizados <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">23</span></h4>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Gualberto Segui</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Drones</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Drones SAS</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Galauru</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Residencial BT</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Filjo</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Fabio Transporte</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Freddy Pereira</span><span class="tag-pill" style="background:#e8f0f8;color:#1a4a7a;font-size:11px;padding:4px 10px;">✈ Gino Duarte Construccion</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Dosefor</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Vandford</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Richard Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Javier Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Veterinaria el Rastro</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Julio Ucha</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Marcia Machado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Estudio WMachado</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Yakeline - Instituto IETI</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Noelia Bejerez</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Ruben Nuñez</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Freddy Pereira</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Maria Soledad</span><span class="tag-pill" style="background:#ebdef0;color:#5b2c6f;font-size:11px;padding:4px 10px;">★ Nelida Souza</span></div></div></div>
-    </div></div></div>
+    </div></div>
 
 <!-- CELL EDIT MODAL -->
 <div class="modal-overlay" id="modal-cell">
@@ -2636,10 +2762,39 @@ body.edit-mode .col-type-toggle { display: inline; }
     <h3>🔗 Vincular nota a cliente</h3>
     <div class="modal-sub">Elegí una empresa de Info. Clientes. Después podrás hacer clic en el chip para ir directo a su ficha.</div>
     <input type="hidden" id="sticky-link-note-id">
-    <select id="sticky-link-select" style="width:100%;padding:8px;border:1px solid var(--c-border);border-radius:3px;margin:10px 0;"></select>
+    <input type="hidden" id="sticky-link-value">
+    <div class="cli-ac">
+      <input type="text" id="sticky-link-search" autocomplete="off" placeholder="Escribí unas letras del nombre…"
+             oninput="onStickyLinkSearch(this.value)" onkeydown="onStickyLinkKey(event)">
+      <div id="sticky-link-results" class="cli-ac-list"></div>
+    </div>
+    <div id="sticky-link-current" class="cli-ac-current"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-sticky-link')">Cancelar</button>
       <button class="btn btn-gold" onclick="saveStickyClientLink()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Asignar tarea a otra usuaria -->
+<div class="modal-overlay" id="modal-task-assign">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-task-assign')">×</button>
+    <h3>👤 Asignar tarea</h3>
+    <div class="modal-sub" id="task-assign-text"></div>
+    <input type="hidden" id="task-assign-id">
+    <div class="form-group" style="margin-top:12px;">
+      <label>Asignar a</label>
+      <select id="task-assign-user" style="width:100%;padding:8px;border:1px solid var(--c-border);border-radius:3px;"></select>
+    </div>
+    <label style="display:flex;gap:8px;align-items:flex-start;margin:14px 0 4px;font-size:12.5px;cursor:pointer;line-height:1.4;">
+      <input type="checkbox" id="task-assign-keep" checked style="margin-top:2px;">
+      <span><strong>Mantener una copia en mi lista</strong><br>
+      <span style="color:var(--c-text-muted);">Si la destildás, la tarea sale de tu lista y pasa a ser solo de ella.</span></span>
+    </label>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-task-assign')">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveTaskAssign()">Asignar</button>
     </div>
   </div>
 </div>
@@ -3066,6 +3221,9 @@ function initFirebase() {
       if (data) {
         const incoming = typeof data === 'string' ? JSON.parse(data) : data;
         // Guard anti-pisado: registrar la versión de la nube que estamos viendo.
+        // IMPORTANTE: esto se hace SIEMPRE, incluso si diferimos el render, porque si no
+        // la próxima transacción se abortaría por "la nube es más nueva" y se perdería
+        // lo que la usuaria está escribiendo.
         const incomingRev = (incoming && incoming._rev) || 0;
         if (incomingRev >= lastSeenRev) lastSeenRev = incomingRev;
         if (incoming && ('_rev' in incoming)) delete incoming._rev;
@@ -3073,20 +3231,18 @@ function initFirebase() {
         // so it doesn't override this user's navigation.
         ['activeTabId','editMode','monthFilters','dashMonth'].forEach(k => { if (k in incoming) delete incoming[k]; });
         if (incoming.tabs) incoming.tabs.forEach(t => { if ('layout' in t) delete t.layout; });
-        // Only react if shared data actually changed
-        if (JSON.stringify(incoming) !== JSON.stringify(state)) {
-          state = incoming;
-          if (!state.tabs || !state.branding) state = buildInitState();
-          // CRITICAL: re-apply migrations after Firebase pulls so new tabs/data appear
-          if (ensureNewStructures()) {
-            // Push the migrated state back to Firebase so other users see it too
-            saveState();
-          }
-          applyBranding();
-          renderTabs();
-          renderContent();
-          showSyncIndicator('🟢 Sincronizado');
+
+        // ===== CANDADO DE EDICIÓN =====
+        // Si la usuaria está escribiendo dentro de una nota, NO tocamos el estado ni
+        // re-renderizamos: eso reconstruía el contenteditable, perdía el cursor y dejaba
+        // el texto cortado en la última versión guardada. Encolamos el cambio remoto y
+        // lo aplicamos (fusionado) apenas salga de la nota.
+        if (isEditingSticky()) {
+          _pendingRemoteState = incoming;
+          showSyncIndicator('✏️ Escribiendo — sincroniza al salir');
+          return;
         }
+        applyIncomingState(incoming);
       } else {
         // No data in Firebase yet → push our current (initial) state up
         saveState();
@@ -3102,6 +3258,76 @@ function showSyncIndicator(msg) {
   let el = document.getElementById('sync-indicator');
   if (!el) return;
   el.textContent = msg;
+}
+
+// ============ CANDADO DE EDICIÓN DE NOTAS ============
+// Problema que resuelve: mientras escribías una nota, volvía el eco de Firebase con la
+// versión de hace ~600 ms (más vieja que la pantalla). El listener hacía state = incoming
+// + renderContent(), lo que reconstruía el <div contenteditable> y te cortaba el texto.
+let _stickyEditingId = null;      // id de la nota que tiene el foco ahora mismo
+let _stickyEditingIsStudio = false;
+let _stickyBlurTimer = null;
+let _pendingRemoteState = null;   // cambio remoto en espera de que salgas de la nota
+
+function isEditingSticky() { return _stickyEditingId !== null; }
+
+function onStickyFocus(noteId, isStudio) {
+  clearTimeout(_stickyBlurTimer);
+  _stickyEditingId = noteId;
+  _stickyEditingIsStudio = !!isStudio;
+}
+
+function onStickyBlur(noteId) {
+  // Damos margen para que (a) un clic en la barra de formato no cuente como salida y
+  // (b) el guardado con debounce de 600 ms suba lo último antes de sincronizar.
+  clearTimeout(_stickyBlurTimer);
+  _stickyBlurTimer = setTimeout(function() {
+    // ¿Volvió el foco a alguna nota? Entonces seguimos editando.
+    const ae = document.activeElement;
+    if (ae && ae.classList && ae.classList.contains('sticky-content')) return;
+    _stickyEditingId = null;
+    flushPendingRemoteState();
+  }, 900);
+}
+
+function flushPendingRemoteState() {
+  if (!_pendingRemoteState) return;
+  const inc = _pendingRemoteState;
+  _pendingRemoteState = null;
+  // Fusión conservadora: lo que la usuaria acaba de escribir SIEMPRE gana sobre la copia
+  // de la nube que quedó encolada. Preservamos su dashboard personal completo y, si estaba
+  // editando una nota del estudio, esa nota puntual.
+  try {
+    const me = currentUser();
+    if (me && state.userDashboards && state.userDashboards[me.name]) {
+      if (!inc.userDashboards) inc.userDashboards = {};
+      inc.userDashboards[me.name] = state.userDashboards[me.name];
+    }
+    if (_stickyEditingIsStudio && Array.isArray(inc.studioStickyNotes) && Array.isArray(state.studioStickyNotes)) {
+      state.studioStickyNotes.forEach(function(localNote) {
+        const i = inc.studioStickyNotes.findIndex(function(x) { return x.id === localNote.id; });
+        if (i >= 0) inc.studioStickyNotes[i] = localNote;
+      });
+    }
+  } catch(e) { console.warn('merge notas', e); }
+  applyIncomingState(inc);
+  saveState(); // subir la versión fusionada para que las demás vean el texto final
+}
+
+function applyIncomingState(incoming) {
+  // Only react if shared data actually changed
+  if (JSON.stringify(incoming) === JSON.stringify(state)) return;
+  state = incoming;
+  if (!state.tabs || !state.branding) state = buildInitState();
+  // CRITICAL: re-apply migrations after Firebase pulls so new tabs/data appear
+  if (ensureNewStructures()) {
+    // Push the migrated state back to Firebase so other users see it too
+    saveState();
+  }
+  applyBranding();
+  renderTabs();
+  renderContent();
+  showSyncIndicator('🟢 Sincronizado');
 }
 
 function loadState() {
@@ -9997,6 +10223,59 @@ function renderMyDashSection(key, d) {
     return html;
   }
   if (key === 'tasks') {
+    const all = Array.isArray(d.tasks) ? d.tasks : [];
+    const filter = getTaskFilter();
+    const nPend = all.filter(t => !t.archived && !t.done).length;
+    const nDone = all.filter(t => !t.archived && t.done).length;
+    const nArch = all.filter(t => t.archived).length;
+
+    let list;
+    if (filter === 'pendientes')      list = all.filter(t => !t.archived && !t.done);
+    else if (filter === 'hechas')     list = all.filter(t => !t.archived && t.done);
+    else if (filter === 'archivadas') list = all.filter(t => t.archived);
+    else                              list = all.filter(t => !t.archived);
+
+    const chip = (k, label, count) =>
+      `<button class="mydash-task-chip${filter === k ? ' active' : ''}" onclick="setTaskFilter('${k}')">${label}<span class="mydash-task-chip-n">${count}</span></button>`;
+
+    const emptyMsg = {
+      pendientes: '🎉 No te quedan tareas pendientes.',
+      hechas:     'Todavía no marcaste ninguna tarea como realizada.',
+      archivadas: 'No hay tareas archivadas.',
+      todas:      'Sin tareas. Escribí una arriba y dale Enter.'
+    }[filter];
+
+    const rows = list.map(t => {
+      // Modo edición inline
+      if (_editingTaskId === t.id) {
+        return `<div class="mydash-task">
+          <input type="checkbox" ${t.done?'checked':''} disabled>
+          <input type="text" class="mydash-task-edit" id="mydash-task-edit-input" value="${bbEscape(t.text)}"
+                 onkeydown="onMyDashTaskEditKey(event,'${t.id}')"
+                 onblur="saveMyDashTaskEdit('${t.id}', this.value)">
+        </div>`;
+      }
+      let badges = '';
+      if (t.assignedTo) badges += `<span class="mydash-task-badge" title="Se la asignaste a ${bbEscape(t.assignedTo)}">→ ${bbEscape(t.assignedTo)}</span>`;
+      if (t.assignedBy) badges += `<span class="mydash-task-badge in" title="Te la asignó ${bbEscape(t.assignedBy)}">de ${bbEscape(t.assignedBy)}</span>`;
+      if (t.archived)   badges += `<span class="mydash-task-badge arch">archivada</span>`;
+
+      const acts = t.archived
+        ? `<button class="mydash-task-act" onclick="toggleArchiveMyDashTask('${t.id}')" title="Desarchivar">↩️</button>
+           <button class="mydash-task-act" onclick="removeMyDashTask('${t.id}')" title="Eliminar definitivamente" style="color:var(--c-red);">×</button>`
+        : `<button class="mydash-task-act" onclick="editMyDashTask('${t.id}')" title="Modificar">✏️</button>
+           <button class="mydash-task-act" onclick="openTaskAssign('${t.id}')" title="Asignar a otra usuaria">👤</button>
+           <button class="mydash-task-act" onclick="toggleArchiveMyDashTask('${t.id}')" title="Archivar">📥</button>
+           <button class="mydash-task-act" onclick="removeMyDashTask('${t.id}')" title="Eliminar" style="color:var(--c-red);">×</button>`;
+
+      return `<div class="mydash-task ${t.done?'done':''}${t.archived?' archived':''}">
+        <input type="checkbox" ${t.done?'checked':''} onchange="toggleMyDashTask('${t.id}')">
+        <span class="mydash-task-text" ondblclick="editMyDashTask('${t.id}')" title="Doble clic para modificar">${bbEscape(t.text)}</span>
+        ${badges}
+        <div class="mydash-task-acts">${acts}</div>
+      </div>`;
+    }).join('');
+
     return `<div class="mydash-section" data-section="tasks" ${dragAttrs}>
       <div class="mydash-section-head">
         <span class="mydash-section-title">${dragHandle}✅ Mis tareas</span>
@@ -10005,13 +10284,15 @@ function renderMyDashSection(key, d) {
           <button class="btn btn-gold btn-sm" onclick="addMyDashTask()">Agregar</button>
         </div>
       </div>
+      <div class="mydash-task-filters">
+        ${chip('pendientes', 'Pendientes', nPend)}
+        ${chip('hechas', 'Realizadas', nDone)}
+        ${chip('todas', 'Todas', nPend + nDone)}
+        ${chip('archivadas', 'Archivadas', nArch)}
+      </div>
       <div class="mydash-tasks">
-        ${d.tasks.map(t => `<div class="mydash-task ${t.done?'done':''}">
-          <input type="checkbox" ${t.done?'checked':''} onchange="toggleMyDashTask('${t.id}')">
-          <span class="mydash-task-text">${bbEscape(t.text)}</span>
-          <button class="mydash-task-del" onclick="removeMyDashTask('${t.id}')" title="Eliminar">×</button>
-        </div>`).join('')}
-        ${!d.tasks.length ? '<div class="mydash-empty">Sin tareas. Escribí una arriba y dale Enter.</div>' : ''}
+        ${rows}
+        ${!list.length ? `<div class="mydash-empty">${emptyMsg}</div>` : ''}
       </div>
     </div>`;
   }
@@ -10161,9 +10442,9 @@ function renderStickyNote(n, d, isStudio) {
     }
   }
   if (F.linkClient && n.clientId) {
-    const client = (state.clientes || []).find(c => c.id === n.clientId);
+    const client = (state.clientes || []).find(c => clienteId(c) === n.clientId);
     if (client) {
-      footerHTML += `<span class="sticky-meta-chip" onclick="event.stopPropagation();goToClient('${client.id}')" style="cursor:pointer;border-left:3px solid var(--c-accent);" title="Ir a la ficha del cliente">🔗 ${bbEscape(client.nombre)}</span>`;
+      footerHTML += `<span class="sticky-meta-chip" onclick="event.stopPropagation();goToClient('${clienteId(client)}')" style="cursor:pointer;border-left:3px solid var(--c-accent);" title="Ir a la ficha del cliente">🔗 ${bbEscape(client.nombre)}</span>`;
     }
   }
   if (readonly && n._sharedBy) {
@@ -10227,7 +10508,7 @@ function renderStickyNote(n, d, isStudio) {
   return `<div class="sticky-note ${sizeClass}${readonly?' sticky-readonly':''}${isStudioNote?' sticky-studio':''}" style="background:${n.color || '#fff3a0'};" data-id="${n.id}" ${dragAttrs}>
     ${toolbar}
     <div class="sticky-content" ${readonly?'':`contenteditable="true"`}
-         ${readonly ? '' : `oninput="${saveHandler}" onkeydown="stickyKeyHandler(event, '${n.id}')"`}
+         ${readonly ? '' : `oninput="${saveHandler}" onkeydown="stickyKeyHandler(event, '${n.id}')" onfocus="onStickyFocus('${n.id}',${isStudioNote ? 'true' : 'false'})" onblur="onStickyBlur('${n.id}')"`}
          ${checkboxClickHandler}
          data-placeholder="Escribí tu nota...">${displayHtml}</div>
     ${footerHTML ? `<div class="sticky-footer">${footerHTML}</div>` : ''}
@@ -10541,26 +10822,148 @@ function onStickyContainerDragOver(ev) {
   if (_stickyDragId) ev.preventDefault();
 }
 
-// =========== Vincular cliente ===========
+// =========== Vincular cliente (orden alfabético + autocompletado) ===========
+// Normaliza para comparar sin tildes ni mayúsculas: "Núñez" == "nunez".
+function cliNorm(s) {
+  return String(s == null ? '' : s)
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().trim();
+}
+
+// Clientes SIEMPRE ordenados alfabéticamente. Se ordena al mostrar, no al guardar:
+// así los clientes nuevos caen solos en su lugar sin tocar los datos.
+function clientesAlfabetico() {
+  return (state.clientes || []).slice().sort(function(a, b) {
+    return String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es', { sensitivity: 'base' });
+  });
+}
+
+let _stickyLinkMatches = [];
+let _stickyLinkIdx = -1;
+const STICKY_LINK_MAX = 8;
+
 function openStickyClientLink(noteId) {
   const d = getMyDashboard();
   const n = d.stickyNotes.find(x => x.id === noteId);
   if (!n) return;
-  const clientes = state.clientes || [];
-  if (!clientes.length) {
-    toast('No hay clientes cargados todavía');
+  if (!clientesAlfabetico().length) { toast('No hay clientes cargados todavía'); return; }
+  document.getElementById('sticky-link-note-id').value = noteId;
+  document.getElementById('sticky-link-value').value = n.clientId || '';
+  document.getElementById('sticky-link-search').value = '';
+  renderStickyLinkCurrent();
+  onStickyLinkSearch('');
+  document.getElementById('modal-sticky-link').classList.add('open');
+  setTimeout(function() {
+    const i = document.getElementById('sticky-link-search');
+    if (i) i.focus();
+  }, 80);
+}
+
+function renderStickyLinkCurrent() {
+  const el = document.getElementById('sticky-link-current');
+  if (!el) return;
+  const id = document.getElementById('sticky-link-value').value;
+  if (!id) { el.innerHTML = '<span style="color:var(--c-text-muted);">Sin cliente vinculado.</span>'; return; }
+  const c = clientesAlfabetico().find(function(x) { return clienteId(x) === id; });
+  el.innerHTML = '✅ <strong>' + bbEscape(c ? c.nombre : id) + '</strong> ' +
+    '<button class="btn btn-outline btn-sm" style="margin-left:8px;" onclick="clearStickyLink()">Quitar vínculo</button>';
+}
+
+function clearStickyLink() {
+  document.getElementById('sticky-link-value').value = '';
+  document.getElementById('sticky-link-search').value = '';
+  renderStickyLinkCurrent();
+  onStickyLinkSearch('');
+}
+
+function onStickyLinkSearch(term) {
+  const q = cliNorm(term);
+  const todos = clientesAlfabetico();
+  if (!q) {
+    // Sin texto: mostramos los primeros en orden alfabético como punto de partida.
+    _stickyLinkMatches = todos;
+  } else {
+    // Búsqueda SOLO por nombre. Los que empiezan con lo tipeado van primero;
+    // dentro de cada grupo se respeta el orden alfabético.
+    const empiezan = [], contienen = [];
+    todos.forEach(function(c) {
+      const nom = cliNorm(c.nombre);
+      if (nom.startsWith(q)) empiezan.push(c);
+      else if (nom.indexOf(q) !== -1) contienen.push(c);
+    });
+    _stickyLinkMatches = empiezan.concat(contienen);
+  }
+  _stickyLinkIdx = _stickyLinkMatches.length ? 0 : -1;
+  renderStickyLinkResults(term);
+}
+
+function renderStickyLinkResults(term) {
+  const box = document.getElementById('sticky-link-results');
+  if (!box) return;
+  if (!_stickyLinkMatches.length) {
+    box.innerHTML = '<div class="cli-ac-more">Ningún cliente coincide con “' + bbEscape(term) + '”.</div>';
     return;
   }
-  document.getElementById('sticky-link-note-id').value = noteId;
-  const sel = document.getElementById('sticky-link-select');
-  sel.innerHTML = '<option value="">(sin vincular)</option>' +
-    clientes.map(c => `<option value="${c.id}"${c.id===n.clientId?' selected':''}>${bbEscape(c.nombre)}</option>`).join('');
-  document.getElementById('modal-sticky-link').classList.add('open');
+  const q = cliNorm(term);
+  const visibles = _stickyLinkMatches.slice(0, STICKY_LINK_MAX);
+  let h = visibles.map(function(c, i) {
+    let nom = bbEscape(c.nombre || '');
+    // Resaltar el tramo tipeado (calculado sobre el nombre normalizado, misma longitud)
+    if (q) {
+      const pos = cliNorm(c.nombre).indexOf(q);
+      if (pos >= 0) {
+        const raw = String(c.nombre || '');
+        nom = bbEscape(raw.slice(0, pos)) + '<b>' + bbEscape(raw.slice(pos, pos + q.length)) + '</b>' + bbEscape(raw.slice(pos + q.length));
+      }
+    }
+    return '<div class="cli-ac-item' + (i === _stickyLinkIdx ? ' sel' : '') + '" ' +
+           'onmousedown="event.preventDefault();pickStickyLink(' + i + ')">' +
+           '<span>' + nom + '</span>' +
+           (c.tipo ? '<span class="cli-ac-item-tipo">' + bbEscape(c.tipo) + '</span>' : '') +
+           '</div>';
+  }).join('');
+  if (_stickyLinkMatches.length > STICKY_LINK_MAX) {
+    h += '<div class="cli-ac-more">…y ' + (_stickyLinkMatches.length - STICKY_LINK_MAX) + ' más. Seguí escribiendo para afinar.</div>';
+  }
+  box.innerHTML = h;
+}
+
+function pickStickyLink(i) {
+  const c = _stickyLinkMatches[i];
+  if (!c) return;
+  document.getElementById('sticky-link-value').value = clienteId(c);
+  document.getElementById('sticky-link-search').value = c.nombre || '';
+  document.getElementById('sticky-link-results').innerHTML = '';
+  _stickyLinkMatches = [];
+  _stickyLinkIdx = -1;
+  renderStickyLinkCurrent();
+}
+
+function onStickyLinkKey(ev) {
+  const max = Math.min(_stickyLinkMatches.length, STICKY_LINK_MAX);
+  if (ev.key === 'ArrowDown') {
+    ev.preventDefault();
+    if (!max) return;
+    _stickyLinkIdx = (_stickyLinkIdx + 1) % max;
+    renderStickyLinkResults(ev.target.value);
+  } else if (ev.key === 'ArrowUp') {
+    ev.preventDefault();
+    if (!max) return;
+    _stickyLinkIdx = (_stickyLinkIdx - 1 + max) % max;
+    renderStickyLinkResults(ev.target.value);
+  } else if (ev.key === 'Enter') {
+    ev.preventDefault();
+    if (_stickyLinkIdx >= 0) pickStickyLink(_stickyLinkIdx);
+    else saveStickyClientLink();
+  } else if (ev.key === 'Escape') {
+    ev.preventDefault();
+    closeModal('modal-sticky-link');
+  }
 }
 
 function saveStickyClientLink() {
   const noteId = document.getElementById('sticky-link-note-id').value;
-  const clientId = document.getElementById('sticky-link-select').value;
+  const clientId = document.getElementById('sticky-link-value').value;
   const d = getMyDashboard();
   const n = d.stickyNotes.find(x => x.id === noteId);
   if (!n) return;
@@ -10749,6 +11152,25 @@ function saveStickyFeatures() {
 }
 
 // ----- Tareas -----
+// El filtro es LOCAL de cada navegador (no viaja a Firebase) para no generar ruido de
+// sincronización cada vez que se toca un chip.
+const TASK_FILTER_KEY = 'wm_task_filter';
+let _editingTaskId = null;
+
+function getTaskFilter() {
+  try {
+    const f = localStorage.getItem(TASK_FILTER_KEY);
+    if (['pendientes','hechas','todas','archivadas'].includes(f)) return f;
+  } catch(e) {}
+  return 'pendientes';
+}
+
+function setTaskFilter(f) {
+  try { localStorage.setItem(TASK_FILTER_KEY, f); } catch(e) {}
+  _editingTaskId = null;
+  renderContent();
+}
+
 function addMyDashTask() {
   const inp = document.getElementById('mydash-task-input');
   const text = (inp.value || '').trim();
@@ -10756,6 +11178,9 @@ function addMyDashTask() {
   const d = getMyDashboard();
   d.tasks.unshift({ id: 't_' + Date.now() + '_' + Math.random().toString(36).slice(2,5), text, done: false, ts: Date.now() });
   inp.value = '';
+  // Si estabas mirando "Realizadas" o "Archivadas", la tarea nueva no se vería: saltamos a Pendientes.
+  const f = getTaskFilter();
+  if (f === 'hechas' || f === 'archivadas') { try { localStorage.setItem(TASK_FILTER_KEY, 'pendientes'); } catch(e) {} }
   saveState();
   renderContent();
 }
@@ -10765,15 +11190,110 @@ function toggleMyDashTask(id) {
   const t = d.tasks.find(x => x.id === id);
   if (!t) return;
   t.done = !t.done;
+  t.doneTs = t.done ? Date.now() : null;
   saveState();
   renderContent();
 }
 
 function removeMyDashTask(id) {
   const d = getMyDashboard();
+  const t = d.tasks.find(x => x.id === id);
+  if (!t) return;
+  if (!confirm('¿Eliminar definitivamente esta tarea?\n\n"' + t.text + '"\n\nSi solo querés sacarla de la vista, usá Archivar (📥).')) return;
   d.tasks = d.tasks.filter(x => x.id !== id);
   saveState();
   renderContent();
+}
+
+// ----- Archivar / desarchivar -----
+function toggleArchiveMyDashTask(id) {
+  const d = getMyDashboard();
+  const t = d.tasks.find(x => x.id === id);
+  if (!t) return;
+  t.archived = !t.archived;
+  t.archivedTs = t.archived ? Date.now() : null;
+  saveState();
+  renderContent();
+  toast(t.archived ? '📥 Tarea archivada' : '↩️ Tarea restaurada');
+}
+
+// ----- Modificar el texto -----
+function editMyDashTask(id) {
+  _editingTaskId = id;
+  renderContent();
+  setTimeout(() => {
+    const i = document.getElementById('mydash-task-edit-input');
+    if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
+  }, 40);
+}
+
+function onMyDashTaskEditKey(ev, id) {
+  if (ev.key === 'Enter') { ev.preventDefault(); saveMyDashTaskEdit(id, ev.target.value); }
+  else if (ev.key === 'Escape') { ev.preventDefault(); _editingTaskId = null; renderContent(); }
+}
+
+function saveMyDashTaskEdit(id, value) {
+  if (_editingTaskId !== id) return; // evita el doble disparo Enter + blur
+  _editingTaskId = null;
+  const text = (value || '').trim();
+  const d = getMyDashboard();
+  const t = d.tasks.find(x => x.id === id);
+  if (t && text) { t.text = text; t.editedTs = Date.now(); saveState(); }
+  renderContent();
+}
+
+// ----- Asignar a otra usuaria -----
+function ensureDashboardOf(name) {
+  ensureUserDashboards();
+  if (!state.userDashboards[name]) {
+    state.userDashboards[name] = {
+      stickyNotes: [], tasks: [], kanban: { todo:[], doing:[], done:[] }, shortcuts: [],
+      sections: { stickyNotes:true, tasks:true, kanban:true, agenda:true, shortcuts:true },
+      sectionOrder: ['stickyNotes','tasks','kanban','agenda','shortcuts']
+    };
+  }
+  const dd = state.userDashboards[name];
+  if (!Array.isArray(dd.tasks)) dd.tasks = [];
+  return dd;
+}
+
+function openTaskAssign(taskId) {
+  const d = getMyDashboard();
+  const t = d.tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const me = currentUser();
+  const others = (state.users || []).filter(u => u && u.name && (!me || u.name !== me.name));
+  if (!others.length) { toast('No hay otras usuarias cargadas'); return; }
+  document.getElementById('task-assign-id').value = taskId;
+  document.getElementById('task-assign-text').textContent = '“' + t.text + '”';
+  document.getElementById('task-assign-user').innerHTML =
+    others.map(u => `<option value="${bbEscape(u.name)}">${bbEscape(u.name)}</option>`).join('');
+  document.getElementById('task-assign-keep').checked = true;
+  document.getElementById('modal-task-assign').classList.add('open');
+}
+
+function saveTaskAssign() {
+  const id     = document.getElementById('task-assign-id').value;
+  const target = document.getElementById('task-assign-user').value;
+  const keep   = document.getElementById('task-assign-keep').checked;
+  if (!target) { toast('Elegí a quién asignársela'); return; }
+  const d = getMyDashboard();
+  const t = d.tasks.find(x => x.id === id);
+  if (!t) return;
+  const me = currentUser();
+  const dd = ensureDashboardOf(target);
+  dd.tasks.unshift({
+    id: 't_' + Date.now() + '_' + Math.random().toString(36).slice(2,5),
+    text: t.text, done: false, ts: Date.now(),
+    assignedBy: me ? me.name : null
+  });
+  if (keep) { t.assignedTo = target; }
+  else { d.tasks = d.tasks.filter(x => x.id !== id); }
+  saveState();
+  closeModal('modal-task-assign');
+  renderContent();
+  try { notifyUserByName(target, 'assignment', '📌 Te asignaron una tarea', t.text, null); } catch(e) {}
+  toast(keep ? '✓ Asignada a ' + target + ' — mantenés tu copia' : '✓ Tarea enviada a ' + target);
 }
 
 // ----- Kanban -----
