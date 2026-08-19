@@ -2314,7 +2314,7 @@ body.edit-mode .col-type-toggle { display: inline; }
   </div>
   <div class="header-right">
     <span id="sync-indicator">🟢 Sincronizado</span>
-    <span id="build-version" title="Version de la app instalada. v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v8-ficha</span>
+    <span id="build-version" title="Version de la app instalada. v8.2 = sin carteles de aviso; los cambios simultaneos se resuelven solos. Incluye v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v8.2</span>
     <span class="year-badge" id="year-badge" onclick="openYearSettings()">2026</span>
     <div id="header-panels" class="header-panels"><div class="header-panel header-panel-presence" data-panel="presence" draggable="true">
         <span class="panel-handle">⠿</span>
@@ -3158,7 +3158,6 @@ let lastSeenRev = 0; // versión más nueva que vimos de la nube (guard anti-pis
 let baseState = null;       // foto de lo último confirmado en la nube
 let _mergeConflicts = 0;    // contador informativo de choques en el mismo campo
 let _conflictLog = [];      // choques de la fusión en curso (ruta + valor mío + valor ajeno)
-let _conflictQueue = [];    // choques pendientes de mostrar (con quién los provocó)
 let _lastCloudAuthor = '';  // quién hizo la última escritura que llegó de la nube
 
 function _clone(o) { return o == null ? o : JSON.parse(JSON.stringify(o)); }
@@ -3182,6 +3181,11 @@ function _keyedList(arr) {
 // `path` es la ruta del campo (para poder avisar de un choque y ofrecer deshacerlo).
 function merge3(base, mine, theirs, path) {
   path = path || [];
+  // Mi valor y el de la nube ya son iguales: no hay nada que fusionar ni que avisar.
+  // (Pasaba todo el tiempo con un solo usuario: al guardar, el eco de Firebase llega
+  //  ANTES de que se actualice la base, así que base=viejo pero mío=ajeno=nuevo. Sin
+  //  esta comprobación se tomaba como "choque" y salía el cartel contra vos misma.)
+  if (_eq(mine, theirs)) return _clone(mine);
   // Sin cambios locales respecto de la base → la nube manda (caso más común).
   if (_eq(mine, base)) return _clone(theirs);
   // Sin cambios remotos → mando yo.
@@ -3357,75 +3361,19 @@ function _fmtVal(v) {
 }
 
 function queueConflicts(list, author) {
+  // A pedido del estudio: NO se muestra ningún cartel. Si dos personas cambian el
+  // mismo campo en el mismo instante, queda el valor local y no se interrumpe a nadie.
+  // Queda rastro solo en la consola del navegador (F12) por si alguna vez hay que mirar.
   if (!list || !list.length) return;
-  list.forEach(function(c) { _conflictQueue.push({ path: c.path, mine: c.mine, theirs: c.theirs, by: author || '' }); });
-  if (_conflictQueue.length > 40) _conflictQueue = _conflictQueue.slice(-40);
-  if (!isEditingSticky()) showConflictModal();
-}
-
-function conflictModalEnsure() {
-  if (document.getElementById('modal-conflicto')) return;
-  const d = document.createElement('div');
-  d.className = 'modal-overlay';
-  d.id = 'modal-conflicto';
-  d.innerHTML = '<div class="modal"><button class="modal-close" onclick="closeConflictModal()">×</button>' +
-    '<h3>⚠️ Cambios a la vez en el mismo dato</h3>' +
-    '<div class="modal-sub" id="conf-sub"></div>' +
-    '<div id="conf-list"></div>' +
-    '<div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">' +
-      '<button class="btn btn-gold" onclick="closeConflictModal()">Listo, dejar los míos</button>' +
-      '<button class="btn btn-outline" onclick="conflictApplyAll()">Aplicar todos los de la otra</button>' +
-    '</div></div>';
-  document.body.appendChild(d);
-}
-function showConflictModal() {
-  if (!_conflictQueue.length) return;
-  conflictModalEnsure();
-  const who = _conflictQueue.map(c => c.by).filter(Boolean);
-  const whoTxt = who.length ? (who[who.length - 1]) : 'otra persona';
-  document.getElementById('conf-sub').innerHTML =
-    'Vos y ' + _cEsc(whoTxt) + ' cambiaron el mismo campo casi al mismo tiempo. ' +
-    'Un campo no puede guardar dos valores, así que <b>quedó el tuyo</b>. ' +
-    'Si el correcto era el de ' + _cEsc(whoTxt) + ', tocá “Usar este”.';
-  const rows = _conflictQueue.map(function(c, i) {
-    return '<div style="border:1px solid var(--c-border,rgba(0,0,0,.15));border-radius:4px;padding:10px;margin-bottom:8px;">' +
-      '<div style="font-size:11px;color:var(--c-text-muted);margin-bottom:6px;">' + _cEsc(_describePath(state, c.path)) + '</div>' +
-      '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
-        '<div style="flex:1;min-width:120px;"><b>Tuyo:</b> ' + _cEsc(_fmtVal(c.mine)) + '</div>' +
-        '<div style="flex:1;min-width:120px;"><b>' + _cEsc(c.by || 'La otra') + ':</b> ' + _cEsc(_fmtVal(c.theirs)) + '</div>' +
-        '<button class="btn btn-outline btn-sm" onclick="conflictApplyOne(' + i + ')">Usar este</button>' +
-      '</div></div>';
-  }).join('');
-  document.getElementById('conf-list').innerHTML = rows;
-  document.getElementById('modal-conflicto').classList.add('open');
-}
-function closeConflictModal() {
-  const m = document.getElementById('modal-conflicto');
-  if (m) m.classList.remove('open');
-  _conflictQueue = [];
-}
-function _applyConflict(c) {
-  const loc = _pathResolve(state, c.path);
-  if (!loc) return false;
-  loc.parent[loc.key] = _clone(c.theirs);
-  return true;
-}
-function conflictApplyOne(i) {
-  const c = _conflictQueue[i];
-  if (!c) return;
-  if (_applyConflict(c)) {
-    _conflictQueue.splice(i, 1);
-    saveState(); applyBranding(); renderTabs(); renderContent();
-    if (_conflictQueue.length) showConflictModal(); else closeConflictModal();
-  } else {
-    alert('Ese dato ya cambió de lugar. Revisalo a mano.');
-  }
-}
-function conflictApplyAll() {
-  _conflictQueue.forEach(_applyConflict);
-  _conflictQueue = [];
-  saveState(); applyBranding(); renderTabs(); renderContent();
-  closeConflictModal();
+  list = list.filter(function(c) { return !_eq(c.mine, c.theirs); });
+  if (!list.length) return;
+  try {
+    console.info('[WM] ' + list.length + ' campo(s) cambiados a la vez' +
+      (author ? ' (junto con ' + author + ')' : '') + '. Quedó el valor local:',
+      list.map(function(c) {
+        return { campo: _describePath(state, c.path), local: c.mine, remoto: c.theirs };
+      }));
+  } catch(e) {}
 }
 
 function initFirebase() {
@@ -3558,14 +3506,13 @@ function onStickyBlur(noteId) {
 function flushPendingRemoteRender() {
   // El estado ya viene fusionado por mergeIncomingState(): acá sólo redibujamos y
   // subimos lo que hayas escrito para que las demás vean el texto final.
-  if (!_pendingRemoteRender) { saveState(); if (_conflictQueue.length) showConflictModal(); return; }
+  if (!_pendingRemoteRender) { saveState(); return; }
   _pendingRemoteRender = false;
   applyBranding();
   renderTabs();
   renderContent();
   showSyncIndicator('\ud83d\udfe2 Sincronizado');
   saveState();
-  if (_conflictQueue.length) showConflictModal();
 }
 
 function mergeIncomingState(incoming, doRender) {
