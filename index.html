@@ -2314,7 +2314,7 @@ body.edit-mode .col-type-toggle { display: inline; }
   </div>
   <div class="header-right">
     <span id="sync-indicator">🟢 Sincronizado</span>
-    <span id="build-version" title="Version de la app instalada. v8.2 = sin carteles de aviso; los cambios simultaneos se resuelven solos. Incluye v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v8.2</span>
+    <span id="build-version" title="Version de la app instalada. v8.3 = bloquea escrituras de pestanas con version vieja y registra quien escribe. Incluye v8.2 = sin carteles de aviso; los cambios simultaneos se resuelven solos. Incluye v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v8.3</span>
     <span class="year-badge" id="year-badge" onclick="openYearSettings()">2026</span>
     <div id="header-panels" class="header-panels"><div class="header-panel header-panel-presence" data-panel="presence" draggable="true">
         <span class="panel-handle">⠿</span>
@@ -2987,7 +2987,7 @@ body.edit-mode .col-type-toggle { display: inline; }
       <button class="btn btn-outline" onclick="document.getElementById('import-file').click()">⬆ Importar JSON</button>
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
       <button class="btn btn-red" onclick="resetAll()">⚠ Resetear todo</button>
-    <button class="btn btn-outline" id="hon-bk-injected" onclick="window.honOpenRestore()">🛟 Respaldos</button><button class="btn btn-outline" onclick="window.honManualBackup()">💾 Backup ahora</button></div>
+    <button class="btn btn-outline" id="hon-bk-injected" onclick="window.honOpenRestore()">🛟 Respaldos</button><button class="btn btn-outline" onclick="window.openWriteLog()" title="Ver qué pestaña escribió y cuándo">🔎 Quién escribió</button><button class="btn btn-outline" onclick="window.honManualBackup()">💾 Backup ahora</button></div>
 
     <h4 style="font-family:var(--font-display);margin-top:18px;margin-bottom:10px;font-size:14px;border-top:1px solid var(--c-border);padding-top:18px;">📄 Exportar página</h4>
     <div style="font-size:12px;color:var(--c-text-muted);margin-bottom:10px;">Descargá el archivo HTML actualizado para pasarle a Claude o subir a Netlify.</div>
@@ -3155,6 +3155,10 @@ let lastSeenRev = 0; // versión más nueva que vimos de la nube (guard anti-pis
 //  Campo por campo: si sólo yo lo cambié, gana el mío; si sólo lo cambió la otra,
 //  gana el suyo; si ninguno lo tocó, queda igual. Nadie pisa a nadie.
 // ============================================================
+const WM_VER = 'v8.3';
+const WM_SID = Math.random().toString(36).slice(2, 8); // id de ESTA pestaña
+let _lastCloudMeta = {};    // metadatos de la última escritura que llegó de la nube
+let _legacyWarned = false;
 let baseState = null;       // foto de lo último confirmado en la nube
 let _mergeConflicts = 0;    // contador informativo de choques en el mismo campo
 let _conflictLog = [];      // choques de la fusión en curso (ruta + valor mío + valor ajeno)
@@ -3397,7 +3401,9 @@ function initFirebase() {
         const incomingRev = (incoming && incoming._rev) || 0;
         if (incomingRev >= lastSeenRev) lastSeenRev = incomingRev;
         _lastCloudAuthor = (incoming && incoming._by) || '';
-        ['_rev','_by','_at'].forEach(k => { if (incoming && (k in incoming)) delete incoming[k]; });
+        _lastCloudMeta = { by: _lastCloudAuthor, at: (incoming && incoming._at) || 0,
+                           ver: (incoming && incoming._ver) || '', sid: (incoming && incoming._sid) || '' };
+        ['_rev','_by','_at','_ver','_sid'].forEach(k => { if (incoming && (k in incoming)) delete incoming[k]; });
         // Primera lectura de la sesión: esta copia de la nube es nuestra base.
         if (baseState === null) baseState = _clone(incoming);
         // Strip any view-state that legacy versions might still send,
@@ -3438,7 +3444,9 @@ function initFirebase() {
         var r = (inc && inc._rev) || 0;
         if (r >= lastSeenRev) lastSeenRev = r;
         _lastCloudAuthor = (inc && inc._by) || '';
-        ['_rev','_by','_at'].forEach(function(k){ if (inc && (k in inc)) delete inc[k]; });
+        _lastCloudMeta = { by: _lastCloudAuthor, at: (inc && inc._at) || 0,
+                           ver: (inc && inc._ver) || '', sid: (inc && inc._sid) || '' };
+        ['_rev','_by','_at','_ver','_sid'].forEach(function(k){ if (inc && (k in inc)) delete inc[k]; });
         ['activeTabId','editMode','monthFilters','dashMonth'].forEach(function(k){ if (k in inc) delete inc[k]; });
         if (inc.tabs) inc.tabs.forEach(function(t){ if ('layout' in t) delete t.layout; });
         mergeIncomingState(inc, !isEditingSticky());
@@ -3515,7 +3523,126 @@ function flushPendingRemoteRender() {
   saveState();
 }
 
+// Cuenta rápida del contenido, para detectar escrituras que "achican" los datos.
+function stateCounts(st) {
+  let cl = 0, rows = 0;
+  try {
+    cl = (st.clientes || []).length;
+    (st.tabs || []).forEach(t => { if (Array.isArray(t.rows)) rows += t.rows.length; });
+  } catch(e) {}
+  return { cl: cl, rows: rows };
+}
+
+// ============================================================
+//  DIAGNÓSTICO DE ESCRITURAS (v8.3)
+//  Cada pestaña anota en la nube qué subió, cuándo y con qué versión. Sirve para
+//  ver quién está pisando datos cuando algo "se revierte solo".
+//  Vive en el nodo wm_writes: NO toca los datos del estudio.
+// ============================================================
+const WM_WRITES_REF = 'wm_writes';
+const WM_WRITES_MAX = 200;
+
+function logWriteEvent(info) {
+  if (!firebaseDB || WM_SNAPSHOT) return;
+  try {
+    const me = (function(){ try { const u = currentUser(); return (u && u.name) || '?'; } catch(e) { return '?'; } })();
+    firebaseDB.ref(WM_WRITES_REF).push(Object.assign({
+      at: Date.now(), by: me, ver: WM_VER, sid: WM_SID
+    }, info || {}));
+  } catch(e) {}
+}
+function pruneWriteLog() {
+  if (!firebaseDB) return;
+  try {
+    firebaseDB.ref(WM_WRITES_REF).once('value').then(function(snap) {
+      const v = snap.val() || {};
+      const keys = Object.keys(v);
+      if (keys.length <= WM_WRITES_MAX) return;
+      keys.sort(function(a, b) { return (v[a].at || 0) - (v[b].at || 0); });
+      keys.slice(0, keys.length - WM_WRITES_MAX).forEach(function(k) {
+        firebaseDB.ref(WM_WRITES_REF + '/' + k).remove();
+      });
+    });
+  } catch(e) {}
+}
+
+function warnLegacyTab() {
+  if (_legacyWarned) return;
+  _legacyWarned = true;
+  try {
+    const b = document.createElement('div');
+    b.id = 'wm-legacy-warn';
+    b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#a33;color:#fff;' +
+      'font-size:13px;padding:12px 16px;text-align:center;box-shadow:0 -2px 12px rgba(0,0,0,.3);';
+    b.innerHTML = '\u26a0\ufe0f <b>Hay otra pesta\u00f1a abierta con la versi\u00f3n vieja de la app</b> y est\u00e1 sobrescribiendo los datos. ' +
+      'Cerr\u00e1 todas las dem\u00e1s pesta\u00f1as y ventanas (revis\u00e1 tambi\u00e9n otros navegadores) y record\u00e1 que arriba diga ' + WM_VER + '. ' +
+      '<button onclick="this.parentNode.remove()" style="margin-left:10px;background:#fff;color:#a33;border:none;padding:3px 10px;border-radius:3px;cursor:pointer;">Entendido</button>';
+    document.body.appendChild(b);
+  } catch(e) {}
+}
+
+window.openWriteLog = function() {
+  if (!firebaseDB) { alert('Sin conexión con la base.'); return; }
+  let d = document.getElementById('modal-wmwrites');
+  if (!d) {
+    d = document.createElement('div');
+    d.className = 'modal-overlay'; d.id = 'modal-wmwrites';
+    d.innerHTML = '<div class="modal" style="width:760px;"><button class="modal-close" onclick="closeModal(\'modal-wmwrites\')">×</button>' +
+      '<h3>🔎 Quién escribió</h3><div class="modal-sub">Últimas escrituras a los datos compartidos. ' +
+      'Si algo "se revierte solo", acá se ve qué pestaña lo hizo. Esta pestaña es <b>' + WM_SID + '</b> (' + WM_VER + ').</div>' +
+      '<div id="wmwrites-list">Cargando…</div></div>';
+    document.body.appendChild(d);
+  }
+  d.classList.add('open');
+  const list = document.getElementById('wmwrites-list');
+  list.innerHTML = 'Cargando…';
+  firebaseDB.ref(WM_WRITES_REF).once('value').then(function(snap) {
+    const v = snap.val() || {};
+    const keys = Object.keys(v).sort(function(a, b) { return (v[b].at || 0) - (v[a].at || 0); }).slice(0, 80);
+    if (!keys.length) { list.innerHTML = '<p style="color:var(--c-text-muted);">Todavía no hay registros. Se van a ir anotando a medida que usen la app.</p>'; return; }
+    let prev = null;
+    const rows = keys.map(function(k) {
+      const e = v[k] || {};
+      const c = e.counts || {};
+      let flag = '';
+      if (e.tipo === 'RECHAZADO') flag = '<span style="color:#a33;font-weight:700;">⛔ rechazada (versión vieja)</span>';
+      else if (e.tipo === 'ACHICA') flag = '<span style="color:#a33;font-weight:700;">⚠ trajo menos datos</span>';
+      else if (prev && c.cl != null && prev.cl != null && c.cl < prev.cl) flag = '<span style="color:#a33;">⚠ bajaron clientes</span>';
+      if (c.cl != null) prev = c;
+      const f = e.at ? new Date(e.at).toLocaleString('es-UY') : '';
+      return '<tr><td style="text-align:left;">' + f + '</td><td>' + (e.by || '?') + '</td><td>' +
+        (e.ver || '<i>vieja</i>') + '</td><td><code>' + (e.sid || '?') + '</code></td><td>' +
+        (c.cl != null ? c.cl : '?') + '</td><td>' + (c.rows != null ? c.rows : '?') + '</td><td>' + flag + '</td></tr>';
+    }).join('');
+    list.innerHTML = '<div class="table-wrap" style="max-height:420px;overflow:auto;"><table class="hon-table">' +
+      '<thead><tr><th>Cuándo</th><th>Quién</th><th>Versión</th><th>Pestaña</th><th>Clientes</th><th>Filas</th><th></th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>';
+  }).catch(function() { list.innerHTML = '<p>Error al leer el registro.</p>'; });
+};
+
 function mergeIncomingState(incoming, doRender) {
+  // ===== ESCUDO CONTRA PESTAÑAS VIEJAS (v8.3) =====
+  // Toda versión de la app desde v7 firma sus escrituras con la hora (_at). Si llega
+  // algo SIN firma, lo escribió una pestaña con código anterior al arreglo: esa pestaña
+  // sube su copia entera y vieja. NO la adoptamos: volvemos a subir lo nuestro y avisamos.
+  if (baseState !== null && !(_lastCloudMeta && _lastCloudMeta.at)) {
+    console.warn('[WM] Llegó una escritura sin firma (pestaña con versión vieja). Se ignora y se re-sube el estado bueno.');
+    logWriteEvent({ tipo: 'RECHAZADO', motivo: 'pestaña con versión vieja', counts: stateCounts(incoming) });
+    warnLegacyTab();
+    saveState();
+    return;
+  }
+  // Aviso si la escritura que llegó achica los datos (menos clientes o menos filas).
+  try {
+    if (baseState !== null) {
+      const a = stateCounts(baseState), b = stateCounts(incoming);
+      if (b.cl < a.cl || b.rows < a.rows) {
+        console.warn('[WM] La escritura recibida trae MENOS datos', { antes: a, ahora: b, de: _lastCloudMeta });
+        logWriteEvent({ tipo: 'ACHICA', motivo: 'llegaron menos datos que los que había', counts: b, antes: a });
+      }
+    }
+  } catch(e) {}
+
   // Fusión de tres vías: base (nube) + mío (pantalla) + ajeno (lo que llegó).
   _conflictLog = [];
   const merged = (baseState === null) ? _clone(incoming) : merge3(baseState, state, incoming, []);
@@ -3597,7 +3724,7 @@ function saveState() {
         var newRev = Math.max(curRev, lastSeenRev) + 1;
         var _me = '';
         try { var _u = currentUser(); _me = (_u && _u.name) || ''; } catch(e) {}
-        var toWrite = Object.assign({}, state, { _rev: newRev, _by: _me, _at: Date.now() });
+        var toWrite = Object.assign({}, state, { _rev: newRev, _by: _me, _at: Date.now(), _ver: WM_VER, _sid: WM_SID });
         snapshotOfWhatWeSend = _clone(state);
         return JSON.stringify(toWrite);
       }, function(error, committed, snapshot) {
@@ -3620,6 +3747,10 @@ function saveState() {
         } catch(e) {}
         // Lo que acabamos de subir es ahora la base confirmada de la nube.
         baseState = snapshotOfWhatWeSend;
+        try {
+          logWriteEvent({ tipo: 'OK', counts: stateCounts(snapshotOfWhatWeSend) });
+          if (Math.random() < 0.05) pruneWriteLog();
+        } catch(e) {}
         showSyncIndicator('\ud83d\udfe2 Guardado');
       }, false); // applyLocally=false: no re-disparar el render local con datos crudos
     }, 600);
