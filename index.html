@@ -551,6 +551,34 @@
 .cli-panel-item.selected { background:var(--c-card); border-left-color:var(--c-accent); }
 .cli-panel-name { font-size:13px; color:var(--c-text); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .cli-panel-detail { padding:24px; overflow-y:auto; max-height:600px; }
+
+/* ===== v8-ficha: WhatsApp y ficha configurable ===== */
+.wa-chip { display:inline-flex; align-items:center; gap:6px; background:#25D366; color:#fff; text-decoration:none;
+  padding:4px 10px; border-radius:14px; font-size:12px; font-weight:600; line-height:1.4; transition:filter .15s; }
+.wa-chip:hover { filter:brightness(1.08); }
+.wa-chip svg { flex-shrink:0; }
+.wa-chip.wa-off { background:transparent; border:1px dashed var(--c-text-muted); color:var(--c-text-muted);
+  font-weight:400; cursor:pointer; }
+.wa-chip.wa-off:hover { border-color:#25D366; color:#25D366; }
+.cli-mail-link { color:var(--c-accent); text-decoration:none; }
+.cli-mail-link:hover { text-decoration:underline; }
+
+.cli-layedit-bar { background:rgba(212,175,55,.12); border:1px solid var(--c-accent); border-radius:6px;
+  padding:10px 14px; margin-bottom:14px; font-size:12px; line-height:1.7; }
+.cli-sec-head { display:flex; align-items:center; gap:8px; }
+.cli-sec-grip { cursor:grab; user-select:none; opacity:.55; font-size:15px; }
+.cli-sec-grip:active { cursor:grabbing; }
+.cli-dragf { display:flex; align-items:center; gap:8px; background:var(--c-card);
+  border:1px solid var(--c-border); border-radius:5px; padding:8px 10px; cursor:grab; }
+.cli-dragf:active { cursor:grabbing; }
+.cli-dragf-grip { opacity:.45; font-size:14px; flex-shrink:0; }
+.cli-dragging { opacity:.4; }
+.cli-drop-hint { outline:2px dashed var(--c-accent); outline-offset:2px; background:rgba(212,175,55,.08); }
+.cli-dropzone { min-height:46px; border-radius:5px; padding:4px; }
+.cli-drop-empty { grid-column:1/-1; text-align:center; color:var(--c-text-muted);
+  font-size:11px; font-style:italic; padding:12px; border:1px dashed var(--c-border); border-radius:5px; }
+.cli-hidden-bin { opacity:.9; }
+.cli-dsec { border-radius:6px; }
 .cli-panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--c-border); }
 .cli-panel-head-left { display:flex; align-items:center; gap:12px; min-width:0; }
 .cli-panel-title { font-family:var(--font-display); font-weight:700; font-size:26px; line-height:1.15; color:var(--c-text); word-break:break-word; user-select:all; -webkit-user-select:all; cursor:text; }
@@ -2286,7 +2314,7 @@ body.edit-mode .col-type-toggle { display: inline; }
   </div>
   <div class="header-right">
     <span id="sync-indicator">🟢 Sincronizado</span>
-    <span id="build-version" title="Version de la app instalada. v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v5-notas</span>
+    <span id="build-version" title="Version de la app instalada. v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v8-ficha</span>
     <span class="year-badge" id="year-badge" onclick="openYearSettings()">2026</span>
     <div id="header-panels" class="header-panels"><div class="header-panel header-panel-presence" data-panel="presence" draggable="true">
         <span class="panel-handle">⠿</span>
@@ -3110,8 +3138,301 @@ let firebaseSaveTimeout = null;
 let cloudSynced = false;
 let lastSeenRev = 0; // versión más nueva que vimos de la nube (guard anti-pisado)
 
+// ============================================================
+//  FUSIÓN DE CAMBIOS (v6-merge)  ← corrige la pérdida de datos
+// ------------------------------------------------------------
+//  ANTES: cuando llegaba un cambio de otra usuaria, se hacía  state = incoming,
+//  es decir se PISABA todo el estado local. Si vos habías tocado algo en los
+//  últimos segundos y todavía no había subido (hay 600 ms de espera antes de
+//  subir, y se reinician con cada tecla), tu cambio se borraba de la memoria y
+//  después se volvía a subir la copia ajena. Ese es el "lo puse y ya no está".
+//
+//  AHORA: se guarda una foto (baseState) de lo último que sabemos que está en la
+//  nube. Cuando llega un cambio remoto se hace una fusión de tres vías:
+//     base  = lo que había en la nube
+//     mío   = lo que tengo en pantalla (con mis cambios sin subir)
+//     ajeno = lo que acaba de llegar
+//  Campo por campo: si sólo yo lo cambié, gana el mío; si sólo lo cambió la otra,
+//  gana el suyo; si ninguno lo tocó, queda igual. Nadie pisa a nadie.
+// ============================================================
+let baseState = null;       // foto de lo último confirmado en la nube
+let _mergeConflicts = 0;    // contador informativo de choques en el mismo campo
+let _conflictLog = [];      // choques de la fusión en curso (ruta + valor mío + valor ajeno)
+let _conflictQueue = [];    // choques pendientes de mostrar (con quién los provocó)
+let _lastCloudAuthor = '';  // quién hizo la última escritura que llegó de la nube
+
+function _clone(o) { return o == null ? o : JSON.parse(JSON.stringify(o)); }
+function _isObj(v) { return v !== null && typeof v === 'object' && !Array.isArray(v); }
+function _eq(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+
+// Clave estable de un elemento de lista (para fusionar filas/clientes/notas por id
+// y no por posición, que es lo que hacía que se "corrieran" los datos).
+function _itemKey(x) {
+  if (!_isObj(x)) return null;
+  if (x.id != null) return 'id:' + x.id;
+  if (x.__key != null) return 'k:' + x.__key;
+  if (x.key != null) return 'key:' + x.key;
+  return null;
+}
+function _keyedList(arr) {
+  return Array.isArray(arr) && arr.length > 0 && arr.every(x => _itemKey(x) !== null);
+}
+
+// Fusión de tres vías. Devuelve el valor resultante.
+// `path` es la ruta del campo (para poder avisar de un choque y ofrecer deshacerlo).
+function merge3(base, mine, theirs, path) {
+  path = path || [];
+  // Sin cambios locales respecto de la base → la nube manda (caso más común).
+  if (_eq(mine, base)) return _clone(theirs);
+  // Sin cambios remotos → mando yo.
+  if (_eq(theirs, base)) return _clone(mine);
+
+  // Listas con id estable: fusionar elemento por elemento.
+  if (Array.isArray(mine) && Array.isArray(theirs) &&
+      _keyedList(mine) && _keyedList(theirs) && (base == null || _keyedList(base) || (Array.isArray(base) && base.length === 0))) {
+    const bMap = new Map(), mMap = new Map(), tMap = new Map();
+    (Array.isArray(base) ? base : []).forEach(x => bMap.set(_itemKey(x), x));
+    mine.forEach((x, i) => mMap.set(_itemKey(x), { v: x, i }));
+    theirs.forEach((x, i) => tMap.set(_itemKey(x), { v: x, i }));
+
+    const out = [];
+    // 1) Recorremos el orden de la nube.
+    theirs.forEach(tItem => {
+      const k = _itemKey(tItem);
+      const inBase = bMap.has(k), m = mMap.get(k);
+      if (!m) {
+        // Yo no lo tengo. Si estaba en la base, es que YO lo borré → respetar el borrado.
+        if (inBase) return;
+        out.push(_clone(tItem)); // alta ajena → entra
+        return;
+      }
+      out.push(merge3(inBase ? bMap.get(k) : undefined, m.v, tItem, path.concat([{ t:'item', k:k }])));
+    });
+    // 2) Altas mías que la nube todavía no tiene, y elementos que la otra borró
+    //    pero yo modifiqué (ante la duda, NO se pierde: se conserva).
+    mine.forEach((mItem, i) => {
+      const k = _itemKey(mItem);
+      if (tMap.has(k)) return;
+      const inBase = bMap.has(k);
+      if (inBase && _eq(bMap.get(k), mItem)) return; // borrado ajeno, yo no lo toqué → respetar
+      const at = Math.min(i, out.length);
+      out.splice(at, 0, _clone(mItem));
+    });
+    return out;
+  }
+
+  // Objetos: fusionar clave por clave.
+  if (_isObj(mine) && _isObj(theirs)) {
+    const b = _isObj(base) ? base : {};
+    const out = {};
+    const keys = new Set([...Object.keys(mine), ...Object.keys(theirs)]);
+    keys.forEach(k => {
+      const inB = Object.prototype.hasOwnProperty.call(b, k);
+      const inM = Object.prototype.hasOwnProperty.call(mine, k);
+      const inT = Object.prototype.hasOwnProperty.call(theirs, k);
+      if (inM && inT) { out[k] = merge3(inB ? b[k] : undefined, mine[k], theirs[k], path.concat([{ t:'key', k:k }])); return; }
+      if (inM && !inT) { // la otra lo borró
+        if (inB && _eq(b[k], mine[k])) return;   // yo no lo toqué → respetar borrado
+        out[k] = _clone(mine[k]); return;        // yo lo cambié → conservar
+      }
+      if (!inM && inT) { // yo lo borré
+        if (inB) return;                          // borrado mío → respetar
+        out[k] = _clone(theirs[k]); return;       // alta ajena → entra
+      }
+    });
+    return out;
+  }
+
+  // Valor simple que cambiaron los dos (mismo campo, misma ventana de tiempo).
+  // Gana el local: es la usuaria que está trabajando ahora y su cambio se sube
+  // enseguida; la otra lo verá al instante.
+  _mergeConflicts++;
+  _conflictLog.push({ path: path, mine: _clone(mine), theirs: _clone(theirs) });
+  return _clone(mine);
+}
+
+// ============================================================
+//  AVISO DE CHOQUE (v7-conflictos)
+//  Si dos personas tocan EXACTAMENTE el mismo campo en el mismo momento, un campo
+//  no puede tener dos valores: queda el tuyo (sos quien está trabajando ahora).
+//  Pero ya no pasa en silencio: se muestra qué puso la otra y podés aplicarlo.
+// ============================================================
+function _cEsc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, function(c) {
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+
+// Camina el estado siguiendo una ruta. devuelve {parent, key} del último tramo.
+function _pathResolve(root, path) {
+  let cur = root;
+  for (let i = 0; i < path.length - 1; i++) {
+    const seg = path[i];
+    if (cur == null) return null;
+    if (seg.t === 'key') cur = cur[seg.k];
+    else cur = Array.isArray(cur) ? cur.find(x => _itemKey(x) === seg.k) : null;
+  }
+  if (cur == null || !path.length) return null;
+  const last = path[path.length - 1];
+  if (last.t === 'key') return { parent: cur, key: last.k, isItem: false };
+  if (!Array.isArray(cur)) return null;
+  const idx = cur.findIndex(x => _itemKey(x) === last.k);
+  return idx < 0 ? null : { parent: cur, key: idx, isItem: true };
+}
+
+const _PATH_LABELS = {
+  tabs:'Pestaña', rows:'Fila', cells:'Celda', folders:'Carpeta', clientes:'Cliente',
+  clients:'Cliente', cols:'Columna', blocks:'Bloque', block:'Bloque',
+  studioStickyNotes:'Nota del estudio', userDashboards:'Tablero', tasks:'Tarea',
+  honorarios:'Honorarios', branding:'Marca', users:'Usuario', meses:'Mes', months:'Mes'
+};
+function _itemLabel(root, path, upto) {
+  // Busca un nombre legible del elemento al que apunta el tramo `upto`.
+  let cur = root;
+  for (let i = 0; i <= upto; i++) {
+    const seg = path[i];
+    if (cur == null) return null;
+    if (seg.t === 'key') cur = cur[seg.k];
+    else cur = Array.isArray(cur) ? cur.find(x => _itemKey(x) === seg.k) : null;
+  }
+  if (!_isObj(cur)) return null;
+  return cur.name || cur.title || cur.c_cliente || cur.label || cur.nombre || null;
+}
+// Códigos internos de una celda → nombre entendible.
+const _CELL_FIELDS = { s:'Estado', d:'Fecha', c:'Comentario', t:'Etiqueta',
+  cs:'Estado del comentario', es:'Enviado al cliente', ed:'Fecha de envío' };
+
+function _describePath(root, path) {
+  const parts = [];
+  let cur = root;
+  let colsHolder = null; // último objeto visto que define columnas
+
+  for (let i = 0; i < path.length; i++) {
+    const seg = path[i];
+
+    // Caso especial: cells › <índice de columna> › <campo interno>
+    if (seg.t === 'key' && seg.k === 'cells' && path[i + 1] && path[i + 1].t === 'key') {
+      const ci = parseInt(path[i + 1].k, 10);
+      let colName = null;
+      if (colsHolder && Array.isArray(colsHolder.cols) && colsHolder.cols[ci]) {
+        colName = colsHolder.cols[ci].label || colsHolder.cols[ci].name || null;
+      }
+      parts.push(colName ? ('Columna \u201c' + colName + '\u201d') : ('Columna ' + (isNaN(ci) ? path[i + 1].k : ci + 1)));
+      const fseg = path[i + 2];
+      if (fseg && fseg.t === 'key') parts.push(_CELL_FIELDS[fseg.k] || fseg.k);
+      return parts.join(' \u203a ');
+    }
+
+    // Avanzamos por el estado para poder leer nombres y definiciones de columna.
+    if (cur != null) {
+      if (seg.t === 'key') cur = cur[seg.k];
+      else cur = Array.isArray(cur) ? cur.find(x => _itemKey(x) === seg.k) : null;
+      if (_isObj(cur) && Array.isArray(cur.cols)) colsHolder = cur;
+    }
+
+    if (seg.t === 'key') {
+      if (_PATH_LABELS[seg.k]) parts.push(_PATH_LABELS[seg.k]);
+      else if (/^c_/.test(seg.k)) {
+        let lbl = null;
+        if (colsHolder && Array.isArray(colsHolder.cols)) {
+          const cd = colsHolder.cols.find(x => x && x.key === seg.k);
+          if (cd) lbl = cd.label || cd.name;
+        }
+        parts.push(lbl || seg.k.replace(/^c_/, ''));
+      }
+      else if (!/^(__|_)/.test(seg.k)) parts.push(seg.k);
+    } else {
+      const lbl = _itemLabel(root, path, i);
+      if (lbl) { if (parts.length) parts[parts.length - 1] += ' \u201c' + lbl + '\u201d'; else parts.push('\u201c' + lbl + '\u201d'); }
+    }
+  }
+  return parts.length ? parts.join(' \u203a ') : 'un campo';
+}
+function _fmtVal(v) {
+  if (v === true) return 'Sí';
+  if (v === false) return 'No';
+  if (v === '' || v == null) return '(vacío)';
+  if (typeof v === 'object') { const t = JSON.stringify(v); return t.length > 90 ? t.slice(0, 90) + '…' : t; }
+  return String(v);
+}
+
+function queueConflicts(list, author) {
+  if (!list || !list.length) return;
+  list.forEach(function(c) { _conflictQueue.push({ path: c.path, mine: c.mine, theirs: c.theirs, by: author || '' }); });
+  if (_conflictQueue.length > 40) _conflictQueue = _conflictQueue.slice(-40);
+  if (!isEditingSticky()) showConflictModal();
+}
+
+function conflictModalEnsure() {
+  if (document.getElementById('modal-conflicto')) return;
+  const d = document.createElement('div');
+  d.className = 'modal-overlay';
+  d.id = 'modal-conflicto';
+  d.innerHTML = '<div class="modal"><button class="modal-close" onclick="closeConflictModal()">×</button>' +
+    '<h3>⚠️ Cambios a la vez en el mismo dato</h3>' +
+    '<div class="modal-sub" id="conf-sub"></div>' +
+    '<div id="conf-list"></div>' +
+    '<div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">' +
+      '<button class="btn btn-gold" onclick="closeConflictModal()">Listo, dejar los míos</button>' +
+      '<button class="btn btn-outline" onclick="conflictApplyAll()">Aplicar todos los de la otra</button>' +
+    '</div></div>';
+  document.body.appendChild(d);
+}
+function showConflictModal() {
+  if (!_conflictQueue.length) return;
+  conflictModalEnsure();
+  const who = _conflictQueue.map(c => c.by).filter(Boolean);
+  const whoTxt = who.length ? (who[who.length - 1]) : 'otra persona';
+  document.getElementById('conf-sub').innerHTML =
+    'Vos y ' + _cEsc(whoTxt) + ' cambiaron el mismo campo casi al mismo tiempo. ' +
+    'Un campo no puede guardar dos valores, así que <b>quedó el tuyo</b>. ' +
+    'Si el correcto era el de ' + _cEsc(whoTxt) + ', tocá “Usar este”.';
+  const rows = _conflictQueue.map(function(c, i) {
+    return '<div style="border:1px solid var(--c-border,rgba(0,0,0,.15));border-radius:4px;padding:10px;margin-bottom:8px;">' +
+      '<div style="font-size:11px;color:var(--c-text-muted);margin-bottom:6px;">' + _cEsc(_describePath(state, c.path)) + '</div>' +
+      '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
+        '<div style="flex:1;min-width:120px;"><b>Tuyo:</b> ' + _cEsc(_fmtVal(c.mine)) + '</div>' +
+        '<div style="flex:1;min-width:120px;"><b>' + _cEsc(c.by || 'La otra') + ':</b> ' + _cEsc(_fmtVal(c.theirs)) + '</div>' +
+        '<button class="btn btn-outline btn-sm" onclick="conflictApplyOne(' + i + ')">Usar este</button>' +
+      '</div></div>';
+  }).join('');
+  document.getElementById('conf-list').innerHTML = rows;
+  document.getElementById('modal-conflicto').classList.add('open');
+}
+function closeConflictModal() {
+  const m = document.getElementById('modal-conflicto');
+  if (m) m.classList.remove('open');
+  _conflictQueue = [];
+}
+function _applyConflict(c) {
+  const loc = _pathResolve(state, c.path);
+  if (!loc) return false;
+  loc.parent[loc.key] = _clone(c.theirs);
+  return true;
+}
+function conflictApplyOne(i) {
+  const c = _conflictQueue[i];
+  if (!c) return;
+  if (_applyConflict(c)) {
+    _conflictQueue.splice(i, 1);
+    saveState(); applyBranding(); renderTabs(); renderContent();
+    if (_conflictQueue.length) showConflictModal(); else closeConflictModal();
+  } else {
+    alert('Ese dato ya cambió de lugar. Revisalo a mano.');
+  }
+}
+function conflictApplyAll() {
+  _conflictQueue.forEach(_applyConflict);
+  _conflictQueue = [];
+  saveState(); applyBranding(); renderTabs(); renderContent();
+  closeConflictModal();
+}
+
 function initFirebase() {
   try {
+    // Modo copia: NO conectar. Una copia vieja abierta por error jamás debe
+    // escribir en la base que están usando en el estudio.
+    if (WM_SNAPSHOT) { showSnapshotBanner(); return; }
     if (typeof firebase === 'undefined') return;
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     firebaseDB = firebase.database();
@@ -3127,7 +3448,10 @@ function initFirebase() {
         // lo que la usuaria está escribiendo.
         const incomingRev = (incoming && incoming._rev) || 0;
         if (incomingRev >= lastSeenRev) lastSeenRev = incomingRev;
-        if (incoming && ('_rev' in incoming)) delete incoming._rev;
+        _lastCloudAuthor = (incoming && incoming._by) || '';
+        ['_rev','_by','_at'].forEach(k => { if (incoming && (k in incoming)) delete incoming[k]; });
+        // Primera lectura de la sesión: esta copia de la nube es nuestra base.
+        if (baseState === null) baseState = _clone(incoming);
         // Strip any view-state that legacy versions might still send,
         // so it doesn't override this user's navigation.
         ['activeTabId','editMode','monthFilters','dashMonth'].forEach(k => { if (k in incoming) delete incoming[k]; });
@@ -3138,24 +3462,64 @@ function initFirebase() {
         // re-renderizamos: eso reconstruía el contenteditable, perdía el cursor y dejaba
         // el texto cortado en la última versión guardada. Encolamos el cambio remoto y
         // lo aplicamos (fusionado) apenas salga de la nota.
+        // Fusionamos SIEMPRE (aunque estés escribiendo una nota): así el cambio de
+        // la otra usuaria entra en el estado y ya no puede perderse. Lo único que se
+        // difiere es volver a dibujar la pantalla, para no romperte el cursor.
         if (isEditingSticky()) {
-          _pendingRemoteState = incoming;
-          showSyncIndicator('✏️ Escribiendo — sincroniza al salir');
+          mergeIncomingState(incoming, /*render=*/false);
+          _pendingRemoteRender = true;
+          showSyncIndicator('✏️ Escribiendo — se actualiza al salir');
           return;
         }
-        applyIncomingState(incoming);
+        mergeIncomingState(incoming, /*render=*/true);
       } else {
         // No data in Firebase yet → push our current (initial) state up
         saveState();
       }
     });
     showSyncIndicator('🟢 Conectado');
+
+    // Pestaña que estuvo dormida (minimizada, PC suspendida, otro escritorio):
+    // al volver pedimos la nube de nuevo y fusionamos antes de dejarla escribir.
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState !== 'visible' || !firebaseDB) return;
+      firebaseDB.ref('wm_app_v2').once('value').then(function(snap) {
+        var data = snap.val();
+        if (!data) return;
+        var inc = typeof data === 'string' ? JSON.parse(data) : data;
+        var r = (inc && inc._rev) || 0;
+        if (r >= lastSeenRev) lastSeenRev = r;
+        _lastCloudAuthor = (inc && inc._by) || '';
+        ['_rev','_by','_at'].forEach(function(k){ if (inc && (k in inc)) delete inc[k]; });
+        ['activeTabId','editMode','monthFilters','dashMonth'].forEach(function(k){ if (k in inc) delete inc[k]; });
+        if (inc.tabs) inc.tabs.forEach(function(t){ if ('layout' in t) delete t.layout; });
+        mergeIncomingState(inc, !isEditingSticky());
+      }).catch(function(){});
+    });
   } catch(e) {
     console.warn('Firebase no disponible, usando localStorage', e);
   }
 }
 
+function showSnapshotBanner() {
+  try {
+    const info = WM_SNAPSHOT || {};
+    const f = info.savedAt ? new Date(info.savedAt).toLocaleString('es-UY') : '';
+    const b = document.createElement('div');
+    b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#8a6d1f;color:#fff;' +
+      'font-family:inherit;font-size:13px;padding:10px 16px;text-align:center;box-shadow:0 -2px 12px rgba(0,0,0,.25);';
+    b.innerHTML = '\ud83d\udcc4 <b>Copia de respaldo</b> \u2014 datos del ' + (f || 'archivo descargado') +
+      (info.by ? (' (por ' + String(info.by).replace(/[<>]/g,'') + ')') : '') +
+      '. Esta copia <b>no se sincroniza</b>: lo que edites ac\u00e1 no llega al estudio ni afecta los datos reales.';
+    document.body.appendChild(b);
+    document.body.style.paddingBottom = '46px';
+    const v = document.getElementById('build-version');
+    if (v) { v.textContent = 'COPIA'; v.style.color = '#8a6d1f'; v.style.borderColor = '#8a6d1f'; }
+  } catch(e) {}
+}
+
 function showSyncIndicator(msg) {
+  if (WM_SNAPSHOT) return;
   let el = document.getElementById('sync-indicator');
   if (!el) return;
   el.textContent = msg;
@@ -3168,7 +3532,7 @@ function showSyncIndicator(msg) {
 let _stickyEditingId = null;      // id de la nota que tiene el foco ahora mismo
 let _stickyEditingIsStudio = false;
 let _stickyBlurTimer = null;
-let _pendingRemoteState = null;   // cambio remoto en espera de que salgas de la nota
+let _pendingRemoteRender = false; // hay cambios remotos ya fusionados, falta redibujar
 
 function isEditingSticky() { return _stickyEditingId !== null; }
 
@@ -3187,51 +3551,70 @@ function onStickyBlur(noteId) {
     const ae = document.activeElement;
     if (ae && ae.classList && ae.classList.contains('sticky-content')) return;
     _stickyEditingId = null;
-    flushPendingRemoteState();
+    flushPendingRemoteRender();
   }, 900);
 }
 
-function flushPendingRemoteState() {
-  if (!_pendingRemoteState) return;
-  const inc = _pendingRemoteState;
-  _pendingRemoteState = null;
-  // Fusión conservadora: lo que la usuaria acaba de escribir SIEMPRE gana sobre la copia
-  // de la nube que quedó encolada. Preservamos su dashboard personal completo y, si estaba
-  // editando una nota del estudio, esa nota puntual.
-  try {
-    const me = currentUser();
-    if (me && state.userDashboards && state.userDashboards[me.name]) {
-      if (!inc.userDashboards) inc.userDashboards = {};
-      inc.userDashboards[me.name] = state.userDashboards[me.name];
-    }
-    if (_stickyEditingIsStudio && Array.isArray(inc.studioStickyNotes) && Array.isArray(state.studioStickyNotes)) {
-      state.studioStickyNotes.forEach(function(localNote) {
-        const i = inc.studioStickyNotes.findIndex(function(x) { return x.id === localNote.id; });
-        if (i >= 0) inc.studioStickyNotes[i] = localNote;
-      });
-    }
-  } catch(e) { console.warn('merge notas', e); }
-  applyIncomingState(inc);
-  saveState(); // subir la versión fusionada para que las demás vean el texto final
-}
-
-function applyIncomingState(incoming) {
-  // Only react if shared data actually changed
-  if (JSON.stringify(incoming) === JSON.stringify(state)) return;
-  state = incoming;
-  if (!state.tabs || !state.branding) state = buildInitState();
-  // CRITICAL: re-apply migrations after Firebase pulls so new tabs/data appear
-  if (ensureNewStructures()) {
-    // Push the migrated state back to Firebase so other users see it too
-    saveState();
-  }
+function flushPendingRemoteRender() {
+  // El estado ya viene fusionado por mergeIncomingState(): acá sólo redibujamos y
+  // subimos lo que hayas escrito para que las demás vean el texto final.
+  if (!_pendingRemoteRender) { saveState(); if (_conflictQueue.length) showConflictModal(); return; }
+  _pendingRemoteRender = false;
   applyBranding();
   renderTabs();
   renderContent();
-  showSyncIndicator('🟢 Sincronizado');
+  showSyncIndicator('\ud83d\udfe2 Sincronizado');
+  saveState();
+  if (_conflictQueue.length) showConflictModal();
 }
 
+function mergeIncomingState(incoming, doRender) {
+  // Fusión de tres vías: base (nube) + mío (pantalla) + ajeno (lo que llegó).
+  _conflictLog = [];
+  const merged = (baseState === null) ? _clone(incoming) : merge3(baseState, state, incoming, []);
+  const iHadChanges = !_eq(merged, incoming); // tengo cosas que la nube todavía no tiene
+  const changedOnScreen = !_eq(merged, state);
+
+  baseState = _clone(incoming); // la nube quedó en esta versión
+  if (changedOnScreen) {
+    state = merged;
+    if (!state.tabs || !state.branding) state = buildInitState();
+    try { localStorage.setItem('wm_app_v2', JSON.stringify(state)); } catch(e) {}
+  }
+
+  // Migraciones (pestañas/campos nuevos) después de traer de la nube.
+  let migrated = false;
+  try { migrated = ensureNewStructures(); } catch(e) { console.warn('migraciones', e); }
+
+  if (doRender && (changedOnScreen || migrated)) {
+    applyBranding();
+    renderTabs();
+    renderContent();
+  }
+  // Si la fusión conservó cambios míos que la nube no tiene, hay que subirlos.
+  if (iHadChanges || migrated) saveState();
+  else showSyncIndicator('\ud83d\udfe2 Sincronizado');
+
+  // Choques en el mismo campo: avisar (nunca en silencio).
+  if (_conflictLog.length) { queueConflicts(_conflictLog, _lastCloudAuthor); _conflictLog = []; }
+}
+
+// Compatibilidad: alguna parte vieja del código puede seguir llamando a esta función.
+function applyIncomingState(incoming) { mergeIncomingState(incoming, true); }
+
+// ¿Este archivo es una copia descargada (con datos incrustados)?
+const WM_SNAPSHOT = (function() {
+  try {
+    const el = document.getElementById('wm-snapshot');
+    if (!el) return null;
+    const o = JSON.parse(el.textContent);
+    return (o && o.state) ? o : null;
+  } catch(e) { return null; }
+})();
+
 function loadState() {
+  // 1) Copia descargada: mandan los datos incrustados en el propio archivo.
+  if (WM_SNAPSHOT) return WM_SNAPSHOT.state;
   try { const s = localStorage.getItem('wm_app_v2'); if (s) return JSON.parse(s); } catch(e) {}
   return buildInitState();
 }
@@ -3239,6 +3622,8 @@ function loadState() {
 function saveState() {
   // Ensure per-user fields are not in shared state
   stripViewStateFromShared();
+  // Modo copia: no tocar el almacenamiento del navegador ni la nube.
+  if (WM_SNAPSHOT) return;
   localStorage.setItem('wm_app_v2', JSON.stringify(state));
   // Guardar en Firebase con un pequeño delay para no saturar.
   // Solo subimos si YA leímos la nube al menos una vez (cloudSynced), para que
@@ -3246,7 +3631,8 @@ function saveState() {
   if (firebaseDB && cloudSynced) {
     clearTimeout(firebaseSaveTimeout);
     firebaseSaveTimeout = setTimeout(function() {
-      showSyncIndicator('⏳ Guardando...');
+      showSyncIndicator('\u23f3 Guardando...');
+      var snapshotOfWhatWeSend = _clone(state); // para saber qué quedó confirmado
       firebaseDB.ref('wm_app_v2').transaction(function(current) {
         // GUARD ANTI-PISADO: nunca sobreescribir una versión más nueva que la última que vimos.
         var curRev = 0;
@@ -3256,18 +3642,28 @@ function saveState() {
             curRev = (parsed && parsed._rev) || 0;
           } catch(e) { curRev = 0; }
           if (curRev > lastSeenRev) {
-            // La nube tiene cambios más nuevos que esta pestaña no vio: abortar para no pisarlos.
+            // La nube tiene cambios más nuevos que esta pestaña no vio: abortar para no
+            // pisarlos. El listener los va a traer y fusionar, y desde ahí se reintenta.
             return; // aborta la transacción
           }
         }
         var newRev = Math.max(curRev, lastSeenRev) + 1;
-        var toWrite = Object.assign({}, state, { _rev: newRev });
+        var _me = '';
+        try { var _u = currentUser(); _me = (_u && _u.name) || ''; } catch(e) {}
+        var toWrite = Object.assign({}, state, { _rev: newRev, _by: _me, _at: Date.now() });
+        snapshotOfWhatWeSend = _clone(state);
         return JSON.stringify(toWrite);
       }, function(error, committed, snapshot) {
-        if (error) { showSyncIndicator('🔴 Error al guardar'); return; }
+        if (error) {
+          showSyncIndicator('\ud83d\udd34 Error al guardar \u2014 reintentando');
+          setTimeout(saveState, 2500); // no perder el cambio por un corte de red
+          return;
+        }
         if (!committed) {
-          // Se abortó porque la nube tenía algo más nuevo; el listener ya traerá esa versión.
-          showSyncIndicator('🟡 Otra sesión tenía cambios más nuevos — sincronizando');
+          // Se abortó porque la nube tenía algo más nuevo. El listener ya va a fusionar
+          // esa versión con la nuestra; reintentamos para que nuestros cambios suban.
+          showSyncIndicator('\ud83d\udfe1 Otra sesión ten\u00eda cambios \u2014 fusionando');
+          setTimeout(saveState, 900);
           return;
         }
         try {
@@ -3275,7 +3671,9 @@ function saveState() {
           var p = typeof v === 'string' ? JSON.parse(v) : v;
           if (p && p._rev) lastSeenRev = p._rev;
         } catch(e) {}
-        showSyncIndicator('🟢 Guardado');
+        // Lo que acabamos de subir es ahora la base confirmada de la nube.
+        baseState = snapshotOfWhatWeSend;
+        showSyncIndicator('\ud83d\udfe2 Guardado');
       }, false); // applyLocally=false: no re-disparar el render local con datos crudos
     }, 600);
   }
@@ -3294,6 +3692,11 @@ function buildDeclaracionesInit() {
 
 function ensureNewStructures() {
   let changed = false;
+  // v8-ficha: diseño configurable de la ficha de cliente (secciones y orden de campos)
+  if (!state.cliLayout || !Array.isArray(state.cliLayout.sections) || !state.cliLayout.sections.length) {
+    state.cliLayout = defaultCliLayout();
+    changed = true;
+  }
   // Inject missing tabs
   const hasTab = id => state.tabs.some(t => t.id === id);
   const insertBeforeId = (newTab, beforeId) => {
@@ -7870,21 +8273,49 @@ function exportData() {
   a.download = 'estudio_machado_backup_' + new Date().toISOString().slice(0,10) + '.json'; a.click();
 }
 
-function exportHTML() {
-  // Get the current page HTML and inject the latest state into it
-  const html = document.documentElement.outerHTML;
-  // Replace the localStorage state with current state so the download has fresh data baked in
-  const stateJson = JSON.stringify(state);
-  const updatedHtml = html.replace(
-    /(<script[^>]*>[\s\S]*?)(let state = loadState\(\);)/,
-    (match, pre, stateLine) => pre + stateLine
-  );
-  const blob = new Blob([updatedHtml], { type: 'text/html' });
+async function exportHTML() {
+  // ARREGLADO: antes esto tomaba el DOM ya dibujado y hacía un reemplazo que no
+  // cambiaba nada, así que el archivo bajaba SIN los datos. Ahora:
+  //  1) traemos el HTML original de la página (no el DOM mutado),
+  //  2) le incrustamos el estado actual como un bloque JSON,
+  //  3) lo marcamos como copia: al abrirlo NO se conecta a Firebase, así una copia
+  //     vieja nunca puede pisar los datos en uso.
+  toast('⏳ Preparando archivo…');
+  let html = '';
+  try {
+    const resp = await fetch(location.href.split('#')[0] + (location.href.includes('?') ? '&' : '?') + '_wm=' + Date.now(), { cache: 'no-store' });
+    if (resp.ok) html = await resp.text();
+  } catch (e) { console.warn('fetch fuente', e); }
+  if (!html || html.indexOf('wm_app_v2') === -1) {
+    html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML; // respaldo
+  }
+
+  // OJO: los textos de abajo se arman por pedazos a propósito. Si el código
+  // contuviera la etiqueta escrita entera, la limpieza de más abajo se encontraría
+  // a sí misma y borraría medio archivo al exportar.
+  const S_OPEN  = '<scr' + 'ipt id="wm-snapshot" type="application/json">';
+  const S_CLOSE = '<\/scr' + 'ipt>';
+  const S_RE    = new RegExp('<scr' + 'ipt id="wm-snapshot"[\\s\\S]*?<\\/scr' + 'ipt>\\s*', 'g');
+
+  // Sacamos cualquier copia incrustada previa para no encadenar respaldos.
+  html = html.replace(S_RE, '');
+
+  const payload = JSON.stringify({ savedAt: Date.now(), by: (function(){ try { const u = currentUser(); return (u && u.name) || ''; } catch(e){ return ''; } })(), state: state });
+  // Escapamos las barras de cierre para que el JSON no corte la etiqueta.
+  const safe = payload.replace(/<\//g, '<\\/');
+  const tag = S_OPEN + safe + S_CLOSE + '\n';
+
+  if (html.indexOf('</head>') !== -1) html = html.replace('</head>', tag + '</head>');
+  else html = tag + html;
+
+  const blob = new Blob([html], { type: 'text/html' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'W_Machado_Estudio_Contable_' + new Date().toISOString().slice(0,10) + '.html';
+  document.body.appendChild(a);
   a.click();
-  toast('✅ HTML descargado');
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 200);
+  toast('✅ HTML descargado con los datos incluidos');
 }
 
 function importData(e) {
@@ -13640,6 +14071,7 @@ function renderClientesLayout1(filtered) {
         </div>
       </div>
       <div style="display:flex;gap:6px;">
+        ${cliLayoutBtn()}
         <button class="btn btn-outline" onclick="openEditCliente('${clienteId(selected)}')">✎ Editar</button>
         <button class="btn btn-outline" onclick="toggleClienteArchived('${clienteId(selected)}')" title="${selected.archived?'Reactivar':'Archivar'}">${selected.archived?'↩':'📦'}</button>
         <button class="btn btn-outline" onclick="deleteCliente('${clienteId(selected)}')" style="color:var(--c-red);border-color:var(--c-red);">🗑 Eliminar</button>
@@ -13647,44 +14079,7 @@ function renderClientesLayout1(filtered) {
     </div>
 
     <div class="cli-exp-body">
-      <div class="cli-exp-section">
-        <div class="cli-exp-section-title">📇 Identificación</div>
-        <div class="cli-exp-grid">
-          ${cliField('RUT', selected.rut, true)}
-          ${cliField('BPS', selected.bps, true)}
-          ${cliField('CI', selected.ci, true)}
-          ${cliField('Fecha de nacimiento', fmtFechaNac(selected.fechaNac))}
-        </div>
-      </div>
-
-      <div class="cli-exp-section">
-        <div class="cli-exp-section-title">🔐 Credenciales</div>
-        <div class="cli-exp-grid">
-          ${cliFieldPassword('Contraseña BPS', selected.passBPS, clienteId(selected)+'_bps')}
-          ${cliFieldPassword('Contraseña Gub.uy', selected.passGubUy, clienteId(selected)+'_gub')}
-          ${cliField('Códigos identif. Gub.uy', selected.codGubUy)}
-        </div>
-      </div>
-
-      <div class="cli-exp-section">
-        <div class="cli-exp-section-title">💼 Profesional / CJPPU</div>
-        <div class="cli-exp-grid">
-          ${cliField('N° CJPPU', selected.cjppu, true)}
-          ${cliFieldPassword('CJPPU Contraseña', selected.passCjppu, clienteId(selected)+'_cjppu')}
-          ${cliField('RUPE', selected.rupe)}
-          ${cliField('Sistema de Facturación', selected.facturacion)}
-        </div>
-      </div>
-
-      <div class="cli-exp-section">
-        <div class="cli-exp-section-title">📍 Contacto y otros</div>
-        <div class="cli-exp-grid">
-          ${cliField('Correo electrónico', selected.correo)}
-          ${cliField('Dirección', selected.direccion)}
-          ${cliField('FOSMETAL', selected.fosmetal)}
-          ${cliField('Otros', selected.otros)}
-        </div>
-      </div>
+      ${renderCliSections(selected, '')}
     </div>
 
     <div class="cli-exp-actions">
@@ -13696,6 +14091,279 @@ function renderClientesLayout1(filtered) {
     </div>
   </div>`;
   return html;
+}
+
+// ============================================================
+//  FICHA DE CLIENTE CONFIGURABLE (v8-ficha)
+//  Los campos ya no están fijos en el código: viven en state.cliLayout, así que
+//  se pueden mover de sección, reordenar, ocultar y renombrar desde la pantalla.
+//  El ícono de WhatsApp es un campo más: se arrastra a donde quieras.
+// ============================================================
+const CLI_FIELD_DEFS = {
+  rut:         { label:'RUT',                  kind:'mono' },
+  bps:         { label:'BPS',                  kind:'mono' },
+  ci:          { label:'CI',                   kind:'mono' },
+  fechaNac:    { label:'F. nac.',              kind:'fecha' },
+  passBPS:     { label:'Contraseña BPS',       kind:'pass' },
+  passGubUy:   { label:'Contraseña Gub.uy',    kind:'pass' },
+  codGubUy:    { label:'Códigos Gub.uy',       kind:'text' },
+  cjppu:       { label:'N° CJPPU',             kind:'mono' },
+  passCjppu:   { label:'Contraseña CJPPU',     kind:'pass' },
+  rupe:        { label:'RUPE',                 kind:'text' },
+  facturacion: { label:'Facturación',          kind:'text' },
+  telefono:    { label:'WhatsApp',             kind:'whatsapp' },
+  correo:      { label:'Correo',               kind:'mail' },
+  direccion:   { label:'Dirección',            kind:'text' },
+  fosmetal:    { label:'FOSMETAL',             kind:'text' },
+  otros:       { label:'Otros',                kind:'text' }
+};
+
+function defaultCliLayout() {
+  return { sections: [
+    { id:'s_ident', icon:'📇', title:'Identificación',       fields:['rut','bps','ci','fechaNac'] },
+    { id:'s_cred',  icon:'🔐', title:'Credenciales',          fields:['passBPS','passGubUy','codGubUy'] },
+    { id:'s_prof',  icon:'💼', title:'Profesional / CJPPU',   fields:['cjppu','passCjppu','rupe','facturacion'] },
+    { id:'s_cont',  icon:'📍', title:'Contacto',              fields:['telefono','correo','direccion','fosmetal','otros'] }
+  ]};
+}
+function cliLayout() {
+  if (!state.cliLayout || !Array.isArray(state.cliLayout.sections) || !state.cliLayout.sections.length) {
+    state.cliLayout = defaultCliLayout();
+  }
+  return state.cliLayout;
+}
+function cliUsedKeys() {
+  const out = [];
+  cliLayout().sections.forEach(sec => (sec.fields || []).forEach(k => { if (CLI_FIELD_DEFS[k]) out.push(k); }));
+  return out;
+}
+function cliHiddenKeys() {
+  const used = cliUsedKeys();
+  return Object.keys(CLI_FIELD_DEFS).filter(k => used.indexOf(k) < 0);
+}
+
+// ---------- WhatsApp ----------
+// Normaliza a formato internacional. Uruguay: 09X XXX XXX → 5989XXXXXXX
+function waNormalize(raw) {
+  let d = String(raw == null ? '' : raw).replace(/[^\d]/g, '');
+  if (!d) return '';
+  if (d.slice(0,2) === '00') d = d.slice(2);
+  if (d.slice(0,3) === '598') return d;
+  d = d.replace(/^0+/, '');
+  if (d.length >= 8 && d.length <= 9) return '598' + d; // número uruguayo sin prefijo
+  return d;
+}
+function waIconSvg(size, color) {
+  return '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="' + color + '" aria-hidden="true">' +
+    '<path d="M17.47 14.38c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.75-1.65-2.05-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.53.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.08-.15-.67-1.6-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.38-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.28.17-1.41-.07-.13-.27-.2-.57-.35z"/>' +
+    '<path d="M12.04 2C6.6 2 2.18 6.42 2.18 11.86c0 1.74.46 3.44 1.32 4.94L2.05 22l5.35-1.4a9.8 9.8 0 0 0 4.64 1.18h.01c5.43 0 9.85-4.42 9.85-9.86A9.8 9.8 0 0 0 12.04 2zm0 17.96h-.01a8.2 8.2 0 0 1-4.16-1.14l-.3-.18-3.09.81.83-3.02-.2-.31a8.13 8.13 0 0 1-1.25-4.34c0-4.52 3.68-8.2 8.19-8.2 2.19 0 4.24.86 5.79 2.4a8.13 8.13 0 0 1 2.4 5.8c0 4.52-3.68 8.19-8.2 8.19z"/></svg>';
+}
+function cliFieldWhatsApp(label, raw, c) {
+  const num = waNormalize(raw);
+  if (!num) {
+    return '<div class="cli-field"><div class="cli-field-label">' + label + '</div>' +
+      '<div class="cli-field-value"><span class="wa-chip wa-off" onclick="openEditCliente(\'' + clienteId(c) + '\')" title="Agregar número de WhatsApp">' +
+      waIconSvg(16, '#9aa0a6') + '<span>Agregar número</span></span></div></div>';
+  }
+  const shown = String(raw || '').trim();
+  return '<div class="cli-field"><div class="cli-field-label">' + label + '</div>' +
+    '<div class="cli-field-value"><a class="wa-chip" href="https://wa.me/' + num + '" target="_blank" rel="noopener" title="Abrir chat de WhatsApp con ' + shown.replace(/"/g,'&quot;') + '">' +
+    waIconSvg(16, '#ffffff') + '<span>' + shown + '</span></a>' +
+    '<button class="pass-btn" onclick="copyToClipboard(\'' + shown.replace(/'/g,"\\'") + '\')" title="Copiar número">⎘</button></div></div>';
+}
+
+// ---------- Render de una ficha según el diseño guardado ----------
+function renderCliFieldByKey(key, c, sfx) {
+  const def = CLI_FIELD_DEFS[key];
+  if (!def) return '';
+  const raw = c[key];
+  if (def.kind === 'pass')     return cliFieldPassword(def.label, raw, clienteId(c) + '_' + key + (sfx || ''));
+  if (def.kind === 'whatsapp') return cliFieldWhatsApp(def.label, raw, c);
+  if (def.kind === 'fecha')    return cliField(def.label, fmtFechaNac(raw));
+  if (def.kind === 'mail') {
+    if (!raw) return cliField(def.label, raw);
+    return '<div class="cli-field"><div class="cli-field-label">' + def.label + '</div>' +
+      '<div class="cli-field-value"><a href="mailto:' + String(raw).replace(/"/g,'&quot;') + '" class="cli-mail-link">' + String(raw).replace(/</g,'&lt;') + '</a></div></div>';
+  }
+  return cliField(def.label, raw, def.kind === 'mono');
+}
+
+function renderCliSections(c, sfx, opts) {
+  opts = opts || {};
+  const lay = cliLayout();
+  let html = '';
+  if (_cliLayoutEdit) return renderCliLayoutEditor(c, sfx);
+  lay.sections.forEach(sec => {
+    const keys = (sec.fields || []).filter(k => CLI_FIELD_DEFS[k]);
+    if (!keys.length) return;
+    if (opts.hideEmpty && !keys.some(k => c[k])) return;
+    html += '<div class="cli-exp-section"><div class="cli-exp-section-title">' + (sec.icon || '') + ' ' + (sec.title || '') + '</div>' +
+      '<div class="cli-exp-grid">' + keys.map(k => renderCliFieldByKey(k, c, sfx)).join('') + '</div></div>';
+  });
+  return html;
+}
+
+// ---------- Modo "acomodar campos" (arrastrar y soltar) ----------
+let _cliLayoutEdit = false;
+let _cliDrag = null;
+
+function toggleCliLayoutEdit() {
+  _cliLayoutEdit = !_cliLayoutEdit;
+  renderContent();
+  if (_cliLayoutEdit) toast('⇅ Arrastrá los campos a donde quieras');
+}
+function cliLayoutBtn() {
+  return '<button class="btn btn-outline" onclick="toggleCliLayoutEdit()" title="Mover, ocultar y renombrar los datos de la ficha">' +
+    (_cliLayoutEdit ? '✓ Listo' : '⇅ Acomodar') + '</button>';
+}
+
+function renderCliLayoutEditor(c, sfx) {
+  const lay = cliLayout();
+  let html = '<div class="cli-layedit-bar">⇅ <b>Acomodando la ficha.</b> Arrastrá los campos entre secciones o al depósito de abajo para ocultarlos. ' +
+    'Arrastrá el ⠿ de una sección para cambiarla de orden. Los cambios los ven las tres. ' +
+    '<button class="btn btn-outline btn-sm" onclick="cliAddSection()">+ Sección</button> ' +
+    '<button class="btn btn-outline btn-sm" onclick="cliResetLayout()">↺ Volver al original</button></div>';
+
+  lay.sections.forEach(sec => {
+    const keys = (sec.fields || []).filter(k => CLI_FIELD_DEFS[k]);
+    html += '<div class="cli-exp-section cli-dsec" data-sid="' + sec.id + '">' +
+      '<div class="cli-exp-section-title cli-sec-head">' +
+        '<span class="cli-sec-grip" draggable="true" data-sid="' + sec.id + '" title="Arrastrar la sección">⠿</span>' +
+        '<span>' + (sec.icon || '') + ' ' + (sec.title || '') + '</span>' +
+        '<button class="pass-btn" onclick="cliRenameSection(\'' + sec.id + '\')" title="Renombrar">✎</button>' +
+        '<button class="pass-btn" onclick="cliDeleteSection(\'' + sec.id + '\')" title="Quitar sección (los campos van al depósito)">🗑</button>' +
+      '</div>' +
+      '<div class="cli-exp-grid cli-dropzone" data-sid="' + sec.id + '">' +
+        (keys.length ? keys.map(k =>
+          '<div class="cli-dragf" draggable="true" data-fkey="' + k + '" data-sid="' + sec.id + '">' +
+            '<span class="cli-dragf-grip">⠿</span>' +
+            '<div style="min-width:0;"><div class="cli-field-label">' + CLI_FIELD_DEFS[k].label + '</div>' +
+            '<div class="cli-field-value" style="opacity:.65;">' + (CLI_FIELD_DEFS[k].kind === 'whatsapp' ? 'ícono de WhatsApp' : (c && c[k] ? String(c[k]).slice(0,28) : '—')) + '</div></div>' +
+          '</div>').join('')
+          : '<div class="cli-drop-empty">Soltá campos acá</div>') +
+      '</div></div>';
+  });
+
+  const hid = cliHiddenKeys();
+  html += '<div class="cli-exp-section cli-hidden-bin"><div class="cli-exp-section-title">🗄 Campos ocultos</div>' +
+    '<div class="cli-exp-grid cli-dropzone" data-sid="__hidden">' +
+      (hid.length ? hid.map(k =>
+        '<div class="cli-dragf" draggable="true" data-fkey="' + k + '" data-sid="__hidden">' +
+          '<span class="cli-dragf-grip">⠿</span>' +
+          '<div><div class="cli-field-label">' + CLI_FIELD_DEFS[k].label + '</div></div>' +
+        '</div>').join('')
+        : '<div class="cli-drop-empty">No hay campos ocultos</div>') +
+    '</div></div>';
+  return html;
+}
+
+function cliMoveField(key, toSid, beforeKey) {
+  const lay = cliLayout();
+  lay.sections.forEach(s => { s.fields = (s.fields || []).filter(k => k !== key); });
+  if (toSid !== '__hidden') {
+    const sec = lay.sections.find(s => s.id === toSid);
+    if (!sec) return;
+    sec.fields = sec.fields || [];
+    const at = beforeKey ? sec.fields.indexOf(beforeKey) : -1;
+    if (at >= 0) sec.fields.splice(at, 0, key); else sec.fields.push(key);
+  }
+  saveState(); renderContent();
+}
+function cliMoveSection(sid, beforeSid) {
+  const lay = cliLayout();
+  const i = lay.sections.findIndex(s => s.id === sid);
+  if (i < 0) return;
+  const [sec] = lay.sections.splice(i, 1);
+  const at = beforeSid ? lay.sections.findIndex(s => s.id === beforeSid) : -1;
+  if (at >= 0) lay.sections.splice(at, 0, sec); else lay.sections.push(sec);
+  saveState(); renderContent();
+}
+function cliRenameSection(sid) {
+  const sec = cliLayout().sections.find(s => s.id === sid);
+  if (!sec) return;
+  const t = prompt('Nombre de la sección:', sec.title || '');
+  if (t === null) return;
+  const ic = prompt('Ícono (podés dejarlo vacío):', sec.icon || '');
+  sec.title = t.trim();
+  if (ic !== null) sec.icon = ic.trim();
+  saveState(); renderContent();
+}
+function cliDeleteSection(sid) {
+  const lay = cliLayout();
+  if (lay.sections.length <= 1) { alert('Tiene que quedar al menos una sección.'); return; }
+  const sec = lay.sections.find(s => s.id === sid);
+  if (!sec) return;
+  if (!confirm('¿Quitar la sección "' + (sec.title || '') + '"?\n\nLos campos que tenga pasan a "Campos ocultos", no se borra ningún dato de los clientes.')) return;
+  lay.sections = lay.sections.filter(s => s.id !== sid);
+  saveState(); renderContent();
+}
+function cliAddSection() {
+  const t = prompt('Nombre de la nueva sección:', 'Nueva sección');
+  if (t === null) return;
+  cliLayout().sections.push({ id: 'sec_' + Date.now().toString(36), icon: '📌', title: t.trim() || 'Nueva sección', fields: [] });
+  saveState(); renderContent();
+}
+function cliResetLayout() {
+  if (!confirm('¿Volver al orden original de la ficha?\n\nNo se borra ningún dato de los clientes.')) return;
+  state.cliLayout = defaultCliLayout();
+  saveState(); renderContent();
+}
+
+function cliLayoutAttachDnD() {
+  if (!_cliLayoutEdit) return;
+  const clearHints = () => document.querySelectorAll('.cli-drop-hint').forEach(x => x.classList.remove('cli-drop-hint'));
+
+  document.querySelectorAll('.cli-dragf').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      _cliDrag = { type:'field', key: el.dataset.fkey };
+      el.classList.add('cli-dragging');
+      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', el.dataset.fkey); } catch(_) {}
+    });
+    el.addEventListener('dragend', () => { el.classList.remove('cli-dragging'); _cliDrag = null; clearHints(); });
+    el.addEventListener('dragover', e => {
+      if (!_cliDrag || _cliDrag.type !== 'field' || _cliDrag.key === el.dataset.fkey) return;
+      e.preventDefault(); e.stopPropagation(); el.classList.add('cli-drop-hint');
+    });
+    el.addEventListener('dragleave', () => el.classList.remove('cli-drop-hint'));
+    el.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation(); clearHints();
+      if (!_cliDrag || _cliDrag.type !== 'field') return;
+      cliMoveField(_cliDrag.key, el.dataset.sid, el.dataset.fkey);
+    });
+  });
+
+  document.querySelectorAll('.cli-dropzone').forEach(z => {
+    z.addEventListener('dragover', e => {
+      if (!_cliDrag || _cliDrag.type !== 'field') return;
+      e.preventDefault(); z.classList.add('cli-drop-hint');
+    });
+    z.addEventListener('dragleave', () => z.classList.remove('cli-drop-hint'));
+    z.addEventListener('drop', e => {
+      e.preventDefault(); clearHints();
+      if (!_cliDrag || _cliDrag.type !== 'field') return;
+      cliMoveField(_cliDrag.key, z.dataset.sid, null);
+    });
+  });
+
+  document.querySelectorAll('.cli-sec-grip').forEach(g => {
+    g.addEventListener('dragstart', e => {
+      _cliDrag = { type:'section', id: g.dataset.sid };
+      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', g.dataset.sid); } catch(_) {}
+    });
+    g.addEventListener('dragend', () => { _cliDrag = null; clearHints(); });
+  });
+  document.querySelectorAll('.cli-dsec').forEach(sec => {
+    sec.addEventListener('dragover', e => {
+      if (!_cliDrag || _cliDrag.type !== 'section' || _cliDrag.id === sec.dataset.sid) return;
+      e.preventDefault(); sec.classList.add('cli-drop-hint');
+    });
+    sec.addEventListener('dragleave', () => sec.classList.remove('cli-drop-hint'));
+    sec.addEventListener('drop', e => {
+      if (!_cliDrag || _cliDrag.type !== 'section') return;
+      e.preventDefault(); clearHints();
+      cliMoveSection(_cliDrag.id, sec.dataset.sid);
+    });
+  });
 }
 
 function cliField(label, value, mono) {
@@ -13883,51 +14551,13 @@ function renderClientesLayout3(filtered) {
         </div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
+        ${cliLayoutBtn()}
         <button class="btn btn-outline" onclick="openEditCliente('${clienteId(selected)}')">✎ Editar</button>
         <button class="btn btn-outline" onclick="deleteCliente('${clienteId(selected)}')" style="color:var(--c-red);border-color:var(--c-red);">🗑</button>
       </div>
     </div>`;
 
-    html += `<div class="cli-exp-section">
-      <div class="cli-exp-section-title">📇 Identificación</div>
-      <div class="cli-exp-grid">
-        ${cliField('RUT', selected.rut, true)}
-        ${cliField('BPS', selected.bps, true)}
-        ${cliField('CI', selected.ci, true)}
-        ${cliField('F. nac.', fmtFechaNac(selected.fechaNac))}
-      </div>
-    </div>`;
-
-    html += `<div class="cli-exp-section">
-      <div class="cli-exp-section-title">🔐 Credenciales</div>
-      <div class="cli-exp-grid">
-        ${cliFieldPassword('Contraseña BPS', selected.passBPS, clienteId(selected)+'_bps3')}
-        ${cliFieldPassword('Contraseña Gub.uy', selected.passGubUy, clienteId(selected)+'_gub3')}
-        ${cliField('Códigos Gub.uy', selected.codGubUy)}
-      </div>
-    </div>`;
-
-    if (selected.cjppu || selected.passCjppu || selected.rupe || selected.facturacion) {
-      html += `<div class="cli-exp-section">
-        <div class="cli-exp-section-title">💼 Profesional</div>
-        <div class="cli-exp-grid">
-          ${cliField('N° CJPPU', selected.cjppu, true)}
-          ${cliFieldPassword('Contraseña CJPPU', selected.passCjppu, clienteId(selected)+'_cjppu3')}
-          ${cliField('RUPE', selected.rupe)}
-          ${cliField('Facturación', selected.facturacion)}
-        </div>
-      </div>`;
-    }
-
-    html += `<div class="cli-exp-section">
-      <div class="cli-exp-section-title">📍 Contacto</div>
-      <div class="cli-exp-grid">
-        ${cliField('Correo', selected.correo)}
-        ${cliField('Dirección', selected.direccion)}
-        ${cliField('FOSMETAL', selected.fosmetal)}
-        ${cliField('Otros', selected.otros)}
-      </div>
-    </div>`;
+    html += renderCliSections(selected, '3', { hideEmpty:false });
   }
   html += `</div></div>`;
   return html;
@@ -13975,6 +14605,7 @@ function renderClientesLayout4(filtered) {
 }
 
 function attachClientesHandlers() {
+  try { cliLayoutAttachDnD(); } catch(e) { console.warn('dnd ficha', e); }
   const s = document.getElementById('clientes-search-input');
   if (s) {
     s.addEventListener('input', () => {
@@ -14000,7 +14631,7 @@ function attachClientesHandlers() {
 }
 
 function openNewClienteModal() {
-  const newC = { id:'cli_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8), tipo:'IyC', nombre:'', rut:'', bps:'', ci:'', fechaNac:'', passBPS:'', passGubUy:'', codGubUy:'', correo:'', direccion:'', facturacion:'', cjppu:'', passCjppu:'', rupe:'', otros:'', fosmetal:'', _created: Date.now() };
+  const newC = { id:'cli_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8), tipo:'IyC', nombre:'', rut:'', bps:'', ci:'', fechaNac:'', passBPS:'', passGubUy:'', codGubUy:'', telefono:'', correo:'', direccion:'', facturacion:'', cjppu:'', passCjppu:'', rupe:'', otros:'', fosmetal:'', _created: Date.now() };
   state.clientes.push(newC);
   saveState();
   const id = clienteId(newC);
@@ -14027,6 +14658,7 @@ function openEditCliente(id) {
       <label>Contraseña BPS<input id="cli-passbps" type="text" value="${(c.passBPS||'').replace(/"/g,'&quot;')}"></label>
       <label>Contraseña Gub.uy<input id="cli-passgub" type="text" value="${(c.passGubUy||'').replace(/"/g,'&quot;')}"></label>
       <label class="full">Códigos identificador Gub.uy<input id="cli-codgub" type="text" value="${(c.codGubUy||'').replace(/"/g,'&quot;')}"></label>
+      <label class="full">📱 WhatsApp / Teléfono<input id="cli-telefono" type="tel" placeholder="099 123 456" value="${(c.telefono||'').replace(/"/g,'&quot;')}"><span style="font-size:10px;color:var(--c-text-muted);">Podés escribirlo como quieras. Si no ponés país, se asume Uruguay (+598).</span></label>
       <label class="full">Correo electrónico<input id="cli-correo" type="email" value="${(c.correo||'').replace(/"/g,'&quot;')}"></label>
       <label class="full">Dirección<input id="cli-direccion" type="text" value="${(c.direccion||'').replace(/"/g,'&quot;')}"></label>
       <label class="full">Sistema de Facturación<input id="cli-facturacion" type="text" value="${(c.facturacion||'').replace(/"/g,'&quot;')}"></label>
@@ -14060,6 +14692,7 @@ function saveClienteFromModal(id) {
   c.passBPS = get('cli-passbps').trim();
   c.passGubUy = get('cli-passgub').trim();
   c.codGubUy = get('cli-codgub').trim();
+  c.telefono = get('cli-telefono').trim();
   c.correo = get('cli-correo').trim();
   c.direccion = get('cli-direccion').trim();
   c.facturacion = get('cli-facturacion').trim();
@@ -14986,7 +15619,8 @@ body.edit-mode .hon-edit-name { display:inline; }
       var e=snap.val(); if(!e || !e.data){ honToast('Esa copia está vacía'); return; }
       if(!confirm('¿Restaurar la copia del '+honBkFmt(e.at)+'?\n\nSe reemplazan los datos actuales de TODA la página por los de esa fecha. Todos los usuarios la verán. Esta acción se puede deshacer restaurando otra copia.')) return;
       try{
-        db.ref('wm_app_v2').set(JSON.stringify(e.data)).then(function(){
+        var _restored = Object.assign({}, e.data, { _rev: (typeof lastSeenRev!=='undefined' ? lastSeenRev : 0) + 1000 });
+        db.ref('wm_app_v2').set(JSON.stringify(_restored)).then(function(){
           honToast('✓ Restaurado. La página se va a recargar.');
           setTimeout(function(){ location.reload(); }, 900);
         }).catch(function(){ honToast('⚠ No se pudo restaurar'); });
