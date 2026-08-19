@@ -2314,7 +2314,7 @@ body.edit-mode .col-type-toggle { display: inline; }
   </div>
   <div class="header-right">
     <span id="sync-indicator">🟢 Sincronizado</span>
-    <span id="build-version" title="Version de la app instalada. v8.3 = bloquea escrituras de pestanas con version vieja y registra quien escribe. Incluye v8.2 = sin carteles de aviso; los cambios simultaneos se resuelven solos. Incluye v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v8.3</span>
+    <span id="build-version" title="Version de la app instalada. v8.3 = bloquea escrituras de pestanas con version vieja y registra quien escribe. Incluye v8.2 = sin carteles de aviso; los cambios simultaneos se resuelven solos. Incluye v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v8.5</span>
     <span class="year-badge" id="year-badge" onclick="openYearSettings()">2026</span>
     <div id="header-panels" class="header-panels"><div class="header-panel header-panel-presence" data-panel="presence" draggable="true">
         <span class="panel-handle">⠿</span>
@@ -3380,8 +3380,66 @@ function queueConflicts(list, author) {
   } catch(e) {}
 }
 
+const WM_SAFE = /[?&]safe=1/.test(location.search); // modo seguro: no escribe nada
+
+let _emptyCloudTries = 0;
+function looksSubstantial(st) {
+  try {
+    const c = stateCounts(st);
+    return (c.cl > 0 || c.rows > 0);
+  } catch(e) { return false; }
+}
+function handleEmptyCloud() {
+  _emptyCloudTries++;
+  console.warn('[WM] La nube vino vacía (intento ' + _emptyCloudTries + '). NO se sube nada automáticamente.');
+  showSyncIndicator('\ud83d\udfe1 Verificando la nube\u2026');
+
+  // Reintentar: casi siempre es un hipo momentáneo y a la segunda lectura ya viene bien.
+  if (_emptyCloudTries <= 3) {
+    setTimeout(function() {
+      if (!firebaseDB) return;
+      firebaseDB.ref('wm_app_v2').once('value').then(function(snap) {
+        const d = snap.val();
+        if (d) { _emptyCloudTries = 0; return; } // el listener se encarga
+        handleEmptyCloud();
+      }).catch(function() { handleEmptyCloud(); });
+    }, 1500 * _emptyCloudTries);
+    return;
+  }
+
+  // Después de 4 lecturas seguidas vacías: no subimos nada por las dudas.
+  logWriteEvent({ tipo: 'NUBE_VACIA', motivo: 'la base vino sin datos', counts: stateCounts(state) });
+  if (!looksSubstantial(state)) {
+    // Esta pestaña tampoco tiene datos: subir sería escribir la plantilla en blanco
+    // encima de todo. Jamás.
+    cloudSynced = false;
+    showSyncIndicator('\ud83d\udd34 Sin datos \u2014 no se guarda');
+    try {
+      const b = document.createElement('div');
+      b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#a33;color:#fff;' +
+        'font-size:13px;padding:12px 16px;text-align:center;';
+      b.innerHTML = '\ud83d\uded1 <b>La base vino vac\u00eda y esta pesta\u00f1a tampoco tiene datos.</b> ' +
+        'Para no borrar nada, se desactiv\u00f3 el guardado. Cerr\u00e1 esta pesta\u00f1a y avis\u00e1 \u2014 hay que restaurar desde un respaldo.';
+      document.body.appendChild(b);
+    } catch(e) {}
+    return;
+  }
+  // Tenemos datos locales y la nube está realmente vacía: preguntar antes de subir.
+  if (confirm('La base en la nube figura VACÍA.\n\nEsta pestaña sí tiene datos (' +
+      stateCounts(state).cl + ' clientes, ' + stateCounts(state).rows + ' filas).\n\n' +
+      '¿Querés subir estos datos a la nube?\n\n' +
+      'Si no estás segura, cancelá y avisá antes de tocar nada.')) {
+    cloudSynced = true;
+    saveState();
+  } else {
+    cloudSynced = false;
+    showSyncIndicator('\ud83d\udd34 Guardado desactivado');
+  }
+}
+
 function initFirebase() {
   try {
+    if (WM_SAFE) { showSafeBanner(); }
     // Modo copia: NO conectar. Una copia vieja abierta por error jamás debe
     // escribir en la base que están usando en el estudio.
     if (WM_SNAPSHOT) { showSnapshotBanner(); return; }
@@ -3390,9 +3448,9 @@ function initFirebase() {
     firebaseDB = firebase.database();
     // Escuchar cambios en tiempo real
     firebaseDB.ref('wm_app_v2').on('value', function(snapshot) {
-      cloudSynced = true; // ya leímos la nube: a partir de acá sí podemos subir
       const data = snapshot.val();
       if (data) {
+        cloudSynced = true; // recién ahora sabemos que la nube tiene datos: podemos subir
         const incoming = typeof data === 'string' ? JSON.parse(data) : data;
         // Guard anti-pisado: registrar la versión de la nube que estamos viendo.
         // IMPORTANTE: esto se hace SIEMPRE, incluso si diferimos el render, porque si no
@@ -3427,8 +3485,14 @@ function initFirebase() {
         }
         mergeIncomingState(incoming, /*render=*/true);
       } else {
-        // No data in Firebase yet → push our current (initial) state up
-        saveState();
+        // ===== CAUSA RAÍZ DEL BORRADO TOTAL (arreglado en v8.5) =====
+        // Antes acá había un saveState() directo. Si la lectura volvía vacía por
+        // CUALQUIER motivo (hipo de red, corte, permiso), esta pestaña subía su
+        // estado. Y si había abierto sin datos locales, su estado era la plantilla
+        // en blanco: se borraba el estudio entero (sin logo, contraseñas de fábrica,
+        // pestañas por defecto). Ahora no se sube nada solo: se reintenta y, si de
+        // verdad está vacía, se pregunta.
+        handleEmptyCloud();
       }
     });
     showSyncIndicator('🟢 Conectado');
@@ -3455,6 +3519,17 @@ function initFirebase() {
   } catch(e) {
     console.warn('Firebase no disponible, usando localStorage', e);
   }
+}
+
+function showSafeBanner() {
+  try {
+    const b = document.createElement('div');
+    b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#2b6cb0;color:#fff;' +
+      'font-size:13px;padding:10px 16px;text-align:center;';
+    b.innerHTML = '\ud83d\udd12 <b>Modo seguro</b> \u2014 esta pesta\u00f1a LEE los datos pero no escribe nada. Sirve para mirar sin riesgo.';
+    document.body.appendChild(b);
+    document.body.style.paddingBottom = '46px';
+  } catch(e) {}
 }
 
 function showSnapshotBanner() {
@@ -3574,8 +3649,8 @@ function warnLegacyTab() {
     b.id = 'wm-legacy-warn';
     b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#a33;color:#fff;' +
       'font-size:13px;padding:12px 16px;text-align:center;box-shadow:0 -2px 12px rgba(0,0,0,.3);';
-    b.innerHTML = '\u26a0\ufe0f <b>Hay otra pesta\u00f1a abierta con la versi\u00f3n vieja de la app</b> y est\u00e1 sobrescribiendo los datos. ' +
-      'Cerr\u00e1 todas las dem\u00e1s pesta\u00f1as y ventanas (revis\u00e1 tambi\u00e9n otros navegadores) y record\u00e1 que arriba diga ' + WM_VER + '. ' +
+    b.innerHTML = '\u26a0\ufe0f <b>Lleg\u00f3 un cambio sin firma.</b> Puede ser una restauraci\u00f3n (normal) o una pesta\u00f1a con la versi\u00f3n vieja. ' +
+      'Si NO acabas de restaurar: cerr\u00e1 las dem\u00e1s pesta\u00f1as y ventanas (revis\u00e1 tambi\u00e9n otros navegadores) y mir\u00e1 que arriba diga ' + WM_VER + '. ' +
       '<button onclick="this.parentNode.remove()" style="margin-left:10px;background:#fff;color:#a33;border:none;padding:3px 10px;border-radius:3px;cursor:pointer;">Entendido</button>';
     document.body.appendChild(b);
   } catch(e) {}
@@ -3625,12 +3700,13 @@ function mergeIncomingState(incoming, doRender) {
   // Toda versión de la app desde v7 firma sus escrituras con la hora (_at). Si llega
   // algo SIN firma, lo escribió una pestaña con código anterior al arreglo: esa pestaña
   // sube su copia entera y vieja. NO la adoptamos: volvemos a subir lo nuestro y avisamos.
+  // IMPORTANTE: sólo AVISA, no pelea. La versión anterior re-subía el estado local,
+  // y eso deshacía las restauraciones hechas con reparar-nube.html (que escribe sin
+  // firma). Una restauración legítima siempre tiene que poder entrar.
   if (baseState !== null && !(_lastCloudMeta && _lastCloudMeta.at)) {
-    console.warn('[WM] Llegó una escritura sin firma (pestaña con versión vieja). Se ignora y se re-sube el estado bueno.');
-    logWriteEvent({ tipo: 'RECHAZADO', motivo: 'pestaña con versión vieja', counts: stateCounts(incoming) });
+    console.warn('[WM] Escritura sin firma: puede ser una pestaña vieja o una restauración.');
+    logWriteEvent({ tipo: 'SIN_FIRMA', motivo: 'pestaña vieja o restauración', counts: stateCounts(incoming) });
     warnLegacyTab();
-    saveState();
-    return;
   }
   // Aviso si la escritura que llegó achica los datos (menos clientes o menos filas).
   try {
@@ -3702,7 +3778,7 @@ function saveState() {
   // Guardar en Firebase con un pequeño delay para no saturar.
   // Solo subimos si YA leímos la nube al menos una vez (cloudSynced), para que
   // una copia vieja/vacía recién abierta no pueda pisar la versión buena.
-  if (firebaseDB && cloudSynced) {
+  if (firebaseDB && cloudSynced && !WM_SAFE) {
     clearTimeout(firebaseSaveTimeout);
     firebaseSaveTimeout = setTimeout(function() {
       showSyncIndicator('\u23f3 Guardando...');
