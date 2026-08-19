@@ -2314,7 +2314,7 @@ body.edit-mode .col-type-toggle { display: inline; }
   </div>
   <div class="header-right">
     <span id="sync-indicator">🟢 Sincronizado</span>
-    <span id="build-version" title="Version de la app instalada. v8.3 = bloquea escrituras de pestanas con version vieja y registra quien escribe. Incluye v8.2 = sin carteles de aviso; los cambios simultaneos se resuelven solos. Incluye v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v8.5</span>
+    <span id="build-version" title="Version de la app instalada. v8.3 = bloquea escrituras de pestanas con version vieja y registra quien escribe. Incluye v8.2 = sin carteles de aviso; los cambios simultaneos se resuelven solos. Incluye v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v8.6</span>
     <span class="year-badge" id="year-badge" onclick="openYearSettings()">2026</span>
     <div id="header-panels" class="header-panels"><div class="header-panel header-panel-presence" data-panel="presence" draggable="true">
         <span class="panel-handle">⠿</span>
@@ -3463,7 +3463,8 @@ function initFirebase() {
                            ver: (incoming && incoming._ver) || '', sid: (incoming && incoming._sid) || '' };
         ['_rev','_by','_at','_ver','_sid'].forEach(k => { if (incoming && (k in incoming)) delete incoming[k]; });
         // Primera lectura de la sesión: esta copia de la nube es nuestra base.
-        if (baseState === null) baseState = _clone(incoming);
+        // NO tocar baseState acá: mergeIncomingState necesita saber si es la
+        // primera lectura de la sesión para adoptar la nube tal cual.
         // Strip any view-state that legacy versions might still send,
         // so it doesn't override this user's navigation.
         ['activeTabId','editMode','monthFilters','dashMonth'].forEach(k => { if (k in incoming) delete incoming[k]; });
@@ -3721,7 +3722,27 @@ function mergeIncomingState(incoming, doRender) {
 
   // Fusión de tres vías: base (nube) + mío (pantalla) + ajeno (lo que llegó).
   _conflictLog = [];
-  const merged = (baseState === null) ? _clone(incoming) : merge3(baseState, state, incoming, []);
+  // ===== PRIMERA LECTURA DE LA SESIÓN (arreglado en v8.6) =====
+  // Lo que hay en localStorage al abrir NO son "cambios sin guardar": es una foto
+  // vieja de la sesión anterior. Antes se la trataba como cambios locales y la
+  // fusión la devolvía entera, así que la pestaña recién abierta subía su copia
+  // vieja y revertía lo que las demás habían hecho (Daiana y Luis volviendo a
+  // Pendiente con las notas viejas apenas se conectaba otra usuaria).
+  // Al conectarse, la nube manda. Punto.
+  if (baseState === null) {
+    baseState = _clone(incoming);
+    state = _clone(incoming);
+    if (!state.tabs || !state.branding) state = buildInitState();
+    try { localStorage.setItem('wm_app_v2', JSON.stringify(state)); } catch(e) {}
+    let mig = false;
+    try { mig = ensureNewStructures(); } catch(e) { console.warn('migraciones', e); }
+    if (doRender) { applyBranding(); renderTabs(); renderContent(); }
+    logWriteEvent({ tipo: 'ADOPTA_NUBE', motivo: 'primera lectura de la sesión', counts: stateCounts(incoming) });
+    if (mig) saveState(); else showSyncIndicator('\ud83d\udfe2 Sincronizado');
+    return;
+  }
+
+  const merged = merge3(baseState, state, incoming, []);
   const iHadChanges = !_eq(merged, incoming); // tengo cosas que la nube todavía no tiene
   const changedOnScreen = !_eq(merged, state);
 
