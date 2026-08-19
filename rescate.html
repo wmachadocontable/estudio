@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rescate — W. Machado</title>
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#101820; color:#e8e8e8;
+         margin:0; padding:24px; line-height:1.5; }
+  .wrap { max-width:1000px; margin:0 auto; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:#9aa7b4; font-size:13px; margin-bottom:20px; }
+  .warn { background:#7a2020; border:1px solid #a33; padding:14px 16px; border-radius:6px; margin-bottom:20px; font-size:14px; }
+  .card { background:#1a2530; border:1px solid #2c3d4d; border-radius:6px; padding:16px; margin-bottom:16px; }
+  .card h2 { font-size:15px; margin:0 0 10px; color:#d4af37; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { padding:7px 8px; border-bottom:1px solid #2c3d4d; text-align:left; vertical-align:middle; }
+  th { color:#9aa7b4; font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.5px; }
+  tr:hover td { background:#20303d; }
+  button { background:#d4af37; color:#101820; border:none; padding:6px 12px; border-radius:4px;
+           cursor:pointer; font-weight:600; font-size:12px; }
+  button:hover { filter:brightness(1.1); }
+  button.sec { background:transparent; color:#9aa7b4; border:1px solid #3d5060; }
+  button.danger { background:#c0392b; color:#fff; }
+  .ok { color:#4ade80; } .bad { color:#f87171; } .mid { color:#fbbf24; }
+  .empty { color:#9aa7b4; font-style:italic; padding:10px 0; }
+  code { background:#0b1219; padding:1px 5px; border-radius:3px; font-size:12px; }
+  #log { background:#0b1219; padding:12px; border-radius:5px; font-size:12px; max-height:180px;
+         overflow:auto; white-space:pre-wrap; font-family:ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🛟 Rescate de datos — W. Machado</h1>
+  <div class="sub">Herramienta independiente. Lee los respaldos y restaura el que elijas.</div>
+
+  <div class="warn">
+    <b>⚠ Antes de restaurar:</b> cerrá TODAS las pestañas y ventanas de la app (Chrome, Firefox, y las de Wendy y Lorena).
+    Si queda alguna abierta, puede volver a pisar lo que restaures.
+  </div>
+
+  <div class="card">
+    <h2>Estado actual de la nube</h2>
+    <div id="actual">Leyendo…</div>
+  </div>
+
+  <div class="card">
+    <h2>Copia guardada en este navegador</h2>
+    <div id="local">Leyendo…</div>
+  </div>
+
+  <div class="card">
+    <h2>Respaldos en la nube (diarios)</h2>
+    <div id="backups">Leyendo…</div>
+  </div>
+
+  <div class="card">
+    <h2>Registro</h2>
+    <div id="log">—</div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+const CFG = {
+  apiKey: "AIzaSyDJlc6wV_4uROXfU0pJ_RBBV-499LwTnsA",
+  authDomain: "w-machado-contable.firebaseapp.com",
+  databaseURL: "https://w-machado-contable-default-rtdb.firebaseio.com",
+  projectId: "w-machado-contable",
+  storageBucket: "w-machado-contable.firebasestorage.app",
+  messagingSenderId: "479317191824",
+  appId: "1:479317191824:web:eea071a3db62e8268b3c15"
+};
+
+let db = null;
+let currentRev = 0;
+
+function log(msg) {
+  const el = document.getElementById('log');
+  el.textContent = new Date().toLocaleTimeString('es-UY') + '  ' + msg + '\n' + (el.textContent === '—' ? '' : el.textContent);
+}
+
+// Cuenta el contenido de un estado para saber si está sano o vacío.
+function counts(st) {
+  let cl = 0, rows = 0, tabs = 0, users = 0, hasLogo = false, cells = 0;
+  try {
+    if (!st) return null;
+    cl = (st.clientes || []).length;
+    tabs = (st.tabs || []).length;
+    (st.tabs || []).forEach(t => {
+      if (Array.isArray(t.rows)) {
+        rows += t.rows.length;
+        t.rows.forEach(r => { if (r && r.cells) cells += Object.keys(r.cells).length; });
+      }
+    });
+    const u = st.users;
+    users = Array.isArray(u) ? u.length : (u ? Object.keys(u).length : 0);
+    hasLogo = !!(st.branding && st.branding.logo);
+  } catch (e) {}
+  return { cl, rows, tabs, users, cells, hasLogo };
+}
+function health(c) {
+  if (!c) return '<span class="bad">sin datos</span>';
+  if (c.cl === 0 && c.cells === 0) return '<span class="bad">⛔ VACÍO</span>';
+  if (c.cells < 20) return '<span class="mid">⚠ casi vacío</span>';
+  return '<span class="ok">✅ con datos</span>';
+}
+function describe(c) {
+  if (!c) return '—';
+  return c.cl + ' clientes · ' + c.rows + ' filas · ' + c.cells + ' celdas · ' +
+         c.tabs + ' pestañas · ' + c.users + ' usuarias · logo: ' + (c.hasLogo ? 'sí' : 'no');
+}
+function fmt(ts) { return ts ? new Date(ts).toLocaleString('es-UY') : '—'; }
+
+function download(obj, name) {
+  const b = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 500);
+}
+
+// Restaura un estado a la nube con firma válida y número de versión bien alto,
+// para que ninguna pestaña lo tome por viejo y lo revierta.
+window.restore = function(st, etiqueta) {
+  const c = counts(st);
+  if (!c || (c.cl === 0 && c.cells === 0)) {
+    alert('Esa copia está vacía. No tiene sentido restaurarla.');
+    return;
+  }
+  if (!confirm('Vas a restaurar: ' + etiqueta + '\n\n' + describe(c) +
+               '\n\nEsto REEMPLAZA lo que hay en la nube ahora.\n' +
+               '¿Cerraste todas las pestañas de la app?')) return;
+
+  const payload = Object.assign({}, st, {
+    _rev: currentRev + 5000,
+    _at: Date.now(),
+    _by: 'Rescate',
+    _ver: 'rescate'
+  });
+  delete payload.activeTabId; delete payload.editMode;
+  delete payload.monthFilters; delete payload.dashMonth;
+
+  db.ref('wm_app_v2').set(JSON.stringify(payload)).then(function() {
+    log('✅ Restaurado: ' + etiqueta + ' (' + describe(c) + ')');
+    alert('✅ Restaurado.\n\nAhora abrí la app y hacé Ctrl+F5.\nVerificá que los datos estén antes de que las demás la abran.');
+    leerActual();
+  }).catch(function(e) {
+    log('❌ Error al restaurar: ' + e.message);
+    alert('Error al restaurar: ' + e.message);
+  });
+};
+
+function parseState(raw) {
+  if (!raw) return null;
+  try { return typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { return null; }
+}
+
+function leerActual() {
+  db.ref('wm_app_v2').once('value').then(function(snap) {
+    const st = parseState(snap.val());
+    if (st && st._rev) currentRev = st._rev;
+    const c = counts(st);
+    document.getElementById('actual').innerHTML =
+      '<table><tr><th>Estado</th><th>Contenido</th><th>Escrito</th><th>Por</th><th></th></tr>' +
+      '<tr><td>' + health(c) + '</td><td>' + describe(c) + '</td><td>' + fmt(st && st._at) +
+      '</td><td>' + ((st && st._by) || '—') + '</td>' +
+      '<td><button class="sec" onclick=\'download(window.__actual, "nube_actual.json")\'>⬇ Guardar copia</button></td></tr></table>';
+    window.__actual = st;
+    log('Nube leída: ' + describe(c));
+  }).catch(function(e) {
+    document.getElementById('actual').innerHTML = '<span class="bad">Error: ' + e.message + '</span>';
+  });
+}
+
+function leerLocal() {
+  const raw = localStorage.getItem('wm_app_v2');
+  const st = parseState(raw);
+  const c = counts(st);
+  const el = document.getElementById('local');
+  if (!st) {
+    el.innerHTML = '<div class="empty">Este navegador no tiene copia guardada. ' +
+      'Probá abrir esta misma página desde la computadora de Wendy o de Lorena.</div>';
+    return;
+  }
+  window.__local = st;
+  el.innerHTML =
+    '<table><tr><th>Estado</th><th>Contenido</th><th></th></tr>' +
+    '<tr><td>' + health(c) + '</td><td>' + describe(c) + '</td>' +
+    '<td><button class="sec" onclick=\'download(window.__local, "copia_local.json")\'>⬇ Guardar</button> ' +
+    '<button onclick=\'restore(window.__local, "copia de este navegador")\'>↺ Restaurar esta</button></td></tr></table>';
+  log('Copia local: ' + describe(c));
+}
+
+function leerBackups() {
+  db.ref('wm_backups').once('value').then(function(snap) {
+    const v = snap.val() || {};
+    const keys = Object.keys(v).sort(function(a, b) { return (v[b].at || 0) - (v[a].at || 0); });
+    const el = document.getElementById('backups');
+    if (!keys.length) {
+      el.innerHTML = '<div class="empty">No hay respaldos guardados en la nube.</div>';
+      return;
+    }
+    window.__bk = v;
+    const rows = keys.map(function(k) {
+      const b = v[k] || {};
+      const c = counts(b.data);
+      return '<tr><td>' + fmt(b.at) + '</td><td>' + (b.by || '—') + '</td><td>' + (b.reason || '') +
+        '</td><td>' + health(c) + '</td><td>' + describe(c) + '</td>' +
+        '<td><button class="sec" onclick=\'download(window.__bk["' + k + '"].data, "respaldo_' + k + '.json")\'>⬇</button> ' +
+        '<button onclick=\'restore(window.__bk["' + k + '"].data, "respaldo del " + fmt(' + (b.at || 0) + '))\'>↺ Restaurar</button></td></tr>';
+    }).join('');
+    el.innerHTML = '<table><tr><th>Fecha</th><th>Por</th><th>Tipo</th><th>Estado</th><th>Contenido</th><th></th></tr>' + rows + '</table>';
+    log(keys.length + ' respaldos encontrados.');
+  }).catch(function(e) {
+    document.getElementById('backups').innerHTML = '<span class="bad">Error: ' + e.message + '</span>';
+  });
+}
+
+try {
+  firebase.initializeApp(CFG);
+  db = firebase.database();
+  log('Conectado a la base.');
+  leerActual();
+  leerLocal();
+  leerBackups();
+} catch (e) {
+  log('❌ No se pudo conectar: ' + e.message);
+  document.body.insertAdjacentHTML('afterbegin',
+    '<div class="warn">No se pudo conectar a la base: ' + e.message + '</div>');
+}
+</script>
+</body>
+</html>
