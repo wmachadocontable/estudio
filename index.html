@@ -10,6 +10,7 @@
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <style>
   :root {
     --c-bg: #ffffff;
@@ -2314,7 +2315,7 @@ body.edit-mode .col-type-toggle { display: inline; }
   </div>
   <div class="header-right">
     <span id="sync-indicator">🟢 Sincronizado</span>
-    <span id="build-version" title="Version de la app instalada. v8.3 = bloquea escrituras de pestanas con version vieja y registra quien escribe. Incluye v8.2 = sin carteles de aviso; los cambios simultaneos se resuelven solos. Incluye v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v8.6</span>
+    <span id="build-version" title="Version de la app instalada. v8.3 = bloquea escrituras de pestanas con version vieja y registra quien escribe. Incluye v8.2 = sin carteles de aviso; los cambios simultaneos se resuelven solos. Incluye v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v8.7-auth</span>
     <span class="year-badge" id="year-badge" onclick="openYearSettings()">2026</span>
     <div id="header-panels" class="header-panels"><div class="header-panel header-panel-presence" data-panel="presence" draggable="true">
         <span class="panel-handle">⠿</span>
@@ -3012,6 +3013,12 @@ const ROLE_LABELS = { admin:'Administrador', editor:'Editor', viewer:'Solo lectu
 const ROLE_ICONS  = { admin:'👑', editor:'✎', viewer:'👁', maintenance:'🔧' };
 const AVATAR_COLORS = ['#16a085','#1a4a7a','#2e7d52','#c0392b','#8e44ad','#d4860a','#34495e','#27ae60','#e67e22','#2980b9','#8e9b00','#c0392b'];
 const APP_PASSWORD_LEGACY = 'adm.2026';
+// ===== AUTENTICACION REAL (Firebase Auth) =====
+// Cada usuaria interna se mapea a un "mail oculto" de Firebase Auth. En pantalla
+// siguen entrando con su nombre; por detras se autentica contra Firebase.
+const AUTH_EMAIL_MAP = { 'Daniela':'daniela@wmachado.com', 'Wendy':'wendy@wmachado.com', 'Lorena':'lorena@wmachado.com' };
+function nameToAuthEmail(name){ return AUTH_EMAIL_MAP[name] || null; }
+function authEmailToName(email){ email=(email||'').toLowerCase(); for(var n in AUTH_EMAIL_MAP){ if(AUTH_EMAIL_MAP[n].toLowerCase()===email) return n; } return null; }
 
 // ============ CONSTANTES SESIÓN 5 ============
 const TRASH_RETENTION_DAYS = 30;
@@ -3439,6 +3446,7 @@ function handleEmptyCloud() {
 
 function initFirebase() {
   try {
+    if (firebaseDB) return; // ya conectado: no re-adjuntar el listener de la nube
     if (WM_SAFE) { showSafeBanner(); }
     // Modo copia: NO conectar. Una copia vieja abierta por error jamás debe
     // escribir en la base que están usando en el estudio.
@@ -12375,93 +12383,33 @@ async function doLogin() {
   errEl.textContent = '';
   if (!userName) { errEl.textContent = 'Seleccioná un usuario'; return; }
   if (!pass) { errEl.textContent = 'Ingresá la contraseña'; return; }
-
-  ensureUsersAsObjects();
-  const user = findUserByName(userName);
-  if (!user) {
-    errEl.textContent = '✕ Usuario no encontrado';
-    document.getElementById('login-pass').value = '';
-    return;
+  const email = nameToAuthEmail(userName);
+  if (!email) { errEl.textContent = '✕ Usuario no habilitado'; return; }
+  if (typeof firebase === 'undefined' || !firebase.auth) {
+    errEl.textContent = '✕ No se pudo conectar con el servidor de acceso'; return;
   }
-
-  // 1) ¿Es el código maestro de emergencia?
-  if (state.security && state.security.masterCodeHash) {
-    const masterTry = await sha256(pass);
-    if (masterTry === state.security.masterCodeHash) {
-      // Login de emergencia exitoso: marca al usuario como "necesita resetear contraseña"
-      user.passwordNeedsReset = true;
-      logAudit('login', 'session', 'Inició sesión con código maestro', null, null);
-      saveState();
-      setSession(user.name);
-      toast('🔑 Acceso por código maestro. Configurá una contraseña nueva.');
-      showApp(user.name);
-      if (typeof startPresence === 'function') startPresence();
-      if (typeof startChat === 'function') startChat();
-      // Forzar el modal de cambio de contraseña inmediatamente
-      setTimeout(() => openChangePasswordForced(), 600);
-      return;
+  errEl.textContent = '⏳ Verificando…';
+  try {
+    await firebase.auth().signInWithEmailAndPassword(email, pass);
+    errEl.textContent = ''; // onAuthStateChanged se encarga de entrar a la app
+  } catch (e) {
+    document.getElementById('login-pass').value = '';
+    const code = e && e.code;
+    if (code === 'auth/wrong-password' || code === 'auth/invalid-credential' || code === 'auth/user-not-found') {
+      errEl.textContent = '✕ Usuario o contraseña incorrectos';
+    } else if (code === 'auth/too-many-requests') {
+      errEl.textContent = '✕ Demasiados intentos. Esperá unos minutos.';
+    } else if (code === 'auth/network-request-failed') {
+      errEl.textContent = '✕ Sin conexión. Revisá internet.';
+    } else {
+      errEl.textContent = '✕ No se pudo iniciar sesión' + (code ? ' ('+code+')' : '');
     }
   }
-
-  // 1.5) 🔧 Acceso de MANTENIMIENTO: contraseña adm.2026 permite entrar a CUALQUIER usuaria,
-  // pero solamente si existe al menos una usuaria con rol "maintenance" configurada en el sistema.
-  // El acceso se registra siempre en la auditoría y aparece un banner visible.
-  if (pass === APP_PASSWORD_LEGACY) {
-    const hasMaintenanceUser = (state.users || []).some(u => u.role === 'maintenance');
-    if (hasMaintenanceUser) {
-      // Log especial: registra como acceso de mantenimiento al usuario X
-      logAudit('login', 'session', `🔧 Acceso de MANTENIMIENTO al usuario "${user.name}"`, null, { reason: 'maintenance-key', accessedUser: user.name });
-      setSession(user.name);
-      // Marcar la sesión actual como mantenimiento (para mostrar banner y permitir acceso temporal)
-      sessionStorage.setItem('wm_maintenance_mode', '1');
-      sessionStorage.setItem('wm_maintenance_user', user.name);
-      saveState();
-      toast('🔧 Acceso de MANTENIMIENTO activado · todo lo que hagas queda registrado');
-      showApp(user.name);
-      if (typeof startPresence === 'function') startPresence();
-      if (typeof startChat === 'function') startChat();
-      return;
-    }
-  }
-
-  // 2) Usuario sin contraseña aún: aceptar contraseña heredada y forzar setup
-  if (!user.passwordHash) {
-    if (pass === APP_PASSWORD_LEGACY) {
-      setSession(user.name);
-      logAudit('login', 'session', 'Inició sesión (primera vez, contraseña legacy)', null, null);
-      saveState();
-      toast('Configurá una contraseña personal');
-      showApp(user.name);
-      if (typeof startPresence === 'function') startPresence();
-      if (typeof startChat === 'function') startChat();
-      setTimeout(() => openChangePasswordForced(), 600);
-      return;
-    }
-    errEl.textContent = '✕ Aún no tenés contraseña personal. Usá "adm.2026" para entrar la primera vez.';
-    document.getElementById('login-pass').value = '';
-    return;
-  }
-
-  // 3) Verificar hash SHA-256 normal
-  const tryHash = await sha256(pass);
-  if (tryHash !== user.passwordHash) {
-    errEl.textContent = '✕ Contraseña incorrecta';
-    document.getElementById('login-pass').value = '';
-    return;
-  }
-
-  setSession(user.name);
-  showApp(user.name);
-  // Sesión 6: audit + iniciar presencia
-  logAudit('login', 'session', 'Inició sesión', null, null);
-  saveState();
-  if (typeof startPresence === 'function') startPresence();
-  // Sesión 7: iniciar chat
-  if (typeof startChat === 'function') startChat();
 }
 
 function doLogout() {
   if (!confirm('¿Cerrar sesión?')) return;
+  try { if (typeof firebase !== 'undefined' && firebase.auth) firebase.auth().signOut(); } catch(e){}
   // Sesión 6: registrar logout y parar presencia
   logAudit('logout', 'session', 'Cerró sesión', null, null);
   saveState();
@@ -12751,35 +12699,38 @@ async function saveChangePassword() {
   errEl.textContent = '';
   const newPwd = document.getElementById('change-pwd-new').value;
   const newPwd2 = document.getElementById('change-pwd-new2').value;
-
-  // Si no es forzado, validar actual
-  if (!_changePwdForced) {
-    const current = document.getElementById('change-pwd-current').value;
-    if (!current) { errEl.textContent = 'Ingresá tu contraseña actual'; return; }
-    if (me.passwordHash) {
-      const currentHash = await sha256(current);
-      if (currentHash !== me.passwordHash) { errEl.textContent = '✕ Contraseña actual incorrecta'; return; }
-    } else {
-      // Sin contraseña aún → acepta legacy
-      if (current !== APP_PASSWORD_LEGACY) { errEl.textContent = '✕ Contraseña actual incorrecta'; return; }
-    }
-  }
-
   if (!newPwd || newPwd.length < 6) { errEl.textContent = 'La contraseña debe tener al menos 6 caracteres'; return; }
   if (newPwd !== newPwd2) { errEl.textContent = '✕ Las contraseñas nuevas no coinciden'; return; }
-
-  // Hash y guardar
-  const newHash = await sha256(newPwd);
-  // Buscar el objeto real en state.users (currentUser devuelve una referencia, debería ser la misma)
-  const u = findUserByName(me.name);
-  if (!u) { errEl.textContent = 'Error: usuario no encontrado'; return; }
-  u.passwordHash = newHash;
-  u.passwordNeedsReset = false;
-  logAudit('password', 'password', 'Cambió su propia contraseña', null, null);
-  saveState();
-  closeModal('modal-change-pwd');
-  toast('✓ Contraseña actualizada');
-  _changePwdForced = false;
+  const fbUser = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+  if (!fbUser) { errEl.textContent = '✕ Sesión expirada. Cerrá sesión y volvé a entrar.'; return; }
+  errEl.textContent = '⏳ Guardando…';
+  try {
+    if (!_changePwdForced) {
+      const current = document.getElementById('change-pwd-current').value;
+      if (!current) { errEl.textContent = 'Ingresá tu contraseña actual'; return; }
+      const cred = firebase.auth.EmailAuthProvider.credential(fbUser.email, current);
+      await fbUser.reauthenticateWithCredential(cred);
+    }
+    await fbUser.updatePassword(newPwd);
+    const u = findUserByName(me.name);
+    if (u) { u.passwordNeedsReset = false; }
+    logAudit('password', 'password', 'Cambió su propia contraseña', null, null);
+    saveState();
+    closeModal('modal-change-pwd');
+    toast('✓ Contraseña actualizada');
+    _changePwdForced = false;
+  } catch (e) {
+    const code = e && e.code;
+    if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+      errEl.textContent = '✕ Contraseña actual incorrecta';
+    } else if (code === 'auth/weak-password') {
+      errEl.textContent = '✕ La contraseña es demasiado débil';
+    } else if (code === 'auth/requires-recent-login') {
+      errEl.textContent = '✕ Por seguridad, cerrá sesión, volvé a entrar y probá de nuevo';
+    } else {
+      errEl.textContent = '✕ No se pudo cambiar' + (code ? ' ('+code+')' : '');
+    }
+  }
 }
 
 function cancelChangePassword() {
@@ -12791,13 +12742,15 @@ function cancelChangePassword() {
 let _resetTargetUserName = null;
 function openResetUserPassword(userName) {
   if (!isAdmin()) { toast('⛔ Solo administradores'); return; }
-  _resetTargetUserName = userName;
   const u = findUserByName(userName);
-  if (!u) return;
-  document.getElementById('reset-pwd-user').textContent = u.displayName || u.name;
-  document.getElementById('reset-pwd-new').value = '';
-  document.getElementById('reset-pwd-error').textContent = '';
-  document.getElementById('modal-reset-pwd').classList.add('open');
+  const quien = u ? (u.displayName || u.name) : userName;
+  alert('🔐 Resetear la contraseña de ' + quien + '\n\n' +
+    'Con la seguridad nueva, las contraseñas se administran desde Firebase:\n\n' +
+    '1. Entrá a console.firebase.google.com → proyecto W Machado Contable\n' +
+    '2. Menú Authentication → pestaña Usuarios\n' +
+    '3. Buscá a ' + quien + ', tocá los 3 puntos ⋮ → "Restablecer contraseña" (o Editar)\n' +
+    '4. Definí una contraseña provisoria y pasásela.\n\n' +
+    'Esa persona entra con la provisoria y después la cambia desde "Cambiar contraseña".');
 }
 
 async function confirmResetUserPassword() {
@@ -12819,13 +12772,11 @@ async function confirmResetUserPassword() {
 // ============ CÓDIGO MAESTRO DE EMERGENCIA (Sesión 4) ============
 function openMasterCodeSettings() {
   if (!isAdmin()) { toast('⛔ Solo administradores'); return; }
-  document.getElementById('master-code-status').textContent = state.security && state.security.masterCodeHash
-    ? '🔐 Hay un código maestro configurado.'
-    : '⚠ No hay código maestro configurado todavía.';
-  document.getElementById('master-code-new').value = '';
-  document.getElementById('master-code-new2').value = '';
-  document.getElementById('master-code-error').textContent = '';
-  document.getElementById('modal-master-code').classList.add('open');
+  alert('🔑 Código maestro de emergencia\n\n' +
+    'Esta función quedó desactivada al pasar a la autenticación real de Firebase ' +
+    '(era una vía de acceso que cualquiera podía ver en el código).\n\n' +
+    'Si alguien olvida su contraseña, una administradora la resetea desde ' +
+    'console.firebase.google.com → Authentication → Usuarios.');
 }
 
 async function saveMasterCode() {
@@ -15121,23 +15072,30 @@ function checkNotifications() {
 
 // ============ BOOT ============
 (function boot() {
-  // make sure branding can be read for login screen even before app shows
   applyBranding();
-  initFirebase();
-  const session = getSession();
-  if (session && getValidUserNames().includes(session.user)) {
-    showApp(session.user);
-    // Sesión 6 + 7: iniciar presencia y chat si reanudamos sesión existente
-    if (typeof startPresence === 'function') {
-      // Damos un pequeño tiempo a que Firebase esté listo
-      setTimeout(() => startPresence(), 800);
+  showLogin(); // pantalla de acceso por defecto hasta confirmar la autenticacion
+  if (typeof firebase === 'undefined' || !firebase.auth) { return; }
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  // Persistencia por pestaña: al cerrar la pestaña se cierra la sesion (como antes).
+  try { firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION); } catch(e){}
+  var _authCurrentName = null;
+  firebase.auth().onAuthStateChanged(function(fbUser){
+    if (fbUser) {
+      var name = authEmailToName(fbUser.email);
+      if (!name) { try{ firebase.auth().signOut(); }catch(e){} showLogin(); return; }
+      if (_authCurrentName === name) return; // evita re-render en refresh de token
+      _authCurrentName = name;
+      initFirebase();        // recien ahora conectamos la nube (ya autenticadas)
+      setSession(name);
+      showApp(name);
+      logAudit('login', 'session', 'Inició sesión', null, null);
+      if (typeof startPresence === 'function') setTimeout(function(){ startPresence(); }, 800);
+      if (typeof startChat === 'function') setTimeout(function(){ startChat(); }, 1000);
+    } else {
+      _authCurrentName = null;
+      showLogin();
     }
-    if (typeof startChat === 'function') {
-      setTimeout(() => startChat(), 1000);
-    }
-  } else {
-    showLogin();
-  }
+  });
 })();
 </script>
 
