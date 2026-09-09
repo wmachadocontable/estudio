@@ -2315,7 +2315,7 @@ body.edit-mode .col-type-toggle { display: inline; }
   </div>
   <div class="header-right">
     <span id="sync-indicator">🟢 Sincronizado</span>
-    <span id="build-version" title="Version de la app instalada. v8.3 = bloquea escrituras de pestanas con version vieja y registra quien escribe. Incluye v8.2 = sin carteles de aviso; los cambios simultaneos se resuelven solos. Incluye v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v9.0-excel</span>
+    <span id="build-version" title="Version de la app instalada. v8.3 = bloquea escrituras de pestanas con version vieja y registra quien escribe. Incluye v8.2 = sin carteles de aviso; los cambios simultaneos se resuelven solos. Incluye v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v9.1-excel</span>
     <span class="year-badge" id="year-badge" onclick="openYearSettings()">2026</span>
     <div id="header-panels" class="header-panels"><div class="header-panel header-panel-presence" data-panel="presence" draggable="true">
         <span class="panel-handle">⠿</span>
@@ -15287,100 +15287,205 @@ function _loadScriptOnce(src) {
     document.head.appendChild(el);
   });
 }
-
 var _XLSX_CDN = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
-var _CLI_COLS = [
-  {header:'Tipo',key:'tipo',width:16},{header:'Nombre',key:'nombre',width:34},{header:'RUT',key:'rut',width:16},
-  {header:'BPS',key:'bps',width:12},{header:'CI',key:'ci',width:12},{header:'F. Nac.',key:'fechaNac',width:12},
-  {header:'Contraseña BPS',key:'passBPS',width:18},{header:'Contraseña Gub.uy',key:'passGubUy',width:18},
-  {header:'Códigos Gub.uy',key:'codGubUy',width:20},{header:'Teléfono',key:'telefono',width:14},
-  {header:'Correo',key:'correo',width:26},{header:'Dirección',key:'direccion',width:30},
-  {header:'Facturación',key:'facturacion',width:32},{header:'N° CJPPU',key:'cjppu',width:14},
-  {header:'Contraseña CJPPU',key:'passCjppu',width:18},{header:'RUPE',key:'rupe',width:14},
-  {header:'FOSMETAL',key:'fosmetal',width:14},{header:'Otros',key:'otros',width:32}
-];
-function _xlsxStyleHeader(ws){
-  var hdr = ws.getRow(1); hdr.height = 22;
-  hdr.eachCell(function(cell){
-    cell.font = { bold:true, color:{argb:'FFFFFFFF'}, size:11 };
-    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF102030'} };
-    cell.alignment = { vertical:'middle', horizontal:'left' };
-  });
+
+function _fmtD(s){
+  if (!s || typeof s !== 'string') return s || '';
+  var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? (m[3] + '/' + m[2]) : s;
 }
-function _xlsxZebra(ws){
-  ws.eachRow(function(row,i){
-    if (i===1) return;
-    row.eachCell({includeEmpty:true}, function(cell){
-      cell.border = { bottom:{style:'thin', color:{argb:'FFE2E6EA'}} };
-      if (!cell.alignment) cell.alignment = { vertical:'top' };
-      if (i%2===0) cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFF5F6F8'} };
+
+// Construye una hoja con título, encabezado de color, cebra, congelado y filtros.
+function buildStyledSheet(wb, name, title, headers, widths, rows, opts){
+  opts = opts || {};
+  var ws = wb.addWorksheet(name);
+  var n = headers.length;
+  for (var i=0;i<n;i++){ ws.getColumn(i+1).width = widths[i] || 14; }
+  ws.mergeCells(1,1,1,n);
+  var tc = ws.getCell(1,1);
+  tc.value = title;
+  tc.font = { name:'Calibri', bold:true, size:14, color:{argb:'FFFFFFFF'} };
+  tc.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF0A1626'} };
+  tc.alignment = { vertical:'middle', horizontal:'left', indent:1 };
+  ws.getRow(1).height = 30;
+  for (var j=0;j<n;j++){
+    var hc = ws.getCell(2, j+1);
+    hc.value = headers[j];
+    hc.font = { bold:true, color:{argb:'FFFFFFFF'}, size:11 };
+    hc.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF102030'} };
+    hc.alignment = { vertical:'middle', horizontal:'left', wrapText:true };
+  }
+  ws.getRow(2).height = 22;
+  for (var r=0;r<rows.length;r++){
+    var er = ws.getRow(3 + r);
+    for (var c=0;c<n;c++){
+      var cell = er.getCell(c+1);
+      cell.value = (rows[r][c]==null) ? '' : rows[r][c];
+      cell.border = { bottom:{style:'thin', color:{argb:'FFE8EBEE'}} };
+      var wrap = opts.wrapCols && opts.wrapCols.indexOf(c) >= 0;
+      cell.alignment = { vertical:'top', wrapText: !!wrap };
+      var fill = opts.cellFill ? opts.cellFill(r, c, rows[r][c]) : null;
+      if (fill) cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:fill} };
+      else if ((3+r) % 2 === 1) cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFF6F7F9'} };
+    }
+  }
+  ws.views = [{ state:'frozen', xSplit: (opts.freezeCols||0), ySplit: 2 }];
+  ws.autoFilter = { from:{row:2, column:1}, to:{row:2, column:n} };
+  return ws;
+}
+
+// ---------- CLIENTES ----------
+var _CLI_HEADERS = ['Tipo','Nombre','Estado','RUT','BPS','CI','F. Nac.','Contraseña BPS','Contraseña Gub.uy','Códigos Gub.uy','Teléfono','Correo','Dirección','Facturación','N° CJPPU','Contraseña CJPPU','RUPE','FOSMETAL','Otros'];
+var _CLI_WIDTHS  = [16,34,11,16,12,12,12,18,18,20,14,26,30,32,14,18,14,14,32];
+var _CLI_KEYS    = [null,null,null,'rut','bps','ci','fechaNac','passBPS','passGubUy','codGubUy','telefono','correo','direccion','facturacion','cjppu','passCjppu','rupe','fosmetal','otros'];
+function _xlsxClientesSheet(wb){
+  var title = 'W. Machado — Estudio Contable · Clientes';
+  if (vaultActive() && !vaultUnlocked) {
+    buildStyledSheet(wb, 'Clientes', title, _CLI_HEADERS, _CLI_WIDTHS,
+      [['🔒 Bóveda bloqueada — poné el PIN en Info. Clientes y reexportá para incluir los datos.','','','','','','','','','','','','','','','','','','']], {});
+    return;
+  }
+  var list = (state.clientes||[]).map(cView).slice();
+  list.sort(function(a,b){
+    var aa = a.archived?1:0, bb = b.archived?1:0;
+    if (aa!==bb) return aa-bb;
+    return (a.nombre||'').localeCompare(b.nombre||'');
+  });
+  var rows = list.map(function(c){
+    return _CLI_HEADERS.map(function(h,idx){
+      if (idx===0) return c.tipo||'';
+      if (idx===1) return c.nombre||'';
+      if (idx===2) return c.archived ? 'Archivado' : 'Activo';
+      var k = _CLI_KEYS[idx];
+      return (c[k]==null) ? '' : String(c[k]);
     });
   });
+  buildStyledSheet(wb, 'Clientes', title, _CLI_HEADERS, _CLI_WIDTHS, rows, {
+    wrapCols: [1,9,11,12,13,18],
+    freezeCols: 2,
+    cellFill: function(r,c,v){ if (c===2 && v==='Archivado') return 'FFF3E2E2'; return null; }
+  });
 }
-function _xlsxClientesSheet(wb){
-  var ws = wb.addWorksheet('Clientes', { views:[{state:'frozen', ySplit:1}] });
-  ws.columns = _CLI_COLS;
-  if (vaultActive() && !vaultUnlocked) {
-    ws.addRow({ tipo:'🔒 Bóveda bloqueada — poné el PIN en Info. Clientes y reexportá para incluir los datos de clientes.' });
-  } else {
-    (state.clientes||[]).map(cView)
-      .filter(function(c){ return !c.archived; })
-      .sort(function(a,b){ return (a.nombre||'').localeCompare(b.nombre||''); })
-      .forEach(function(c){
-        var row = {};
-        _CLI_COLS.forEach(function(col){ row[col.key] = (c[col.key]==null) ? '' : String(c[col.key]); });
-        ws.addRow(row);
-      });
-  }
-  _xlsxStyleHeader(ws); _xlsxZebra(ws);
-  ['direccion','facturacion','otros','correo','nombre'].forEach(function(k){ var col=ws.getColumn(k); if(col) col.alignment={wrapText:true,vertical:'top'}; });
-  ws.autoFilter = { from:'A1', to:{row:1, column:_CLI_COLS.length} };
+
+// ---------- EMPRESAS / SV.PROFESIONALES (tablas mensuales) ----------
+function _empCellText(cell){
+  if (!cell) return '';
+  var s = cell.s, out;
+  if (s==='done') out = cell.d ? _fmtD(cell.d) : '✓';
+  else if (s==='pending') out = 'Pendiente';
+  else if (s==='na') out = 'N/A';
+  else out = '';
+  if (cell.t) out = (out ? out+' · ' : '') + cell.t;
+  if (cell.es && cell.ed) out = (out ? out+' · ' : '') + 'Env ' + _fmtD(cell.ed);
+  return out;
 }
-function _estadoCeldaTexto(cell){
-  if (!cell || !cell.s) return '';
-  var t = (cell.s === 'done') ? 'Realizado' : String(cell.s);
-  if (cell.d) t += ' ' + cell.d;
-  if (cell.es && cell.ed) t += ' · Enviado ' + cell.ed;
-  return t;
+function _empStatusColor(s){
+  if (s==='done') return 'FFDCF0E1';
+  if (s==='pending') return 'FFFCF3D6';
+  if (s==='na') return 'FFECEEF0';
+  return null;
 }
-function _xlsxTablaSheet(wb, sheetName, tabId){
+function _xlsxTablaSheet(wb, sheetName, tabId, titleName){
   var tab = (state.tabs||[]).find(function(t){ return t.id===tabId; });
   if (!tab) return;
   var cols = tab.columns || [];
   var year = tab.tabYear;
-  var ws = wb.addWorksheet(sheetName, { views:[{state:'frozen', ySplit:1}] });
-  var header = [{ header:'Nombre', key:'nombre', width:34 }];
-  if (tab.hasTag) header.push({ header: tab.tagLabel || 'Tipo', key:'tag', width:14 });
-  cols.forEach(function(cn,i){ header.push({ header: cn, key:'c'+i, width:16 }); });
-  ws.columns = header;
-  (tab.rows||[]).forEach(function(r){
-    var src = (r.cellsByYear && year && r.cellsByYear[year]) ? r.cellsByYear[year] : (r.cells || {});
-    var row = { nombre: r.name || '' };
-    if (tab.hasTag) row.tag = r.tag || '';
-    cols.forEach(function(cn,i){ row['c'+i] = _estadoCeldaTexto(src[String(i)]); });
-    ws.addRow(row);
+  var hasTag = !!tab.hasTag;
+  var headers = ['Nombre'];
+  if (hasTag) headers.push(tab.tagLabel || 'Tipo');
+  cols.forEach(function(cn){ headers.push(cn); });
+  var widths = [34]; if (hasTag) widths.push(14); cols.forEach(function(){ widths.push(15); });
+  var firstMonth = hasTag ? 2 : 1;
+  var statusMatrix = [];
+  var rows = (tab.rows||[]).map(function(rw){
+    var src = (rw.cellsByYear && year && rw.cellsByYear[year]) ? rw.cellsByYear[year] : (rw.cells || {});
+    var line = [rw.name || ''];
+    if (hasTag) line.push(rw.tag || '');
+    var st = [];
+    cols.forEach(function(cn,ci){ var cell = src[String(ci)]; line.push(_empCellText(cell)); st.push(cell ? cell.s : ''); });
+    statusMatrix.push(st);
+    return line;
   });
-  _xlsxStyleHeader(ws); _xlsxZebra(ws);
-  ws.autoFilter = { from:'A1', to:{row:1, column:header.length} };
+  var titleYear = year ? (' · ' + year) : '';
+  buildStyledSheet(wb, sheetName, 'W. Machado — ' + titleName + titleYear, headers, widths, rows, {
+    freezeCols: firstMonth,
+    cellFill: function(r,c,v){
+      if (c >= firstMonth){ return _empStatusColor(statusMatrix[r][c-firstMonth]); }
+      return null;
+    }
+  });
 }
-async function exportAllXLSX(){
-  toast('⏳ Generando Excel…');
-  try { if (!window.ExcelJS) await _loadScriptOnce(_XLSX_CDN); }
-  catch(e){ toast('✕ No se pudo cargar el generador de Excel (revisá internet)'); return; }
-  var wb = new ExcelJS.Workbook();
-  wb.creator = 'W. Machado Estudio Contable';
-  _xlsxClientesSheet(wb);
-  _xlsxTablaSheet(wb, 'Empresas', 'empresas');
-  _xlsxTablaSheet(wb, 'Serv. Profesionales', 'sprof');
-  var buf = await wb.xlsx.writeBuffer();
-  var blob = new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  var fecha = (typeof todayLocalStr === 'function') ? todayLocalStr() : new Date().toISOString().slice(0,10);
-  a.href = url; a.download = 'W_Machado_Datos_' + fecha + '.xlsx';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
-  toast('✓ Excel generado (Clientes + Empresas + Serv. Profesionales)');
+
+// ---------- SUELDOS (Sueldos / Servicios Domésticos / Reliquidaciones) ----------
+function _chk(v){ return v ? '✓' : ''; }
+function _sueldoStatusColor(s){
+  s = (s||'').toLowerCase();
+  if (s==='finalizado') return 'FFE7DEF2';
+  if (s==='enviado') return 'FFD9E8F5';
+  if (s==='pronto') return 'FFDCF0E1';
+  if (s==='en proceso' || s==='enproceso') return 'FFFCF3D6';
+  if (s==='pendiente') return 'FFECEEF0';
+  return null;
+}
+function _sortedSueldoMonths(){ return Object.keys(state.sueldos||{}).sort(); }
+function _xlsxSueldosSheets(wb){
+  var meses = _sortedSueldoMonths();
+  // Sueldos + Servicios Domésticos comparten estructura
+  var colsFull = [
+    ['status','Estado'],['prontos','Prontos'],['avisadoEnviado','Avisado/Enviado'],['fosmetal','Fosmetal'],
+    ['bps','BPS'],['contabilizado','Contabilizado'],['controlFacturaBps','Control Fact. BPS'],
+    ['auditoria','Auditoría'],['grupo','Grupo'],['observaciones','Observaciones'],['notaInterna','Nota interna']
+  ];
+  function buildFull(sheetName, subKey, titleName){
+    var headers = ['Mes','Empresa'].concat(colsFull.map(function(x){ return x[1]; }));
+    var widths  = [10,30, 14,10,16,10,8,14,16,12,14,26,30];
+    var rows = [];
+    meses.forEach(function(mes){
+      var lst = (state.sueldos[mes] && state.sueldos[mes][subKey]) || [];
+      lst.forEach(function(r){
+        var line = [mes, r.name || ''];
+        colsFull.forEach(function(x){
+          var k = x[0], v = r[k];
+          if (k==='status') line.push(v || '');
+          else if (typeof v === 'boolean') line.push(_chk(v));
+          else line.push(v==null ? '' : String(v));
+        });
+        rows.push(line);
+      });
+    });
+    if (!rows.length) return;
+    buildStyledSheet(wb, sheetName, 'W. Machado — ' + titleName, headers, widths, rows, {
+      wrapCols: [12,13],
+      freezeCols: 2,
+      cellFill: function(r,c,v){ if (c===2) return _sueldoStatusColor(v); return null; }
+    });
+  }
+  buildFull('Sueldos', 'sueldos', 'Sueldos (todos los meses)');
+  buildFull('Serv. Domésticos', 'sd', 'Servicios Domésticos');
+  // Reliquidaciones (estructura distinta)
+  var relRows = [];
+  meses.forEach(function(mes){
+    var lst = (state.sueldos[mes] && state.sueldos[mes].reliq) || [];
+    lst.forEach(function(r){ relRows.push([mes, r.name||'', r.status||'', r.concepto||'', r.importe||'', r.observaciones||'']); });
+  });
+  if (relRows.length){
+    buildStyledSheet(wb, 'Reliquidaciones', 'W. Machado — Reliquidaciones',
+      ['Mes','Empresa','Estado','Concepto','Importe','Observaciones'], [10,30,14,26,14,30], relRows, {
+      wrapCols: [3,5], freezeCols: 2,
+      cellFill: function(r,c,v){ if (c===2) return _sueldoStatusColor(v); return null; }
+    });
+  }
+}
+
+function _xlsxDownload(wb, filename){
+  return wb.xlsx.writeBuffer().then(function(buf){
+    var blob = new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+  });
 }
 
 async function exportClientesXLSX() {
@@ -15388,19 +15493,27 @@ async function exportClientesXLSX() {
   toast('⏳ Generando Excel…');
   try { if (!window.ExcelJS) await _loadScriptOnce(_XLSX_CDN); }
   catch(e){ toast('✕ No se pudo cargar el generador de Excel (revisá internet)'); return; }
-  var wb = new ExcelJS.Workbook();
-  wb.creator = 'W. Machado Estudio Contable';
+  var wb = new ExcelJS.Workbook(); wb.creator = 'W. Machado Estudio Contable';
   _xlsxClientesSheet(wb);
-  var buf = await wb.xlsx.writeBuffer();
-  var blob = new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
   var fecha = (typeof todayLocalStr === 'function') ? todayLocalStr() : new Date().toISOString().slice(0,10);
-  a.href = url; a.download = 'Clientes_W_Machado_' + fecha + '.xlsx';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+  await _xlsxDownload(wb, 'Clientes_W_Machado_' + fecha + '.xlsx');
   toast('✓ Excel de clientes generado');
 }
+
+async function exportAllXLSX(){
+  toast('⏳ Generando Excel…');
+  try { if (!window.ExcelJS) await _loadScriptOnce(_XLSX_CDN); }
+  catch(e){ toast('✕ No se pudo cargar el generador de Excel (revisá internet)'); return; }
+  var wb = new ExcelJS.Workbook(); wb.creator = 'W. Machado Estudio Contable';
+  _xlsxClientesSheet(wb);
+  _xlsxTablaSheet(wb, 'Empresas', 'empresas', 'Empresas');
+  _xlsxTablaSheet(wb, 'Serv. Profesionales', 'sprof', 'Servicios Profesionales');
+  _xlsxSueldosSheets(wb);
+  var fecha = (typeof todayLocalStr === 'function') ? todayLocalStr() : new Date().toISOString().slice(0,10);
+  await _xlsxDownload(wb, 'W_Machado_Datos_' + fecha + '.xlsx');
+  toast('✓ Excel generado (Clientes, Empresas, Sv.Prof., Sueldos)');
+}
+
 
 function exportClientesPDF() {
   if (vaultActive() && !vaultUnlocked) { toast('🔒 Poné el PIN para exportar'); return; }
