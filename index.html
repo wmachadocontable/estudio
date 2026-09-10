@@ -2315,7 +2315,7 @@ body.edit-mode .col-type-toggle { display: inline; }
   </div>
   <div class="header-right">
     <span id="sync-indicator">🟢 Sincronizado</span>
-    <span id="build-version" title="Version de la app instalada. v8.3 = bloquea escrituras de pestanas con version vieja y registra quien escribe. Incluye v8.2 = sin carteles de aviso; los cambios simultaneos se resuelven solos. Incluye v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v9.1-excel</span>
+    <span id="build-version" title="Version de la app instalada. v8.3 = bloquea escrituras de pestanas con version vieja y registra quien escribe. Incluye v8.2 = sin carteles de aviso; los cambios simultaneos se resuelven solos. Incluye v8-ficha = WhatsApp con enlace directo, ficha de cliente reordenable y Descargar HTML arreglado. Incluye v7-conflictos = avisa cuando dos personas tocan el mismo campo a la vez y deja elegir cual queda. Incluye v6-merge (fusion de cambios: ya no se pisan los datos) y v5-notas = chip de nota en el Dashboard con cartel al pasar el cursor y salto directo a la ficha; incluye v4-tareas (filtros/archivar/asignar, notas sin cortes, buscador de clientes)." style="font-size:10px;color:#6b8f6b;letter-spacing:.5px;padding:3px 7px;border:1px solid rgba(107,143,107,.4);border-radius:2px;">v9.3-azure-test</span>
     <span class="year-badge" id="year-badge" onclick="openYearSettings()">2026</span>
     <div id="header-panels" class="header-panels"><div class="header-panel header-panel-presence" data-panel="presence" draggable="true">
         <span class="panel-handle">⠿</span>
@@ -2986,6 +2986,7 @@ body.edit-mode .col-type-toggle { display: inline; }
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <button class="btn btn-outline" onclick="exportData()">⬇ Exportar JSON</button>
       <button class="btn btn-outline" onclick="exportAllXLSX()">📊 Exportar todo a Excel</button>
+      <button class="btn btn-outline" onclick="probarLoginAzure()" title="Prueba el login de Microsoft (Azure) - no toca Firebase">🧪 Probar login de Microsoft</button>
       <button class="btn btn-outline" onclick="document.getElementById('import-file').click()">⬆ Importar JSON</button>
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
       <button class="btn btn-red" onclick="resetAll()">⚠ Resetear todo</button>
@@ -15500,6 +15501,80 @@ async function exportClientesXLSX() {
   toast('✓ Excel de clientes generado');
 }
 
+async function probarLoginAzure(){
+  try {
+    toast('⏳ Cargando login de Microsoft…');
+    if (!window.msal) {
+      await _loadScriptOnce('https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.1/lib/msal-browser.min.js');
+    }
+    if (!window.msal) { alert('No se pudo cargar la librería de Microsoft (MSAL). ¿Hay internet?'); return; }
+    var cfg = {
+      auth: {
+        clientId: 'c3d637ca-e27e-4ab1-8edc-9936b744eba7',
+        authority: 'https://wmachadoapp.ciamlogin.com/',
+        knownAuthorities: ['wmachadoapp.ciamlogin.com'],
+        redirectUri: 'https://wmachadocontable.github.io/estudio/'
+      },
+      cache: { cacheLocation: 'sessionStorage' }
+    };
+    var pca = new msal.PublicClientApplication(cfg);
+    await pca.initialize();
+    var res = await pca.loginPopup({ scopes: ['openid', 'profile'] });
+    var acct = (res && res.account) ? (res.account.name || res.account.username) : 'usuario';
+    alert('✅ ¡El login de Microsoft FUNCIONÓ!\n\nEntró como: ' + acct + '\n\nEsto confirma que la autenticación de Azure anda en tu página. (Todavía no reemplaza a Firebase — es solo la prueba del login.)');
+  } catch (e) {
+    var msg = (e && (e.errorCode || e.errorMessage || e.message)) ? ((e.errorCode || '') + ' :: ' + (e.errorMessage || e.message || '')) : String(e);
+    alert('⚠ El login de Microsoft dio un error:\n\n' + msg + '\n\nSacale captura a este mensaje y pasáselo a Claude para ajustar.');
+    try { console.error('MSAL error', e); } catch(_){}
+  }
+}
+
+function _honCellText(m){
+  if (!m) return '';
+  var amt = (m.sinIva !== undefined && m.sinIva !== '' && m.sinIva !== null) ? ('$ ' + Number(m.sinIva).toLocaleString('es-UY')) : '';
+  var pago = m.fecha ? (_fmtD(m.fecha) + (m.medio ? ' ' + m.medio : '')) : '';
+  if (amt && pago) return amt + ' · ' + pago;
+  return amt || pago || '';
+}
+function _honCellColor(m){
+  if (!m) return null;
+  if (m.fecha) return 'FFDCF0E1';
+  if (m.sinIva) return 'FFFCF3D6';
+  return null;
+}
+function _xlsxHonorariosSheet(wb){
+  var tab = (state.tabs||[]).find(function(t){ return t.type === 'honorarios'; });
+  if (!tab || !tab.honData) return;
+  // Respeto de privacidad: si es privada, solo la incluye Wendy (dueña) o una admin.
+  try {
+    if (tab.privacy === 'private_user') {
+      var me = (typeof currentUser === 'function') ? currentUser() : null;
+      var owners = tab.privateOwners || [];
+      var isOwner = me && (owners.indexOf(me.name) >= 0 || (me.id && owners.indexOf(me.id) >= 0));
+      var admin = (typeof isAdmin === 'function') ? isAdmin() : false;
+      if (!isOwner && !admin) return;
+    }
+  } catch(e){}
+  var MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var headers = ['Cliente'].concat(MESES);
+  var widths = [34]; MESES.forEach(function(){ widths.push(18); });
+  var cli = tab.honData.clients || [];
+  var statusMatrix = [];
+  var rows = cli.map(function(c){
+    var line = [c.name || ''];
+    var st = [];
+    var ms = c.months || [];
+    for (var i=0;i<12;i++){ var m = ms[i]; line.push(_honCellText(m)); st.push(m); }
+    statusMatrix.push(st);
+    return line;
+  });
+  var year = tab.tabYear ? (' · ' + tab.tabYear) : '';
+  buildStyledSheet(wb, 'Honorarios', 'W. Machado — Honorarios' + year, headers, widths, rows, {
+    freezeCols: 1,
+    cellFill: function(r,c,v){ if (c >= 1) return _honCellColor(statusMatrix[r][c-1]); return null; }
+  });
+}
+
 async function exportAllXLSX(){
   toast('⏳ Generando Excel…');
   try { if (!window.ExcelJS) await _loadScriptOnce(_XLSX_CDN); }
@@ -15509,9 +15584,10 @@ async function exportAllXLSX(){
   _xlsxTablaSheet(wb, 'Empresas', 'empresas', 'Empresas');
   _xlsxTablaSheet(wb, 'Serv. Profesionales', 'sprof', 'Servicios Profesionales');
   _xlsxSueldosSheets(wb);
+  _xlsxHonorariosSheet(wb);
   var fecha = (typeof todayLocalStr === 'function') ? todayLocalStr() : new Date().toISOString().slice(0,10);
   await _xlsxDownload(wb, 'W_Machado_Datos_' + fecha + '.xlsx');
-  toast('✓ Excel generado (Clientes, Empresas, Sv.Prof., Sueldos)');
+  toast('✓ Excel generado (Clientes, Empresas, Sv.Prof., Sueldos, Honorarios)');
 }
 
 
