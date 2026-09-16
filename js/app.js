@@ -99,20 +99,6 @@ function buildInitState() {
   };
 }
 
-// ============ FIREBASE CONFIG ============
-// PEGÁ ACÁ tu firebaseConfig (reemplazá el objeto de abajo con el tuyo)
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDJlc6wV_4uROXfU0pJ_RBBV-499LwTnsA",
-  authDomain: "w-machado-contable.firebaseapp.com",
-  databaseURL: "https://w-machado-contable-default-rtdb.firebaseio.com",
-  projectId: "w-machado-contable",
-  storageBucket: "w-machado-contable.firebasestorage.app",
-  messagingSenderId: "479317191824",
-  appId: "1:479317191824:web:eea071a3db62e8268b3c15",
-  measurementId: "G-LPVSLGP3SW"
-};
-
-let firebaseDB = null;
 let firebaseSaveTimeout = null;
 // Traba de seguridad: recién permitimos subir a la nube DESPUÉS de haberla leído
 // una vez. Evita que una copia vieja/vacía pise la versión buena al abrir la página.
