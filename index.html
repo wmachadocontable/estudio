@@ -820,10 +820,9 @@
       <label>Notas</label>
       <textarea id="cal-event-notes" placeholder="Detalles adicionales..."></textarea>
     </div>
-    <input type="hidden" id="cal-event-id" value="gcal_040000008200E00074C5B7101A82E008000000000950B24304ABDC010000000000000000100000003CD7F00EB27A994B95A05592F6EFE4E6">
+    <input type="hidden" id="cal-event-id" value="">
     <div class="form-actions" style="flex-wrap:wrap;">
       <button class="btn btn-outline" id="cal-delete-btn" onclick="deleteCalEvent()" style="display: inline-block; color: var(--c-red); border-color: var(--c-red);">🗑 Eliminar</button>
-      <button class="btn btn-outline" id="cal-gcal-btn" onclick="addCurrentEventToGCal()" style="display: inline-block;">📅 Agregar a Google Calendar</button>
       <button class="btn btn-outline" onclick="closeModal('modal-cal-event')">Cancelar</button>
       <button class="btn btn-gold" onclick="saveCalEvent()">Guardar</button>
     </div>

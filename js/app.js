@@ -2693,32 +2693,6 @@ function renderSettings() {
       <button class="btn btn-gold" onclick="openCustomize()">⚙ Abrir personalización</button>
     </div>`;
 
-  // ---------- Google Calendar Sync ----------
-  const gcal = state.gcalSync || {};
-  const lastSyncTxt = gcal.lastSync ? new Date(gcal.lastSync).toLocaleString('es-UY') : 'Nunca';
-  html += `<div class="settings-card"><h4>📅 Sincronización con Google Calendar</h4>
-      <p style="font-size:13px;color:var(--c-text-muted);margin-bottom:14px;">
-        Los eventos que crees en tu Google Calendar aparecerán automáticamente acá.
-        Pegá la <strong>URL secreta en formato iCal</strong> de tu calendario.
-      </p>
-      <div class="form-group">
-        <label>URL iCal de Google Calendar</label>
-        <input type="text" id="gcal-ical-url" value="${(gcal.icalUrl||'').replace(/"/g,'&quot;')}" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics">
-      </div>
-      <div class="form-group" style="display:flex;align-items:center;gap:10px;">
-        <input type="checkbox" id="gcal-auto" ${gcal.auto?'checked':''} style="width:auto;">
-        <label for="gcal-auto" style="margin:0;cursor:pointer;">Sincronizar automáticamente cada 15 minutos</label>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-        <button class="btn btn-gold btn-sm" onclick="saveGCalSettings()">💾 Guardar</button>
-        <button class="btn btn-outline btn-sm" onclick="syncFromGoogleCalendar(true)">🔄 Sincronizar ahora</button>
-        <button class="btn btn-outline btn-sm" onclick="showGCalHelp()">❓ Cómo obtener la URL</button>
-      </div>
-      <p style="font-size:11px;color:var(--c-text-muted);margin-top:10px;">
-        Última sincronización: <strong>${lastSyncTxt}</strong>
-      </p>
-    </div>`;
-
   html += `</div>`;
   return html;
 }
@@ -7022,7 +6996,6 @@ function showApp(userName) {
   const menuBtn = document.getElementById('header-menu-btn');
   if (menuBtn) menuBtn.classList.remove('has-active');
   startNotificationChecker();
-  setupGCalAutoSync();
   // Sesión 6: renderizar paneles del header (presencia, audit, etc.)
   if (typeof renderHeaderPanels === 'function') renderHeaderPanels();
 }
@@ -7574,14 +7547,6 @@ function renderCalendar() {
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <button class="btn btn-gold" onclick="openNewCalEvent()">+ Nuevo evento</button>
-        <button class="gcal-btn" onclick="syncFromGoogleCalendar(true)" title="Traer eventos desde Google Calendar" style="background:#34a853;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-          Importar de Google
-        </button>
-        <button class="gcal-btn" onclick="exportToGCal()" title="Exportar al Google Calendar">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          Exportar a Google
-        </button>
       </div>
     </div>`;
 
@@ -7665,13 +7630,11 @@ function renderCalMonth(events) {
       const ass = normalizeAssignees(ev);
       const assText = ass.length ? ' → ' + ass.map(u => userLabel(u)).join(', ') : '';
       const avatars = ass.length ? ass.slice(0,3).map(u => userAvatarSmall(u, 14)).join('') : '';
-      const fromGCal = (ev._source === 'gcal' || String(ev.id).startsWith('gcal_'));
-      const gIcon = fromGCal ? '<span title="Importado de Google Calendar" style="opacity:.7;font-size:9px;">🔗</span> ' : '';
       const doneCls = ev.done ? ' done' : '';
       const checkCls = ev.done ? 'ev-pill-check done' : 'ev-pill-check';
-      html += `<div class="cal-event-pill ${ev.type}${doneCls}" onclick="event.stopPropagation();openEditCalEvent('${ev.id}')" title="${escapeHtml(ev.title)}${assText}${fromGCal?' (Google Calendar)':''}">
+      html += `<div class="cal-event-pill ${ev.type}${doneCls}" onclick="event.stopPropagation();openEditCalEvent('${ev.id}')" title="${escapeHtml(ev.title)}${assText}">
         <span class="${checkCls}" onclick="event.stopPropagation();toggleEventDone('${ev.id}')" title="Marcar como ${ev.done?'pendiente':'completado'}"></span>
-        <span class="ev-pill-text">${gIcon}${ev.time?ev.time+' ':''}${escapeHtml(ev.title)}${avatars?' '+avatars:''}${ev.notify?' 🔔':''}</span>
+        <span class="ev-pill-text">${ev.time?ev.time+' ':''}${escapeHtml(ev.title)}${avatars?' '+avatars:''}${ev.notify?' 🔔':''}</span>
       </div>`;
     });
     if (dayEvents.length > 4) html += `<div style="font-size:10px;color:var(--c-text-muted);padding:2px 4px;cursor:pointer;" onclick="event.stopPropagation();gotoDay('${dateStr}')">+${dayEvents.length-4} más…</div>`;
@@ -7746,13 +7709,12 @@ function renderCalWeek(events, singleDay) {
       const [hh, mm] = (ev.time||'00:00').split(':').map(Number);
       const top = (hh * 42) + (mm/60 * 42);
       const height = 42; // 1h por defecto (no tenemos duración)
-      const fromGCal = (ev._source === 'gcal' || String(ev.id).startsWith('gcal_'));
       const doneCls = ev.done ? ' done' : '';
       const checkCls = ev.done ? 'ev-week-check done' : 'ev-week-check';
       const ass = normalizeAssignees(ev);
       const assText = ass.length ? ' · ' + ass.join(', ') : '';
       html += `<div class="cal-week-event ${ev.type}${doneCls}" style="top:${top}px;height:${height}px;min-height:24px;" onclick="event.stopPropagation();openEditCalEvent('${ev.id}')" title="${escapeHtml(ev.title)}${assText}">
-        <span class="${checkCls}" onclick="event.stopPropagation();toggleEventDone('${ev.id}')" title="Marcar como ${ev.done?'pendiente':'completado'}"></span><span class="ev-week-text">${ev.time} ${fromGCal?'🔗 ':''}${escapeHtml(ev.title)}${ev.notify?' 🔔':''}</span>
+        <span class="${checkCls}" onclick="event.stopPropagation();toggleEventDone('${ev.id}')" title="Marcar como ${ev.done?'pendiente':'completado'}"></span><span class="ev-week-text">${ev.time} ${escapeHtml(ev.title)}${ev.notify?' 🔔':''}</span>
       </div>`;
     });
 
@@ -7781,12 +7743,11 @@ function renderCalWeek(events, singleDay) {
 }
 
 function renderWeekEventInline(ev) {
-  const fromGCal = (ev._source === 'gcal' || String(ev.id).startsWith('gcal_'));
   const doneCls = ev.done ? ' done' : '';
   const checkCls = ev.done ? 'ev-pill-check done' : 'ev-pill-check';
   return `<div class="cal-event-pill ${ev.type}${doneCls}" onclick="event.stopPropagation();openEditCalEvent('${ev.id}')" title="${escapeHtml(ev.title)}">
     <span class="${checkCls}" onclick="event.stopPropagation();toggleEventDone('${ev.id}')"></span>
-    <span class="ev-pill-text">${fromGCal?'🔗 ':''}${escapeHtml(ev.title)}${ev.notify?' 🔔':''}</span>
+    <span class="ev-pill-text">${escapeHtml(ev.title)}${ev.notify?' 🔔':''}</span>
   </div>`;
 }
 
@@ -7852,7 +7813,6 @@ function openNewCalEventDate(dateStr) {
   document.getElementById('cal-event-notify').checked = true;
   document.getElementById('cal-event-done').checked = false;
   document.getElementById('cal-delete-btn').style.display = 'none';
-  document.getElementById('cal-gcal-btn').style.display = 'none';
   refreshCalAssignedMulti([]);
   updateNotifPermissionStatus();
   document.getElementById('modal-cal-event').classList.add('open');
@@ -7872,19 +7832,12 @@ function openEditCalEvent(id) {
   document.getElementById('cal-event-notify').checked = ev.notify !== false;
   document.getElementById('cal-event-done').checked = !!ev.done;
   document.getElementById('cal-delete-btn').style.display = 'inline-block';
-  document.getElementById('cal-gcal-btn').style.display = 'inline-block';
   // Backward compat: single 'assignedTo' string → array
   let assignees = ev.assignedTo;
   if (typeof assignees === 'string') assignees = assignees ? [assignees] : [];
   refreshCalAssignedMulti(assignees || []);
   updateNotifPermissionStatus();
   document.getElementById('modal-cal-event').classList.add('open');
-}
-
-function addCurrentEventToGCal() {
-  const id = document.getElementById('cal-event-id').value;
-  if (!id) { toast('Guardá el evento primero'); return; }
-  openInGoogleCalendar(id);
 }
 
 function refreshCalAssignedMulti(selected) {
@@ -7986,279 +7939,6 @@ function normalizeAssignees(ev) {
   if (Array.isArray(a)) return a.filter(Boolean);
   if (typeof a === 'string' && a) return [a];
   return [];
-}
-
-function exportToGCal() {
-  const events = (state.calendarEvents||[]);
-  if (!events.length) { toast('No hay eventos para exportar'); return; }
-  const todayStr = todayLocalStr();
-  const upcoming = events.filter(e=>e.date>=todayStr).sort((a,b)=>a.date.localeCompare(b.date));
-  if (!upcoming.length) { toast('No hay eventos futuros para exportar'); return; }
-  // Build .ics content
-  let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//W.Machado Estudio Contable//ES\r\nCALSCALE:GREGORIAN\r\n';
-  upcoming.forEach(ev => {
-    const d = ev.date.replace(/-/g,'');
-    const dt = ev.time ? d + 'T' + ev.time.replace(':','') + '00' : d;
-    const ass = normalizeAssignees(ev);
-    ics += 'BEGIN:VEVENT\r\n';
-    ics += `UID:${ev.id}@wmachado\r\n`;
-    ics += `DTSTAMP:${new Date().toISOString().replace(/[-:.]/g,'').slice(0,15)}Z\r\n`;
-    ics += `DTSTART${ev.time?'':';VALUE=DATE'}:${dt}\r\n`;
-    ics += `DTEND${ev.time?'':';VALUE=DATE'}:${dt}\r\n`;
-    ics += `SUMMARY:${(ev.title||'').replace(/\n/g,' ')}${ass.length?' ('+ass.join(', ')+')':''}\r\n`;
-    if (ev.notes) ics += `DESCRIPTION:${ev.notes.replace(/\n/g,'\\n')}\r\n`;
-    if (ev.notify) {
-      ics += 'BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:Recordatorio\r\nTRIGGER:-PT1H\r\nEND:VALARM\r\n';
-    }
-    ics += 'END:VEVENT\r\n';
-  });
-  ics += 'END:VCALENDAR';
-  const blob = new Blob([ics], {type:'text/calendar'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'estudio_machado_eventos.ics';
-  a.click();
-  toast('📥 Archivo .ics descargado — abrí calendar.google.com y arrastrá el archivo para importarlo');
-}
-
-// Open a single event directly in Google Calendar via URL (no API/OAuth needed)
-function openInGoogleCalendar(eventId) {
-  const ev = (state.calendarEvents||[]).find(e=>e.id===eventId);
-  if (!ev) return;
-  // GCal URL format: https://calendar.google.com/calendar/render?action=TEMPLATE&text=...&dates=YYYYMMDDTHHMMSS/YYYYMMDDTHHMMSS&details=...
-  const d = ev.date.replace(/-/g,'');
-  let dates;
-  if (ev.time) {
-    const t = ev.time.replace(':','') + '00';
-    // Treat as local time → use floating time format (no Z)
-    dates = `${d}T${t}/${d}T${t}`;
-  } else {
-    // All-day: end date should be +1 day per spec
-    const dt = parseLocalDate(ev.date);
-    dt.setDate(dt.getDate()+1);
-    const nextDay = dt.getFullYear() + String(dt.getMonth()+1).padStart(2,'0') + String(dt.getDate()).padStart(2,'0');
-    dates = `${d}/${nextDay}`;
-  }
-  const ass = normalizeAssignees(ev);
-  const title = encodeURIComponent(ev.title + (ass.length?' ('+ass.join(', ')+')':''));
-  const details = encodeURIComponent((ev.notes || '') + (ev.notify?'\n\n[Recordatorio activo en la app del Estudio]':'') );
-  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`;
-  window.open(url, '_blank');
-}
-
-// ============ GOOGLE CALENDAR SYNC (Import) ============
-// Lee la URL iCal pública de Google Calendar y agrega/actualiza los eventos en state.calendarEvents.
-// Como Google no envía cabeceras CORS, usamos un proxy público gratis (allorigins) para esquivar la restricción del navegador.
-
-// Lista de proxies CORS públicos que probamos en orden hasta que alguno responda.
-// Google Calendar no envía cabeceras CORS, por eso necesitamos un intermediario.
-const GCAL_PROXIES = [
-  url => 'https://corsproxy.io/?' + encodeURIComponent(url),
-  url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-  url => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(url),
-  url => 'https://thingproxy.freeboard.io/fetch/' + url,
-  url => 'https://cors.sh/' + url
-];
-
-async function fetchICalViaProxy(url) {
-  const errors = [];
-  for (let i = 0; i < GCAL_PROXIES.length; i++) {
-    const buildUrl = GCAL_PROXIES[i];
-    try {
-      const ctrl = new AbortController();
-      const timeout = setTimeout(() => ctrl.abort(), 12000); // 12s por proxy
-      const resp = await fetch(buildUrl(url), { signal: ctrl.signal });
-      clearTimeout(timeout);
-      if (!resp.ok) { errors.push('proxy ' + (i+1) + ': HTTP ' + resp.status); continue; }
-      const text = await resp.text();
-      if (text && text.includes('BEGIN:VCALENDAR')) return text;
-      errors.push('proxy ' + (i+1) + ': respuesta inválida');
-    } catch (e) {
-      errors.push('proxy ' + (i+1) + ': ' + (e.message || 'error'));
-    }
-  }
-  throw new Error('Ningún proxy funcionó. Detalles: ' + errors.join(' | '));
-}
-
-function saveGCalSettings() {
-  const url = (document.getElementById('gcal-ical-url').value || '').trim();
-  const auto = document.getElementById('gcal-auto').checked;
-  if (!state.gcalSync) state.gcalSync = {};
-  state.gcalSync.icalUrl = url;
-  state.gcalSync.auto = auto;
-  saveState();
-  toast('💾 Configuración guardada');
-  setupGCalAutoSync();
-  renderContent();
-}
-
-function showGCalHelp() {
-  alert(
-    'Cómo obtener la URL iCal de tu Google Calendar:\n\n' +
-    '1. Entrá a calendar.google.com en una computadora.\n' +
-    '2. En la columna izquierda, pasá el mouse sobre el calendario que querés sincronizar y hacé clic en los 3 puntos → "Configuración y uso compartido".\n' +
-    '3. Bajá hasta "Dirección secreta en formato iCal" (o "Secret address in iCal format").\n' +
-    '4. Copiá esa URL (termina en .ics) y pegala acá.\n\n' +
-    '⚠️ Esa URL es privada: cualquiera que la tenga puede ver tu calendario. No la compartas.\n\n' +
-    'Después tocá "Guardar" y "Sincronizar ahora".'
-  );
-}
-
-// Parser mínimo de iCal (suficiente para Google Calendar)
-function parseICal(text) {
-  // Desplegado de líneas (RFC 5545: líneas que empiezan con espacio/tab continúan la anterior)
-  const unfolded = text.replace(/\r?\n[ \t]/g, '');
-  const lines = unfolded.split(/\r?\n/);
-  const events = [];
-  let cur = null;
-  for (const line of lines) {
-    if (line === 'BEGIN:VEVENT') { cur = {}; continue; }
-    if (line === 'END:VEVENT') { if (cur) events.push(cur); cur = null; continue; }
-    if (!cur) continue;
-    const colonIdx = line.indexOf(':');
-    if (colonIdx < 0) continue;
-    const keyFull = line.slice(0, colonIdx);
-    const value = line.slice(colonIdx + 1);
-    const key = keyFull.split(';')[0];
-    if (key === 'UID') cur.uid = value;
-    else if (key === 'SUMMARY') cur.summary = unescapeIcal(value);
-    else if (key === 'DESCRIPTION') cur.description = unescapeIcal(value);
-    else if (key === 'LOCATION') cur.location = unescapeIcal(value);
-    else if (key === 'DTSTART') {
-      cur.start = parseIcalDate(value, keyFull);
-      cur.allDay = keyFull.includes('VALUE=DATE');
-    }
-    else if (key === 'DTEND') cur.end = parseIcalDate(value, keyFull);
-    else if (key === 'STATUS') cur.status = value;
-  }
-  return events;
-}
-
-function unescapeIcal(s) {
-  return (s||'').replace(/\\n/g,'\n').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\');
-}
-
-// Devuelve { date: 'YYYY-MM-DD', time: 'HH:MM' | '' }
-function parseIcalDate(value, keyFull) {
-  // Formatos: YYYYMMDD  |  YYYYMMDDTHHMMSS  |  YYYYMMDDTHHMMSSZ
-  if (/^\d{8}$/.test(value)) {
-    return { date: `${value.slice(0,4)}-${value.slice(4,6)}-${value.slice(6,8)}`, time: '' };
-  }
-  const m = value.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)$/);
-  if (m) {
-    let [_, y, mo, d, h, mi, s, z] = m;
-    if (z === 'Z') {
-      // UTC → convertir a hora local
-      const dt = new Date(Date.UTC(+y, +mo-1, +d, +h, +mi, +s));
-      y = dt.getFullYear(); mo = String(dt.getMonth()+1).padStart(2,'0'); d = String(dt.getDate()).padStart(2,'0');
-      h = String(dt.getHours()).padStart(2,'0'); mi = String(dt.getMinutes()).padStart(2,'0');
-    }
-    return { date: `${y}-${mo}-${d}`, time: `${h}:${mi}` };
-  }
-  return { date: '', time: '' };
-}
-
-async function syncFromGoogleCalendar(showToasts) {
-  const url = state.gcalSync && state.gcalSync.icalUrl;
-  if (!url) {
-    if (showToasts) toast('⚠️ Configurá la URL iCal en Configuración primero');
-    return;
-  }
-  if (showToasts) toast('🔄 Sincronizando con Google Calendar...');
-  try {
-    const text = await fetchICalViaProxy(url);
-    const gEvents = parseICal(text);
-    if (!state.calendarEvents) state.calendarEvents = [];
-
-    let added = 0, updated = 0;
-    gEvents.forEach(g => {
-      if (!g.start || !g.start.date) return;
-      if (g.status === 'CANCELLED') return;
-      // ID estable basado en el UID de Google, sanitizado y prefijado para distinguir
-      const rawUid = g.uid || (g.summary + '_' + g.start.date);
-      const safeUid = rawUid.replace(/[^A-Za-z0-9_-]/g, '_');
-      const localId = 'gcal_' + safeUid;
-      const existing = state.calendarEvents.find(e => e.id === localId);
-      const ev = {
-        id: localId,
-        title: g.summary || '(sin título)',
-        date: g.start.date,
-        time: g.allDay ? '' : (g.start.time || ''),
-        type: 'evento',
-        assignedTo: existing ? existing.assignedTo : [],
-        notify: existing ? !!existing.notify : false,
-        done: existing ? !!existing.done : false,
-        notes: ((g.description || '') + (g.location ? '\n📍 ' + g.location : '')).trim(),
-        _source: 'gcal'
-      };
-      if (existing) {
-        // Solo actualizamos los campos que vienen de Google, conservamos asignados y notify
-        const changed = existing.title !== ev.title || existing.date !== ev.date || existing.time !== ev.time || existing.notes !== ev.notes;
-        if (changed) {
-          Object.assign(existing, { title: ev.title, date: ev.date, time: ev.time, notes: ev.notes, _source: 'gcal' });
-          updated++;
-        }
-      } else {
-        state.calendarEvents.push(ev);
-        added++;
-      }
-    });
-
-    // Limpiar eventos que ya no están en Google (solo los que vinieron de gcal)
-    const currentUids = new Set(gEvents.map(g => {
-      const rawUid = g.uid || (g.summary + '_' + (g.start && g.start.date));
-      return 'gcal_' + rawUid.replace(/[^A-Za-z0-9_-]/g, '_');
-    }));
-    const before = state.calendarEvents.length;
-    state.calendarEvents = state.calendarEvents.filter(e => {
-      if (e._source !== 'gcal' && !String(e.id).startsWith('gcal_')) return true;
-      return currentUids.has(e.id);
-    });
-    const removed = before - state.calendarEvents.length;
-
-    if (!state.gcalSync) state.gcalSync = {};
-    state.gcalSync.lastSync = Date.now();
-    saveState();
-    renderContent();
-    if (showToasts) {
-      const parts = [];
-      if (added) parts.push(`+${added} nuevos`);
-      if (updated) parts.push(`${updated} actualizados`);
-      if (removed) parts.push(`-${removed} eliminados`);
-      toast('✅ Sincronizado: ' + (parts.length ? parts.join(', ') : 'sin cambios'));
-    }
-  } catch (err) {
-    console.error('Error sincronizando Google Calendar:', err);
-    if (showToasts) {
-      const msg = err.message || 'Error desconocido';
-      toast('❌ ' + msg.slice(0, 120));
-      // Si todos los proxies fallaron, mostrar ayuda detallada
-      if (msg.includes('Ningún proxy')) {
-        setTimeout(() => {
-          alert(
-            'No se pudo conectar con Google Calendar.\n\n' +
-            'Posibles causas:\n' +
-            '• La URL iCal no es válida o cambió.\n' +
-            '• Los proxies CORS públicos están caídos (probá de nuevo en unos minutos).\n' +
-            '• Tu navegador o red bloquea los proxies.\n\n' +
-            'Verificá que la URL termine en ".ics" y que sea la dirección PRIVADA en formato iCal de Google Calendar.\n\n' +
-            'Detalle técnico:\n' + msg
-          );
-        }, 500);
-      }
-    }
-  }
-}
-
-let gcalAutoTimer = null;
-function setupGCalAutoSync() {
-  if (gcalAutoTimer) { clearInterval(gcalAutoTimer); gcalAutoTimer = null; }
-  if (state.gcalSync && state.gcalSync.auto && state.gcalSync.icalUrl) {
-    // Cada 15 minutos
-    gcalAutoTimer = setInterval(() => syncFromGoogleCalendar(false), 15 * 60 * 1000);
-    // Y también una sincronización al cargar (con pequeño delay para no bloquear el render)
-    setTimeout(() => syncFromGoogleCalendar(false), 3000);
-  }
 }
 
 // ============ SUELDOS ============
