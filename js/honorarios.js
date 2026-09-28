@@ -470,15 +470,16 @@
     }
   };
 
-  // ---------- PATCH renderContent + ensureNewStructures ----------
+  // ---------- Integración con contratos centrales ----------
   if (typeof registerTabRenderer==='function'){
     registerTabRenderer('honorarios', function(tab, mc){
       mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab);
     });
   }
-  if (typeof ensureNewStructures==='function'){
-    const _e=ensureNewStructures;
-    ensureNewStructures=function(){ let c=false; try{c=_e();}catch(e){} try{ if(window.ensureHonorarios()) c=true; }catch(e){} return c; };
+  if (typeof registerStructureInitializer==='function'){
+    registerStructureInitializer('honorarios', function(){
+      return !!(typeof window.ensureHonorarios==='function' && window.ensureHonorarios());
+    });
   }
 
   // ============================================================

@@ -428,6 +428,10 @@ function ensureNewStructures() {
     if (ensureClientIds()) changed = true;
   }
 
+  if (typeof runStructureInitializers === 'function') {
+    if (runStructureInitializers()) changed = true;
+  }
+
   return changed;
 }
 if (ensureNewStructures()) saveState();
