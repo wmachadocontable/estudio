@@ -659,6 +659,12 @@ function renderContent() {
   }
   // Sesión 5: marca visual de bloqueo
   document.body.classList.toggle('tab-locked', !!tab.locked);
+  if (
+    typeof renderRegisteredTab === 'function' &&
+    renderRegisteredTab(tab, mc)
+  ) {
+    return;
+  }
   if (tab.type === 'dashboard') { mc.innerHTML = renderDashboard(); attachDashboardHandlers(); return; }
   else if (tab.type === 'mydash') { mc.innerHTML = renderMyDashboard(tab); return; }
   else if (tab.type === 'settings') mc.innerHTML = renderSettings();

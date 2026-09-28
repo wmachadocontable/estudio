@@ -471,20 +471,10 @@
   };
 
   // ---------- PATCH renderContent + ensureNewStructures ----------
-  if (typeof renderContent==='function'){
-    const _orig=renderContent;
-    renderContent=function(){
-      const tab=state.tabs.find(t=>t.id===userPrefs.activeTabId);
-      if(tab && tab.type==='honorarios'){
-        if(typeof userCanSeeTab==='function' && !userCanSeeTab(tab)) return _orig();
-        if(typeof userCanEnterTab==='function' && !userCanEnterTab(tab)) return _orig();
-        document.body.classList.toggle('tab-locked', !!tab.locked);
-        const mc=document.getElementById('main-content');
-        mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab);
-        return;
-      }
-      return _orig();
-    };
+  if (typeof registerTabRenderer==='function'){
+    registerTabRenderer('honorarios', function(tab, mc){
+      mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab);
+    });
   }
   if (typeof ensureNewStructures==='function'){
     const _e=ensureNewStructures;
