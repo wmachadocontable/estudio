@@ -8538,34 +8538,6 @@ function _xlsxDownload(wb, filename){
   });
 }
 
-async function probarLoginAzure(){
-  try {
-    toast('⏳ Cargando login de Microsoft…');
-    if (!window.msal) {
-      await _loadScriptOnce('https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.1/lib/msal-browser.min.js');
-    }
-    if (!window.msal) { alert('No se pudo cargar la librería de Microsoft (MSAL). ¿Hay internet?'); return; }
-    var cfg = {
-      auth: {
-        clientId: 'c3d637ca-e27e-4ab1-8edc-9936b744eba7',
-        authority: 'https://wmachadoapp.ciamlogin.com/',
-        knownAuthorities: ['wmachadoapp.ciamlogin.com'],
-        redirectUri: 'https://wmachadocontable.github.io/estudio/'
-      },
-      cache: { cacheLocation: 'sessionStorage' }
-    };
-    var pca = new msal.PublicClientApplication(cfg);
-    await pca.initialize();
-    var res = await pca.loginPopup({ scopes: ['openid', 'profile'] });
-    var acct = (res && res.account) ? (res.account.name || res.account.username) : 'usuario';
-    alert('✅ ¡El login de Microsoft FUNCIONÓ!\n\nEntró como: ' + acct + '\n\nEsto confirma que la autenticación de Azure anda en tu página. (Todavía no reemplaza a Firebase — es solo la prueba del login.)');
-  } catch (e) {
-    var msg = (e && (e.errorCode || e.errorMessage || e.message)) ? ((e.errorCode || '') + ' :: ' + (e.errorMessage || e.message || '')) : String(e);
-    alert('⚠ El login de Microsoft dio un error:\n\n' + msg + '\n\nSacale captura a este mensaje y pasáselo a Claude para ajustar.');
-    try { console.error('MSAL error', e); } catch(_){}
-  }
-}
-
 function _honCellText(m){
   if (!m) return '';
   var amt = (m.sinIva !== undefined && m.sinIva !== '' && m.sinIva !== null) ? ('$ ' + Number(m.sinIva).toLocaleString('es-UY')) : '';
