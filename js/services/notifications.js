@@ -415,6 +415,46 @@ function toggleDndDay(day) {
   renderNotifSettingsContent();
 }
 
+// ============ NOTIFICATIONS ============
+let notifCheckInterval = null;
+
+function startNotificationChecker() {
+  if (notifCheckInterval) return;
+  // Run once now, then every minute
+  checkNotifications();
+  notifCheckInterval = setInterval(checkNotifications, 60*1000);
+}
+
+function checkNotifications() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const session = getSession();
+  if (!session) return;
+  const me = session.user;
+  const todayStr = todayLocalStr();
+  const events = (state.calendarEvents||[]);
+  events.forEach(ev => {
+    if (!ev.notify) return;
+    if (ev.date !== todayStr) return;
+    if (wasNotifShown(ev.id, todayStr)) return;
+    const ass = normalizeAssignees(ev);
+    // Notify if user is assigned OR if there are no assignees (general events)
+    if (ass.length && !ass.includes(me)) return;
+    const typeIcons = {tarea:'✅',evento:'📅',vencimiento:'⚠️',reunion:'🤝'};
+    const icon = typeIcons[ev.type] || '🔔';
+    const body = (ev.time ? `${ev.time} · ` : '') + (ev.notes || 'Tarea pendiente para hoy.');
+    try {
+      const n = new Notification(`${icon} ${ev.title}`, {
+        body,
+        icon: (state.branding && state.branding.logo) || undefined,
+        tag: ev.id,
+        requireInteraction: ev.type === 'vencimiento'
+      });
+      n.onclick = () => { window.focus(); switchTab('calendario'); n.close(); };
+      markNotifShown(ev.id, todayStr);
+    } catch(e) { console.warn('Notification error:', e); }
+  });
+}
+
 // ----- Conectar notificaciones con eventos de chat -----
 // Esta función se llama cuando llega un mensaje nuevo en cualquier canal.
 // Decide si genera una notificación y de qué tipo.
