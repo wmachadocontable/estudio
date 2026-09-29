@@ -1000,8 +1000,6 @@ async function exportClientesXLSX() {
   toast('✓ Excel de clientes generado');
 }
 
-async
-
 function exportClientesPDF() {
   if (vaultActive() && !vaultUnlocked) { toast('🔒 Poné el PIN para exportar'); return; }
   // Open a new window with print-styled HTML and trigger print
