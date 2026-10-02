@@ -55,6 +55,10 @@
 - **Personalizar** (`js/modules/apariencia.js`): estilo del encabezado (Clásico, Brillo, Degradé, Lino,
   Líneas finas) y barra de pestañas (Clásica, Fina, Con flechas, Plateada, Oculta; ojo: declaraciones.css pinta la Clásica con #nav-tabs, por eso las opciones van con el id). Rueda del mouse = mover pestañas.
 - **Selectores** con flechita propia (en `css/pulido.css`).
+- **Botón principal** (.btn-gold) en azul marino con letra blanca (antes gris, parecía desactivado).
+- **Logo del encabezado:** solo el monograma WM, recortado del logo con CSS (opción «Logo completo» en Personalizar).
+- **Íconos** (`js/modules/iconos.js`): «De colores» (por defecto) o «Sobrios» (de línea), en Personalizar. Cambia los
+  emojis en pantalla, nunca los datos ni lo que se escribe. **Fundido** corto al cambiar de pestaña.
 - **Notas adhesivas** de Personal al estilo de María Lucía (`js/modules/notas.js`, `css/notas.css`): papel pastel,
   cinta, leve inclinación, fecha y círculos de colores. Se mantiene todo lo que ya hacían. Los colores viejos
   se muestran con su equivalente pastel (`notaColor`), sin tocar el dato.

@@ -27,8 +27,17 @@ function aplicarApariencia() {
   const b = document.body; if (!b) return;
   ENC_ESTILOS.forEach(x => b.classList.toggle('enc-' + x.id, x.id === encEstilo()));
   BARRA_ESTILOS.forEach(x => b.classList.toggle('barra-' + x.id, x.id === barraEstilo()));
+  // Logo del encabezado: solo el monograma WM (por defecto) o el logo completo.
+  b.classList.toggle('logo-monograma', logoEstilo() === 'monograma');
+  // Íconos sobrios (js/modules/iconos.js)
+  if (typeof iconosEstilo === 'function') { b.classList.toggle('iconos-sobrios', iconosEstilo() === 'sobrios'); iconosAplicar(); }
   pestanasFlechas();
 }
+const LOGO_ESTILOS = [
+  { id: 'monograma', label: 'Solo el monograma', desc: 'Las letras WM, grandes y legibles.' },
+  { id: 'completo',  label: 'Logo completo',     desc: 'El recuadro entero, como antes.' }
+];
+function logoEstilo() { const v = state && state.branding && state.branding.logoEncabezado; return v === 'completo' ? 'completo' : 'monograma'; }
 function setApariencia(campo, v) {
   if (!state.branding) state.branding = {};
   state.branding[campo] = v;
@@ -82,13 +91,21 @@ aplicarApariencia();
 /* ===== Las opciones en ⋯ → Personalizar ===== */
 function pintarAparienciaCustom() {
   const box = document.getElementById('cust-apariencia'); if (!box) return;
-  const grupo = (titulo, lista, actual, campo, mini) => '<div class="form-group"><label>' + titulo + '</label><div class="ap-opciones">'
-    + lista.map(x => '<button type="button" class="ap-op' + (x.id === actual ? ' on' : '') + '" onclick="setApariencia(\'' + campo + '\',\'' + x.id + '\')">'
+  // al: qué se llama al elegir (setApariencia con su campo, o setIconos)
+  const grupo = (titulo, lista, actual, al, mini) => '<div class="form-group"><label>' + titulo + '</label><div class="ap-opciones">'
+    + lista.map(x => '<button type="button" class="ap-op' + (x.id === actual ? ' on' : '') + '" onclick="' + al(x.id) + '">'
       + '<span class="ap-mini ' + mini + '-' + x.id + '"><i></i></span><b>' + (x.id === actual ? '✓ ' : '') + x.label + '</b><small>' + x.desc + '</small></button>').join('')
     + '</div></div>';
-  box.innerHTML = grupo('Estilo del encabezado', ENC_ESTILOS, encEstilo(), 'encabezado', 'apm-enc')
-    + grupo('Barra para desplazar las pestañas', BARRA_ESTILOS, barraEstilo(), 'barraPestanas', 'apm-barra')
+  const campo = (c) => (id) => 'setApariencia(\'' + c + '\',\'' + id + '\')';
+  box.innerHTML = grupo('Estilo del encabezado', ENC_ESTILOS, encEstilo(), campo('encabezado'), 'apm-enc')
+    + grupo('Logo del encabezado', LOGO_ESTILOS, logoEstilo(), campo('logoEncabezado'), 'apm-logo')
+    + grupo('Barra para desplazar las pestañas', BARRA_ESTILOS, barraEstilo(), campo('barraPestanas'), 'apm-barra')
+    + (typeof ICONOS_OPCIONES !== 'undefined' ? grupo('Íconos', ICONOS_OPCIONES, iconosEstilo(), (id) => 'setIconos(\'' + id + '\')', 'apm-ico') : '')
     + '<small class="ap-nota">Se ve al instante. Vale para las tres.</small>';
+  // Las miniaturas de los íconos: unos de muestra de cada tipo.
+  const c = box.querySelector('.apm-ico-colores'), s = box.querySelector('.apm-ico-sobrios');
+  if (c) c.innerHTML = '<span class="no-iconos">🏢 💼 🧾 📋</span>';
+  if (s && typeof ICO_SVG === 'function') s.innerHTML = ['edificio', 'maletin', 'recibo', 'portapapeles'].map(k => ICO_SVG(ICONOS_LINEA[k])).join('');
 }
 if (typeof openCustomize === 'function') {
   const _openCustomize = openCustomize;

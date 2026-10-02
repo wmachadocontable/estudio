@@ -110,3 +110,14 @@ select::-ms-expand{display:none}
 select option{color:var(--c-text);background:#fff}
 /* Que los menús del navegador se vean claros aunque la computadora esté en modo oscuro */
 :root{color-scheme:light}
+
+/* ===== Botón principal (oct. 2026): azul marino con letra blanca =====
+   Antes era gris plata con letra oscura y parecía desactivado. Ahora se nota cuál es la acción
+   principal de cada pantalla (+ Agregar fila, + Gasto, Agregar, Guardar…). */
+.btn-gold{background:var(--c-header);color:#fff;border:1px solid var(--c-header);box-shadow:0 2px 6px rgba(16,32,48,.18)}
+.btn-gold:hover{background:var(--c-blue);border-color:var(--c-blue);color:#fff;box-shadow:0 6px 16px rgba(16,32,48,.22)}
+.btn-gold:active{transform:translateY(0);box-shadow:0 1px 3px rgba(16,32,48,.2)}
+
+/* ===== Al cambiar de pestaña: un fundido corto (js/modules/celular.js lo dispara) ===== */
+.main-content.pag-entra{animation:pag-entra .22s ease-out}
+@keyframes pag-entra{from{opacity:0;transform:translate3d(0,6px,0)}to{opacity:1;transform:none}}

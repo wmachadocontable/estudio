@@ -72,7 +72,7 @@ function ingresoCfgCard() {
    no contesta, queda un ícono según la hora. */
 const CLIMA_LUGAR = { nombre: 'Rivera', lat: -30.9053, lon: -55.5508 };
 const CLIMA_VIGENCIA_MIN = 30;
-const CLIMA_CLAVE = 'wm_clima_rivera';
+const CLIMA_GUARDADO = 'wm_clima_rivera';
 
 // Código del tiempo (WMO, el que usa Open-Meteo) → ícono y palabra.
 function climaDe(codigo, esDeDia, vientoKmh) {
@@ -96,7 +96,7 @@ function climaPorHora() { const h = new Date().getHours(); return { ico: h >= 6 
 let _climaPedido = null;
 function climaRivera() {
   try {
-    const g = JSON.parse(localStorage.getItem(CLIMA_CLAVE) || 'null');
+    const g = JSON.parse(localStorage.getItem(CLIMA_GUARDADO) || 'null');
     if (g && Date.now() - g.at < CLIMA_VIGENCIA_MIN * 60000) return Promise.resolve(g);
   } catch (e) {}
   if (_climaPedido) return _climaPedido;
@@ -105,7 +105,7 @@ function climaRivera() {
   _climaPedido = fetch(url).then(r => { if (!r.ok) throw new Error('clima ' + r.status); return r.json(); }).then(j => {
     const a = j.current || {};
     const g = { at: Date.now(), codigo: a.weather_code, dia: a.is_day === 1, viento: a.wind_speed_10m || 0, temp: a.temperature_2m };
-    try { localStorage.setItem(CLIMA_CLAVE, JSON.stringify(g)); } catch (e) {}
+    try { localStorage.setItem(CLIMA_GUARDADO, JSON.stringify(g)); } catch (e) {}
     return g;
   }).finally(() => { _climaPedido = null; });
   return _climaPedido;

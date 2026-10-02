@@ -2507,7 +2507,8 @@ function buildTabOperationalSection(tab, activeCol) {
   return {
     id: 'tab_op_' + tab.id,
     icon: icon,
-    title: `${tab.name} — Vista operativa (${periodLabel})`,
+    // Oct. 2026: el nombre sin su emoji (el ícono ya va aparte; antes salía «🏢 🏢 Empresas»).
+    title: `${(typeof tabIcono === 'function' ? tabIcono(tab).txt : tab.name)} — Vista operativa (${periodLabel})`,
     count: null,
     body
   };
