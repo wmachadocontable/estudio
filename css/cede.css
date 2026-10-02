@@ -1,21 +1,22 @@
 /* Declaraciones › CEDE mensual (js/declaraciones-cede.js, oct. 2026). Colores solo en :root. */
 :root{
+  --ce-sobre-oscuro:#fff;
   --ce-ok:#1f6b45; --ce-ok-bg:#e3f3ea; --ce-pend:#b0730a; --ce-pend-bg:#fdf5e4; --ce-curso:#1a4a7a; --ce-curso-bg:#eef4fb;
   --ce-gris:#8a95a3; --ce-gris-bg:#f1f3f5; --ce-linea:#eef0f3; --ce-blanco:#fff; --ce-borde:#dfe3e8; --ce-claro:#c3cad3; --ce-rojo:#c0392b;
 }
 .ce-v{background:var(--ce-blanco);border:1px solid var(--ce-linea);border-radius:14px;padding:18px 20px;margin-top:8px}
 .ce-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.ce-tit{font-family:var(--font-display);font-size:24px;color:var(--c-header)}
+.ce-tit{font-family:var(--font-display);font-size:24px;color:var(--c-header-tx,var(--c-header))}
 .ce-tit i{color:var(--c-accent)}
 .ce-acc{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .ce-anio{padding:6px 10px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-weight:700;font-size:13px;background:var(--ce-blanco)}
 .ce-meses{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .ce-meses button{border:1px solid var(--ce-borde);background:var(--ce-blanco);border-radius:16px;padding:4px 12px;font-family:inherit;font-size:11px;
-  letter-spacing:1px;text-transform:uppercase;font-weight:700;color:var(--c-header);cursor:pointer;position:relative}
+  letter-spacing:1px;text-transform:uppercase;font-weight:700;color:var(--c-header-tx,var(--c-header));cursor:pointer;position:relative}
 .ce-meses button.hay::after{content:'';position:absolute;top:3px;right:4px;width:5px;height:5px;border-radius:50%;background:var(--ce-ok)}
-.ce-meses button.on{background:var(--c-header);color:var(--ce-blanco);border-color:var(--c-header)}
+.ce-meses button.on{background:var(--c-header);color:var(--ce-sobre-oscuro);border-color:var(--c-header)}
 .ce-kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.ce-kpi{flex:1;min-width:120px;border:1px solid var(--ce-linea);border-top:3px solid var(--c-header);border-radius:10px;padding:10px 14px;color:var(--c-header)}
+.ce-kpi{flex:1;min-width:120px;border:1px solid var(--ce-linea);border-top:3px solid var(--c-header);border-radius:10px;padding:10px 14px;color:var(--c-header-tx,var(--c-header))}
 .ce-kpi.k-ok{border-top-color:var(--ce-ok);color:var(--ce-ok)} .ce-kpi.k-pend{border-top-color:var(--ce-rojo);color:var(--ce-rojo)}
 .ce-kpi b{display:block;font-family:var(--font-display);font-size:24px;font-weight:400}
 .ce-kpi span{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ce-gris)}
@@ -26,7 +27,7 @@ table.ce-tabla td{border-bottom:1px solid var(--ce-linea);padding:6px}
 .ce-in{width:100%;border:1px solid transparent;border-radius:6px;padding:6px 8px;font-family:inherit;font-size:13px;background:transparent}
 .ce-in:hover{border-color:var(--ce-borde)}
 .ce-in:focus{border-color:var(--c-header);background:var(--ce-blanco);outline:none}
-.ce-cli{font-weight:700;color:var(--c-header)}
+.ce-cli{font-weight:700;color:var(--c-header-tx,var(--c-header))}
 .ce-tipo{font-weight:700;color:var(--ce-curso)}
 .ce-imp{max-width:110px}
 .ce-est{font-weight:700;border-radius:14px;max-width:150px}

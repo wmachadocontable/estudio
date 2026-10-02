@@ -117,7 +117,7 @@
 
 /* Vista previa desde Configuración: se ve, pero no se puede usar */
 .login-screen.vista-previa .login-card{pointer-events:none}
-.ing-cerrar-previa{position:fixed;top:16px;right:16px;z-index:1001;background:#fff;color:var(--c-header);border:none;border-radius:20px;
+.ing-cerrar-previa{position:fixed;top:16px;right:16px;z-index:1001;background:#fff;color:var(--c-header-tx,var(--c-header));border:none;border-radius:20px;
   padding:9px 16px;font-family:var(--font-body);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.3)}
 
 @media (max-width:520px){
@@ -156,7 +156,7 @@
 #saludo-clima{display:none}
 .saludo-tiempo{display:flex;align-items:center;gap:10px;padding-left:18px;border-left:1px solid var(--c-border-soft)}
 .saludo-ico2{font-size:30px;line-height:1}
-.saludo-tiempo b{display:block;font-family:var(--font-display);font-size:24px;font-weight:400;color:var(--c-header);line-height:1}
+.saludo-tiempo b{display:block;font-family:var(--font-display);font-size:24px;font-weight:400;color:var(--c-header-tx,var(--c-header));line-height:1}
 .saludo-tiempo small{display:block;font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--c-text-muted);margin-top:4px;white-space:nowrap}
 /* Banda azul marino y Suave: el ícono a la izquierda y el clima en la línea de la fecha */
 body.sal-banda .saludo-app,body.sal-suave .saludo-app{gap:14px}

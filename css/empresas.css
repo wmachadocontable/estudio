@@ -3,6 +3,7 @@
    y los agregados de Controles (oct. 2026). Colores solo acá en :root.
    ===================================================================== */
 :root{
+  --emp-sobre-oscuro:#fff;
   --emp-real:#1a4a7a; --emp-real-bg:#eef4fb; --emp-real-bd:#9dbbe0;
   --emp-env:#1f6b45;  --emp-env-bg:#e3f3ea;  --emp-env-bd:#b9dfc9;
   --emp-pend:#b0730a; --emp-pend-bg:#fdf5e4;
@@ -12,7 +13,7 @@
 }
 
 /* ---- Circulito con la inicial ---- */
-.emp-ini{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;color:var(--emp-blanco);font-weight:700;
+.emp-ini{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;color:var(--emp-sobre-oscuro);font-weight:700;
   font-style:normal;flex:none;line-height:1;vertical-align:middle;margin-left:4px;font-family:var(--font-body)}
 
 /* ---- «Envía» al lado del nombre (vista nueva y clásica) ---- */
@@ -23,7 +24,7 @@
 .emp-envia .emp-ini{margin-left:0}
 .emp-envia.on{border-style:solid;border-color:var(--emp-linea);color:var(--c-text);background:var(--emp-suave)}
 .emp-envia:not(.on){padding-left:8px}
-.emp-envia:hover{border-color:var(--c-header);color:var(--c-header)}
+.emp-envia:hover{border-color:var(--c-header);color:var(--c-header-tx,var(--c-header))}
 .emp-menu{position:fixed;z-index:700;background:var(--emp-blanco);border:1px solid var(--c-border);border-radius:10px;box-shadow:0 10px 30px rgba(16,32,48,.18);
   padding:6px;min-width:190px}
 .emp-menu-t{font-size:11px;color:var(--emp-gris);padding:4px 8px 8px;line-height:1.4}
@@ -36,23 +37,23 @@
 /* ---- La vista nueva ---- */
 .emp-v{background:var(--emp-blanco);border:1px solid var(--emp-borde2);border-radius:14px;padding:20px 22px 18px}
 .emp-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-.emp-tit{font-family:var(--font-display);font-size:26px;color:var(--c-header)}
+.emp-tit{font-family:var(--font-display);font-size:26px;color:var(--c-header-tx,var(--c-header))}
 .emp-tit i{color:var(--c-accent);font-style:italic}
 .emp-acc{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .emp-anio{padding:6px 10px;border:1px solid var(--c-border);border-radius:6px;background:var(--emp-blanco);font-family:inherit;font-weight:700;font-size:13px}
 .emp-seg{display:inline-flex;border:1px solid var(--emp-borde);border-radius:22px;padding:3px;background:var(--emp-blanco)}
 .emp-seg button{border:none;border-radius:18px;padding:6px 15px;font-family:inherit;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;
-  font-weight:700;background:transparent;color:var(--c-header);cursor:pointer}
-.emp-seg button.on{background:var(--c-header);color:var(--emp-blanco)}
+  font-weight:700;background:transparent;color:var(--c-header-tx,var(--c-header));cursor:pointer}
+.emp-seg button.on{background:var(--c-header);color:var(--emp-sobre-oscuro)}
 .emp-meses{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}
 .emp-meses button{border:1px solid var(--emp-borde);background:var(--emp-blanco);border-radius:16px;padding:4px 12px;font-family:inherit;font-size:11px;letter-spacing:1px;
-  text-transform:uppercase;font-weight:700;color:var(--c-header);cursor:pointer}
-.emp-meses button.on{background:var(--c-header);color:var(--emp-blanco);border-color:var(--c-header)}
+  text-transform:uppercase;font-weight:700;color:var(--c-header-tx,var(--c-header));cursor:pointer}
+.emp-meses button.on{background:var(--c-header);color:var(--emp-sobre-oscuro);border-color:var(--c-header)}
 .emp-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
 .emp-kpi{background:var(--emp-blanco);border:1px solid var(--emp-linea);border-top:3px solid currentColor;border-radius:10px;padding:12px 16px;box-shadow:0 1px 3px rgba(16,32,48,.04)}
 .emp-kpi b{display:block;font-family:var(--font-display);font-size:28px;font-weight:400;line-height:1.1}
 .emp-kpi span{display:block;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--emp-gris);margin-top:3px}
-.emp-kpi.k-real{color:var(--emp-real)} .emp-kpi.k-env{color:var(--emp-env)} .emp-kpi.k-pend{color:var(--emp-rojo)} .emp-kpi.k-pct{color:var(--c-header)}
+.emp-kpi.k-real{color:var(--emp-real)} .emp-kpi.k-env{color:var(--emp-env)} .emp-kpi.k-pend{color:var(--emp-rojo)} .emp-kpi.k-pct{color:var(--c-header-tx,var(--c-header))}
 .emp-herr{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .emp-buscar{flex:0 1 260px;padding:7px 12px;border:1px solid var(--c-border);border-radius:18px;font-family:inherit;font-size:13px;background:var(--emp-blanco)}
 .emp-leg{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--emp-gris)}
@@ -75,18 +76,18 @@ table.emp-anual{width:100%;border-collapse:collapse;table-layout:fixed}
 table.emp-anual th{background:none;color:var(--emp-gris);font-size:10.5px;letter-spacing:1.5px;font-weight:700;text-transform:uppercase;
   padding:0 2px 9px;border-bottom:2px solid var(--c-header);text-align:center}
 table.emp-anual th.emp-th-nom{text-align:left;width:230px;padding-left:4px}
-table.emp-anual th.emp-hoy{color:var(--c-header)}
+table.emp-anual th.emp-hoy{color:var(--c-header-tx,var(--c-header))}
 table.emp-anual td{border-bottom:1px solid var(--emp-gris-bg);padding:8px 2px;text-align:center;vertical-align:middle}
 table.emp-anual td.emp-td-nom{text-align:left;padding-left:4px}
 table.emp-anual td.emp-c{cursor:pointer;transition:background .15s}
 table.emp-anual td.emp-c:hover{background:var(--emp-suave)}
 table.emp-anual tr.row-locked td.emp-c{cursor:default}
-.emp-nom{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;color:var(--c-header)}
+.emp-nom{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;color:var(--c-header-tx,var(--c-header))}
 .emp-nom .row-lock,.emp-nom .row-x{opacity:0;transition:opacity .15s;cursor:pointer;font-size:11px}
 tr:hover .emp-nom .row-lock,tr:hover .emp-nom .row-x,.emp-mfila:hover .emp-nom .row-lock,.emp-mfila:hover .emp-nom .row-x,.emp-nom .row-lock.locked{opacity:1}
 .emp-nom-sub{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap}
 .emp-nom-sub .emp-envia{margin-left:0}
-.emp-tag{font-size:9.5px;letter-spacing:1.2px;font-weight:700;color:var(--c-header);background:var(--c-blue-light);border-radius:10px;padding:1px 8px;cursor:pointer}
+.emp-tag{font-size:9.5px;letter-spacing:1.2px;font-weight:700;color:var(--c-header-tx,var(--c-header));background:var(--c-blue-light);border-radius:10px;padding:1px 8px;cursor:pointer}
 
 /* Mensual */
 .emp-mlista{border-top:2px solid var(--c-header)}
@@ -113,7 +114,7 @@ tr:hover .emp-nom .row-lock,tr:hover .emp-nom .row-x,.emp-mfila:hover .emp-nom .
 .emp-cfg-op{display:flex;flex-direction:column;gap:4px;text-align:left;background:var(--emp-blanco);border:1.5px solid var(--c-border);border-radius:10px;padding:10px;
   cursor:pointer;font-family:inherit}
 .emp-cfg-op.on{border-color:var(--c-header);box-shadow:0 0 0 2px rgba(16,32,48,.08)}
-.emp-cfg-op b{font-size:13px;color:var(--c-header)}
+.emp-cfg-op b{font-size:13px;color:var(--c-header-tx,var(--c-header))}
 .emp-cfg-op small{font-size:11.5px;color:var(--c-text-muted);line-height:1.4}
 .emp-cfg-mini{display:flex;gap:4px;height:30px;align-items:center;padding:0 8px;border-radius:6px;background:var(--emp-suave)}
 .emp-cfg-mini i{flex:1;height:10px;border-radius:5px}
@@ -131,7 +132,7 @@ tr:hover .emp-nom .row-lock,tr:hover .emp-nom .row-x,.emp-mfila:hover .emp-nom .
 .mc-estados{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .mc-est{border:1.5px solid var(--c-border);background:var(--emp-blanco);border-radius:10px;padding:10px 6px;font-family:inherit;font-size:12.5px;font-weight:700;
   color:var(--c-text-muted);cursor:pointer;transition:all .15s}
-.mc-est:hover{border-color:var(--c-header);color:var(--c-header)}
+.mc-est:hover{border-color:var(--c-header);color:var(--c-header-tx,var(--c-header))}
 .mc-est.on.mc-est-done{background:var(--emp-real-bg);border-color:var(--emp-real);color:var(--emp-real)}
 .mc-est.on.mc-est-pending{background:var(--emp-pend-bg);border-color:var(--emp-pend);color:var(--emp-pend)}
 .mc-est.on.mc-est-na,.mc-est.on.mc-est-empty{background:var(--emp-gris-bg);border-color:var(--emp-gris);color:var(--c-text)}
@@ -143,7 +144,7 @@ tr:hover .emp-nom .row-lock,tr:hover .emp-nom .row-x,.emp-mfila:hover .emp-nom .
 .mc-envio.on{border-color:var(--emp-env-bd);background:var(--emp-env-suave)}
 .mc-envio .form-group{margin-bottom:0}
 .mc-envio #modal-sent-date-wrap{margin-top:12px}
-.mc-switch{display:flex!important;align-items:center;gap:10px;cursor:pointer;margin:0!important;font-weight:700;color:var(--c-header);
+.mc-switch{display:flex!important;align-items:center;gap:10px;cursor:pointer;margin:0!important;font-weight:700;color:var(--c-header-tx,var(--c-header));
   text-transform:none!important;letter-spacing:0!important;font-size:13.5px!important}
 .mc-switch input{position:absolute;opacity:0;width:1px;height:1px}
 .mc-sw{position:relative;width:38px;height:22px;border-radius:11px;background:var(--emp-apagado);flex:none;transition:background .2s}
@@ -160,7 +161,7 @@ tr:hover .sld-ctl-x{opacity:1}
 .sld-ctl-x:hover{color:var(--emp-rojo)}
 .sld-ctl-firma{font-size:10.5px;color:var(--emp-gris);margin-top:2px}
 .sld-ctl-fuera{margin-top:12px;border:1px solid var(--emp-linea);border-radius:10px;padding:8px 12px;background:var(--emp-suave)}
-.sld-ctl-fuera summary{cursor:pointer;font-weight:700;font-size:12.5px;color:var(--c-header)}
+.sld-ctl-fuera summary{cursor:pointer;font-weight:700;font-size:12.5px;color:var(--c-header-tx,var(--c-header))}
 .sld-ctl-fuera-f{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--emp-linea);font-size:12.5px}
 .sld-ctl-fuera-f small{color:var(--emp-gris)}
 

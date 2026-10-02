@@ -1,0 +1,106 @@
+/* =====================================================================
+   MODO NOCHE «MEDIANOCHE» (oct. 2026) — js/modules/noche.js pone la clase
+   «noche» en <html> y <body> de 20:00 a 8:00 (se puede desactivar en ⋯).
+   Casi todo sale de redefinir las variables de colores; abajo, los
+   lugares que tenían colores fijos. Se carga después de todos los CSS.
+   ===================================================================== */
+body.noche{
+  --n-fondo:#0b1424; --n-fondo-2:#0e1a2e; --n-tarjeta:#13213a; --n-tarjeta-2:#182a46; --n-borde:#24344d; --n-borde-suave:#1c2b42;
+  --n-texto:#e9eef5; --n-texto-2:#c3cdd9; --n-gris:#93a2b6; --n-plata:#d6dee8; --n-brillo:0 0 22px rgba(160,190,230,.14);
+  --n-verde:#6fd6a2; --n-verde-bg:#143327; --n-rojo:#ff8f84; --n-rojo-bg:#3a1f26; --n-ambar:#f0c46a; --n-ambar-bg:#352c1a;
+  --n-azul:#9cc3f2; --n-azul-bg:#17304f; --n-boton:#2b4c7a; --n-boton-2:#1e3a63;
+
+  /* Las variables de siempre, en versión noche */
+  --c-bg:var(--n-fondo); --c-bg-alt:var(--n-fondo-2); --c-card:var(--n-tarjeta);
+  --c-header:#1e3456; --c-header-tx:var(--n-plata);
+  --c-accent:var(--n-plata); --c-accent-light:#2a3b55; --c-accent-dark:#9aa8ba;
+  --c-text:var(--n-texto); --c-text-muted:var(--n-gris);
+  --c-border:var(--n-borde); --c-border-soft:var(--n-borde-suave);
+  --c-green:var(--n-verde); --c-green-light:var(--n-verde-bg); --c-red:var(--n-rojo); --c-red-light:var(--n-rojo-bg);
+  --c-pending:var(--n-ambar); --c-pending-light:var(--n-ambar-bg); --c-blue:var(--n-azul); --c-blue-light:var(--n-azul-bg);
+  /* Empresas, CEDE y Finanzas (sus propias variables) */
+  --emp-real:var(--n-azul); --emp-real-bg:var(--n-azul-bg); --emp-real-bd:#3d6491;
+  --emp-env:var(--n-verde); --emp-env-bg:var(--n-verde-bg); --emp-env-bd:#2f6b52;
+  --emp-pend:var(--n-ambar); --emp-pend-bg:var(--n-ambar-bg); --emp-pend-bd:#5a4826; --emp-rojo:var(--n-rojo); --emp-rojo-bg:var(--n-rojo-bg);
+  --emp-gris:var(--n-gris); --emp-gris-bg:#1c2b42; --emp-linea:var(--n-borde-suave); --emp-suave:#16263f;
+  --emp-blanco:var(--n-tarjeta); --emp-borde:var(--n-borde); --emp-borde2:var(--n-borde); --emp-claro:#4a5d77; --emp-punto:#3a4c66;
+  --emp-apagado:#3a4c66; --emp-env-suave:#132c26; --emp-texto2:var(--n-texto-2); --c-saludo-suave:#182a46;
+  --ce-ok:var(--n-verde); --ce-ok-bg:var(--n-verde-bg); --ce-pend:var(--n-ambar); --ce-pend-bg:var(--n-ambar-bg); --ce-curso:var(--n-azul); --ce-curso-bg:var(--n-azul-bg);
+  --ce-gris:var(--n-gris); --ce-gris-bg:#1c2b42; --ce-linea:var(--n-borde-suave); --ce-blanco:var(--n-tarjeta); --ce-borde:var(--n-borde); --ce-claro:#4a5d77; --ce-rojo:var(--n-rojo);
+  color-scheme:dark;
+  color:var(--n-texto);
+  background:radial-gradient(120% 70% at 10% 0%,#17294a 0%,#0c1526 45%,#070d18 100%) fixed!important;
+}
+html.noche{background:#070d18}
+/* La pantalla de ingreso queda como siempre */
+body.noche #login-screen{--c-bg:#fff;--c-bg-alt:#f8f9fa;--c-card:#fff;--c-header:#102030;--c-header-tx:#102030;--c-text:#0a0a0a;
+  --c-text-muted:#6c757d;--c-border:#dee2e6;--c-border-soft:#e9ecef;--c-accent:#b8c1cc;color-scheme:light}
+
+/* ---- Encabezado y barra de pestañas: azul profundo con una línea plateada ---- */
+body.noche header{background:linear-gradient(90deg,#08101d,#0f1d33)!important;border-bottom:1px solid transparent!important;position:relative}
+body.noche header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(214,222,232,.5),transparent);pointer-events:none}
+body.noche #nav-tabs,body.noche .nav-tabs{background:rgba(8,16,29,.85)!important;border-bottom:1px solid var(--n-borde)!important}
+body.noche .nav-tab.active{color:#fff!important}
+
+/* ---- Tarjetas, ventanas y campos ---- */
+body.noche .modal,body.noche .settings-card,body.noche .stat-card,body.noche .card{background:var(--n-tarjeta);border-color:var(--n-borde)}
+body.noche .modal-overlay{background:rgba(3,7,14,.72)}
+body.noche input,body.noche select,body.noche textarea{background-color:var(--n-fondo-2);color:var(--n-texto);border-color:var(--n-borde)}
+body.noche input::placeholder,body.noche textarea::placeholder{color:#62738b}
+body.noche option{background:var(--n-tarjeta);color:var(--n-texto)}
+body.noche .btn-gold{background:linear-gradient(180deg,var(--n-boton),var(--n-boton-2))!important;color:#fff!important;border-color:#3d5f91!important;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+body.noche .btn-outline{background:transparent;color:var(--n-texto-2);border-color:var(--n-borde)}
+body.noche .btn-outline:hover{border-color:var(--n-plata);color:#fff}
+body.noche .lista-pop,body.noche .emp-menu,body.noche .header-menu-dropdown{background:var(--n-tarjeta-2)!important;border-color:var(--n-borde)!important;box-shadow:0 14px 40px rgba(0,0,0,.5)!important}
+body.noche .header-menu-item{color:var(--n-texto)}
+body.noche .header-menu-item:hover{background:#1f3352}
+.noche-menu-sub{display:block;font-size:10.5px;color:var(--c-text-muted);font-weight:400;margin-top:1px}
+
+/* ---- Tablas ---- */
+body.noche table th{border-color:var(--n-borde)}
+body.noche table td{border-color:var(--n-borde-suave)}
+body.noche tbody tr:nth-child(even) td{background-color:rgba(255,255,255,.015)}
+body.noche tbody tr:hover td{background-color:rgba(156,195,242,.05)}
+
+/* ---- Toques de «Medianoche»: brillo suave en los números grandes ---- */
+body.noche .emp-kpi b,body.noche .ce-kpi b,body.noche .stat-num{text-shadow:0 0 16px currentColor}
+body.noche .emp-v,body.noche .ce-v,body.noche .saludo-app{box-shadow:var(--n-brillo)}
+body.noche .moon,body.noche .saludo-ico{filter:drop-shadow(0 0 6px rgba(239,228,189,.35))}
+
+/* ---- Lugares con colores fijos (revisados uno por uno) ---- */
+body.noche .decl-tcard{background:var(--n-tarjeta);border-color:var(--n-borde)}
+body.noche .decl-tcard:hover{box-shadow:var(--n-brillo)}
+body.noche .decl-tcard.add{background:transparent;border-color:#3a4c66;color:var(--n-gris)}
+body.noche .subtab{background:var(--n-tarjeta)}
+body.noche .subtab:hover{background:var(--n-tarjeta-2)}
+body.noche .subtab-count{background:rgba(255,255,255,.08)}
+body.noche .mydash-task-chip.active{background:var(--n-boton);border-color:#3d5f91;color:#fff}
+body.noche .studio-stickies-count{background:#2a3b55;color:var(--n-plata)}
+body.noche .hon-wrap{--ho-accent:#3d6491}
+body.noche .hon-year td.hon-yc.na,body.noche .hon-year td.hon-yc.arch{color:#4a5d77}
+body.noche .mc-sw::after{background:#e9eef5}
+body.noche .mc-sw{background:#3a4c66}
+/* Etiquetas con color propio (tipos, GNS/DGI, estados de Declaraciones): se mantiene el tono, oscurecido. */
+body.noche .tag-pill,body.noche .tipo-badge,body.noche .decl-tag,body.noche [class*="tag-"][style*="background"]{
+  background-image:linear-gradient(rgba(11,20,36,.62),rgba(11,20,36,.62))!important;color:#eef2f7!important;border-color:rgba(255,255,255,.12)!important}
+/* La fila del período actual en Impuestos */
+body.noche .fin-app tr[style*="background"]{background:var(--n-tarjeta-2)!important}
+/* Azul fijo #0066cc (Finalizados del Dashboard) y el saludo en «Banda azul marino» */
+body.noche [style*="#0066cc"],body.noche [style*="#0066CC"]{color:var(--n-azul)!important}
+body.noche [style*="border-left:3px solid #4a9eff"]{border-left-color:#4a7fc0!important}
+body.noche.sal-banda .saludo-app{background:linear-gradient(90deg,#14243f,#1d3557);border-color:#2b4467}
+body.noche.sal-banda .saludo-t{color:#fff}
+body.noche.sal-banda .saludo-f{color:var(--n-plata)}
+/* Sueldos: filas y tarjetas de la bandeja en amarillo / rojo, en tono noche */
+body.noche{--sld-amarillo:#2e2817;--sld-amarillo-borde:#c99a3a;--sld-rojo:#35202a}
+body.noche .sld-tarea.amarilla{border-color:#5a4826}
+body.noche .sld-tarea.rojo{border-color:#5c2f37}
+body.noche .sld-falta{color:var(--n-ambar)}
+body.noche .sld-bandeja{background:var(--n-tarjeta)}
+/* Campos de las fichas (Gastos y otras) que traían fondo blanco fijo */
+body.noche input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),body.noche select,body.noche textarea{
+  background-color:var(--n-fondo-2)!important;color:var(--n-texto)!important;border-color:var(--n-borde)!important}
+body.noche input:focus,body.noche select:focus,body.noche textarea:focus{border-color:#5b7fae!important}
+body.noche #login-screen input,body.noche #login-screen select{background-color:#f8f9fa!important;color:#0a0a0a!important;border-color:#dee2e6!important}
+body.noche .header-menu-btn.open,body.noche .header-menu-btn:hover{background:#1f3352!important;color:#fff!important}
+body.noche .sueldos-subtab-count{background:#2a3b55!important;color:var(--n-plata)!important}

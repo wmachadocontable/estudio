@@ -104,6 +104,16 @@
 - **Celular:** Finanzas y CEDE en fichas (final de `js/modules/celular.js` y `css/celular.css`), «Quién debe»
   en fichas, subpestañas de Finanzas entran en el ancho. Honorarios anual entra en la pantalla (computadora).
 
+## Modo noche «Medianoche» (02/10/2026)
+- De **20:00 a 8:00** toda la página pasa a modo noche, sola y con la página abierta (`js/modules/noche.js`,
+  clase `noche` en `<html>` y `<body>`). Se desactiva en el menú **⋯ → Modo noche** (cada una la suya:
+  `userPrefs.modoNoche` = `auto` | `off`; `siempre` sirve para probar de día). La pantalla de ingreso no cambia.
+- Colores en `css/noche.css` (se carga último): redefine las variables `--c-*` y las de Empresas, CEDE y Sueldos,
+  y corrige los lugares con colores fijos. Para que los títulos azules no desaparecieran de noche, el texto
+  que usaba `var(--c-header)` ahora usa `var(--c-header-tx, var(--c-header))` (de día es el mismo color).
+- **Al agregar algo nuevo:** usar las variables (`--c-card`, `--c-text`, `--c-border`…) y no colores fijos;
+  y pasar la revisión automática (`nocheAuditar()` en la consola con `userPrefs.modoNoche='siempre'`).
+
 ## Guardado por partes (02/10/2026, misma rama)
 - Pedido de la usuaria al ver el uso de Firebase: 2 GB de descargas en 2 días (límite 10 GB/mes). Causa: todo el
   estudio en un texto que viajaba entero con cada tilde. Ahora `wm_v3/p/<clave>` (ver `docs/firebase-contract.md`).

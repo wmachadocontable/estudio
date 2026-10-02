@@ -11,7 +11,7 @@
     border-radius:9px; padding:7px 12px; font-size:13px; cursor:pointer; white-space:nowrap; transition:.15s; }
   .decl-btn:hover { border-color:var(--c-accent,#b8c1cc); }
   .decl-btn.primary { background:var(--c-header,#102030); color:#fff; border-color:transparent; }
-  .decl-btn.active { background:var(--c-accent,#b8c1cc); color:var(--c-header,#102030); border-color:transparent; font-weight:700; }
+  .decl-btn.active { background:var(--c-accent,#b8c1cc); color:var(--c-header-tx,var(--c-header,#102030)); border-color:transparent; font-weight:700; }
   .decl-select { border:1px solid var(--c-border,#dcdfe4); background:var(--c-card,#fff); color:var(--c-text);
     border-radius:9px; padding:7px 10px; font-size:13px; cursor:pointer; }
   /* Barra de carpetas */
@@ -155,7 +155,7 @@
 
   /* ===== Pantalla inicial de Declaraciones (logo + tarjetas) ===== */
   .decl-landing{ position:relative; z-index:1; text-align:center; padding:54px 22px 60px; }
-  .decl-land-title{ font-size:30px; font-weight:600; letter-spacing:.5px; color:var(--c-header,#102030); margin-bottom:8px; }
+  .decl-land-title{ font-size:30px; font-weight:600; letter-spacing:.5px; color:var(--c-header-tx,var(--c-header,#102030)); margin-bottom:8px; }
   .decl-land-sub{ font-size:16px; color:var(--c-text-muted,#5f6e7e); margin-bottom:32px; }
   .decl-tcards{ display:flex; gap:16px; flex-wrap:wrap; max-width:600px; margin:0 auto; }
   .decl-tcard{ flex:1; min-width:160px; cursor:pointer; background:#fff; border:1px solid var(--c-border,#e2e5ea);
