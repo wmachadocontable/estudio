@@ -214,6 +214,13 @@ function copySueldosFromPreviousMonth() {
   const yaHay = ['sueldos', 'sd', 'reliq'].reduce((a, s) => a + dst[s].length, 0);
   if (!confirm(yaHay ? '¿Traer de ' + formatYearMonth(prev) + ' las empresas que falten en ' + formatYearMonth(ym) + '? Lo que ya está cargado no se toca.'
                      : '¿Copiar las empresas de ' + formatYearMonth(prev) + ' a ' + formatYearMonth(ym) + '? Se copian «Envía», los «No lleva» y las Observaciones, sin los tildes.')) return;
+  const n = sldCopiarFilas(src, dst);
+  sldGuardar();
+  toast(n ? '✓ ' + n + ' fila' + (n === 1 ? '' : 's') + ' copiada' + (n === 1 ? '' : 's') + ' de ' + formatYearMonth(prev) : 'No faltaba ninguna');
+}
+// Copia las filas que falten de un mes a otro: empresas, «Envía», «No lleva» y Observaciones, sin tildes.
+// Cada fila mantiene su id: si dos sesiones copian a la vez, quedan las mismas filas (no se duplican).
+function sldCopiarFilas(src, dst) {
   let n = 0;
   ['sueldos', 'sd', 'reliq'].forEach(sub => {
     (src[sub] || []).forEach(r => {
@@ -224,9 +231,30 @@ function copySueldosFromPreviousMonth() {
       dst[sub].push(c); n++;
     });
   });
-  sldGuardar();
-  toast(n ? '✓ ' + n + ' fila' + (n === 1 ? '' : 's') + ' copiada' + (n === 1 ? '' : 's') + ' de ' + formatYearMonth(prev) : 'No faltaba ninguna');
+  return n;
 }
+
+/* ===== EL MES NUEVO SE CREA SOLO (oct. 2026) =====
+   Desde el día 1, la primera que entra a la página (con los datos ya leídos de la nube) crea el mes
+   en curso copiando el último mes con filas (hasta 3 meses atrás). Si el mes ya tiene filas, o ya se
+   creó solo una vez (_auto), no hace nada: si después borran una empresa, no vuelve a aparecer. */
+function sldMesAutomatico() {
+  if (!state.sueldosV2 || typeof cloudSynced === 'undefined' || !cloudSynced) return false;
+  if (typeof currentUser !== 'function' || !currentUser()) return false;
+  const hoy = new Date(), ym = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0');
+  const tieneFilas = (m) => !!m && ['sueldos', 'sd', 'reliq'].some(s => (m[s] || []).length);
+  const actual = state.sueldos && state.sueldos[ym];
+  if (actual && (actual._auto || tieneFilas(actual))) return false;
+  let prev = null;
+  for (let i = 1; i <= 3 && !prev; i++) { const p = sldMesSumar(ym, -i); if (tieneFilas(state.sueldos && state.sueldos[p])) prev = p; }
+  if (!prev) return false;
+  const dst = ensureSueldosMonth(ym);
+  const n = sldCopiarFilas(state.sueldos[prev], dst);
+  dst._auto = { at: Date.now(), de: prev, por: sldYo() };
+  setTimeout(() => toast('📅 Sueldos: se creó ' + formatYearMonth(ym) + ' con ' + n + ' filas de ' + formatYearMonth(prev)), 800);
+  return true;   // se guarda
+}
+if (typeof registerStructureInitializer === 'function') registerStructureInitializer('sueldos-mes-auto', sldMesAutomatico);
 
 // Al escribir una observación, le avisa a Lorena (como antes).
 function triggerSueldoObservacionNotify(row, observacion, sub) {

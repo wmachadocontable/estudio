@@ -198,7 +198,8 @@ function renderFinanzas(tab, mc){
     + finListas();
   if (sub === 'hon') {
     const hon = finHonTab();
-    h += hon ? '<div id="fin-hon-host"></div>' : '<div class="fin-vacio"><div class="e-ico">💲</div><p>Todavía no hay Honorarios cargados.</p></div>';
+    // Arriba de Honorarios: quién debe (js/finanzas/honorarios-deudores.js)
+    h += hon ? ((typeof honDeudoresHTML === 'function' ? honDeudoresHTML() : '') + '<div id="fin-hon-host"></div>') : '<div class="fin-vacio"><div class="e-ico">💲</div><p>Todavía no hay Honorarios cargados.</p></div>';
     mc.innerHTML = h + '</div>';
     if (hon) { document.getElementById('fin-hon-host').innerHTML = renderHonorarios(hon); attachHonorariosHandlers(hon); }
     return;

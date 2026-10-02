@@ -280,3 +280,43 @@ function gstCopiarFijos(){
   toast(nuevos?('✓ Se trajeron '+nuevos+' gastos fijos de '+MONTHS[pm]):'Esos gastos fijos ya estaban cargados');
 }
 
+
+/* ===== LOS GASTOS FIJOS SE TRAEN SOLOS (oct. 2026) =====
+   Desde el día 1, al entrar a la página (con los datos ya leídos de la nube), se crean en el mes en
+   curso los gastos marcados como fijos del último mes que tenga (hasta 3 meses atrás), como pendientes
+   y con el mismo día del mes. Se hace UNA vez por mes (finanzas.fijosAuto[AAAA-MM]): si después borran
+   uno, no vuelve. Cada gasto creado tiene un id fijo (mes + concepto), así dos sesiones a la vez no lo
+   duplican. El botón «Traer los fijos del mes anterior» sigue estando, para hacerlo a mano. */
+function gstFijosAutomaticos() {
+  if (typeof cloudSynced === 'undefined' || !cloudSynced || typeof currentUser !== 'function' || !currentUser()) return false;
+  if (!state.finanzas || !Array.isArray(state.finanzas.gastos)) return false;
+  const f = state.finanzas, hoy = new Date(), y = hoy.getFullYear(), m = hoy.getMonth();
+  const clave = y + '-' + String(m + 1).padStart(2, '0');
+  if (f.fijosAuto && f.fijosAuto[clave]) return false;
+  let origen = [], de = '';
+  for (let i = 1; i <= 3 && !origen.length; i++) {
+    const t = new Date(y, m - i, 1), py = t.getFullYear(), pm = t.getMonth();
+    origen = f.gastos.filter(g => g.fijo && g.forma !== 'credito' && gstAnioDe(g) === py && gstMesDe(g) === pm);
+    de = MONTHS[pm] + ' ' + py;
+  }
+  if (!origen.length) return false;                    // nada para traer (se vuelve a mirar la próxima vez)
+  const yaHay = f.gastos.filter(g => gstAnioDe(g) === y && gstMesDe(g) === m);
+  const ultimo = new Date(y, m + 1, 0).getDate();
+  const slug = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 30);
+  let n = 0;
+  origen.forEach(g => {
+    const id = 'gf' + clave + '_' + slug(g.concepto);
+    if (f.gastos.some(x => x.id === id)) return;
+    if (yaHay.some(x => (x.concepto || '').trim().toLowerCase() === (g.concepto || '').trim().toLowerCase())) return;
+    const dia = Math.min(+((g.fecha || '').slice(8, 10)) || 1, ultimo);
+    f.gastos.push({ id, _t: Date.now(), concepto: g.concepto, cat: g.cat, importe: g.importe, proveedor: g.proveedor || '', medio: g.medio || '',
+      fecha: clave + '-' + String(dia).padStart(2, '0'), pagado: false, fechaPago: '', factura: '', fijo: true, forma: 'contado',
+      conIva: !!g.conIva, iva: g.conIva ? g.iva : 0, ivaModo: g.ivaModo || 'incluido', ivaDed: g.ivaDed || 100, notas: '', _auto: true });
+    n++;
+  });
+  if (!f.fijosAuto) f.fijosAuto = {};
+  f.fijosAuto[clave] = { at: Date.now(), n: n, de: de };
+  if (n) setTimeout(() => { if (typeof finEsDuena === 'function' && finEsDuena()) toast('🧾 Gastos: se trajeron ' + n + ' gastos fijos de ' + de); }, 1200);
+  return true;
+}
+if (typeof registerStructureInitializer === 'function') registerStructureInitializer('gastos-fijos-auto', gstFijosAutomaticos);

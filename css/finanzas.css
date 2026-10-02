@@ -175,3 +175,19 @@ tbody tr.imp-vacio td{color:var(--c-text-muted)}
   td.imp-venc .cell-in{width:auto}
   .fin-tab{padding:10px 12px}
 }
+
+/* ===== Quién debe (honorarios atrasados) ===== */
+.hon-deu{border:1px solid var(--c-border);border-left:4px solid var(--c-red);border-radius:8px;background:var(--c-card);margin:0 0 18px;box-shadow:0 1px 3px rgba(16,32,48,.05)}
+.hon-deu-ok{border-left-color:var(--c-green);padding:11px 16px;font-size:13px;color:var(--c-green)}
+.hon-deu summary{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;list-style:none;flex-wrap:wrap}
+.hon-deu summary::-webkit-details-marker{display:none}
+.hon-deu-t{font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--c-red)}
+.hon-deu-n{flex:1;font-size:13px;color:var(--c-text-muted)}
+.hon-deu-n b{color:var(--c-text)}
+.hon-deu-t2{width:100%;border-collapse:collapse;font-size:13px}
+.hon-deu-t2 th{background:var(--c-bg-alt)!important;color:var(--c-text-muted)!important;font-size:10.5px;text-align:left;padding:7px 16px}
+.hon-deu-t2 th.num,.hon-deu-t2 td.num{text-align:right}
+.hon-deu-t2 td{padding:8px 16px;border-top:1px solid var(--c-border-soft);text-align:left}
+.hon-deu-t2 tbody tr:nth-child(even){background:none}
+.hon-deu-mes{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:var(--c-red-light);color:var(--c-red);margin:1px 2px 1px 0}
+.hon-deu-pie{font-size:11.5px;color:var(--c-text-muted);padding:8px 16px 12px}
