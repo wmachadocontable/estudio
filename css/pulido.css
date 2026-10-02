@@ -121,3 +121,12 @@ select option{color:var(--c-text);background:#fff}
 /* ===== Al cambiar de pestaña: un fundido corto (js/modules/celular.js lo dispara) ===== */
 .main-content.pag-entra{animation:pag-entra .22s ease-out}
 @keyframes pag-entra{from{opacity:0;transform:translate3d(0,6px,0)}to{opacity:1;transform:none}}
+
+/* ===== Configuración: estado del respaldo automático ===== */
+.resp-card{border-left:4px solid var(--c-border)}
+.resp-card.resp-ok{border-left-color:var(--c-green)}
+.resp-card.resp-atrasado,.resp-card.resp-error,.resp-card.resp-sin-permiso{border-left-color:var(--c-red)}
+.resp-txt{font-size:13px;line-height:1.55;margin:0 0 8px}
+.resp-ok .resp-txt{color:var(--c-green)}
+.resp-atrasado .resp-txt,.resp-error .resp-txt{color:var(--c-red)}
+.resp-sub{font-size:11.5px;color:var(--c-text-muted);margin:0 0 10px;line-height:1.5}

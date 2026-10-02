@@ -65,6 +65,15 @@
 - **Celular** (`css/celular.css`, `js/modules/celular.js`): pestañas en una barra abajo con ícono, campanita
   visible, tablas con la primera columna fija, ventanas de abajo hacia arriba. Revisado a 375 px.
 
+## Automatizaciones y respaldo (02/10/2026)
+- **Sueldos:** el mes en curso se crea solo desde el día 1 (`sldMesAutomatico`, una vez por mes: `_auto`).
+- **Gastos fijos:** aparecen solos cada mes (`gstFijosAutomaticos`, `finanzas.fijosAuto`, ids fijos `gf<mes>_<concepto>`).
+- **Honorarios atrasados:** «Quién debe» arriba de Honorarios + aviso diario a Wendy (`js/finanzas/honorarios-deudores.js`).
+- **Respaldo:** el viejo (Apps Script, no estaba en el repo) se cortó en silencio el **19/08/2026**. Nuevo script en
+  `herramientas/respaldo-apps-script/` (ver su LEEME): 23 h, JSON + Excel en Drive y mail. Anota `wm_respaldo` en la base;
+  la página lo muestra en Configuración y avisa si pasan 2 días (`js/modules/respaldo-estado.js`). **Falta instalarlo** en
+  script.google.com con la cuenta wmachadocontable y apagar el activador viejo.
+
 ## Pendiente
 - Revisión de **Álvaro** (pull request de `mejoras-octubre`).
 - Publicar: **solo con aprobación explícita**. Antes: `node herramientas/version-archivos.js`. Después de
