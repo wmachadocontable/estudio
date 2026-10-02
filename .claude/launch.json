@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "estudio-emuladores",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["herramientas/prueba/emuladores.js"],
+      "port": 4000
+    },
+    {
+      "name": "estudio-local",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["herramientas/servidor-local.js"],
+      "port": 5540
+    }
+  ]
+}

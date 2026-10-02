@@ -77,6 +77,7 @@ function initFirebase() {
     if (WM_SNAPSHOT) { showSnapshotBanner(); return; }
     if (typeof firebase === 'undefined') return;
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    wmConectarEmuladores();
     firebaseDB = firebase.database();
     // Escuchar cambios en tiempo real
     firebaseDB.ref('wm_app_v2').on('value', function(snapshot) {
@@ -8491,6 +8492,7 @@ async function exportAllXLSX(){
   showLogin(); // pantalla de acceso por defecto hasta confirmar la autenticacion
   if (typeof firebase === 'undefined' || !firebase.auth) { return; }
   if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  wmConectarEmuladores();
   // Persistencia por pestaña: al cerrar la pestaña se cierra la sesion (como antes).
   try { firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION); } catch(e){}
   var _authCurrentName = null;

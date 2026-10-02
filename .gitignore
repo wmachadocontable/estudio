@@ -12,3 +12,6 @@ backups/
 exports/
 private/
 secrets/
+herramientas/prueba/datos-locales/
+herramientas/prueba/*.log
+*-debug.log
