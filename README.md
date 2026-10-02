@@ -53,7 +53,7 @@ Aplicación web interna para gestión operativa contable.
 
 ## Datos
 
-- Nodo principal compartido: wm_app_v2.
+- Nodo principal compartido: wm_v3/p (por partes, desde el 02/10/2026; ver docs/firebase-contract.md). wm_app_v2 quedó como copia del día del cambio.
 - Sincronización con transaction para evitar pisados entre sesiones.
 - Control de versión con _rev.
 - Fusión de estados y lógica anti-pisado en sync.

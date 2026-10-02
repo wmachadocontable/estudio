@@ -79,77 +79,10 @@ function initFirebase() {
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     wmConectarEmuladores();
     firebaseDB = firebase.database();
-    // Escuchar cambios en tiempo real
-    firebaseDB.ref('wm_app_v2').on('value', function(snapshot) {
-      const data = snapshot.val();
-      if (data) {
-        cloudSynced = true; // recién ahora sabemos que la nube tiene datos: podemos subir
-        const incoming = typeof data === 'string' ? JSON.parse(data) : data;
-        // Guard anti-pisado: registrar la versión de la nube que estamos viendo.
-        // IMPORTANTE: esto se hace SIEMPRE, incluso si diferimos el render, porque si no
-        // la próxima transacción se abortaría por "la nube es más nueva" y se perdería
-        // lo que la usuaria está escribiendo.
-        const incomingRev = (incoming && incoming._rev) || 0;
-        if (incomingRev >= lastSeenRev) lastSeenRev = incomingRev;
-        _lastCloudAuthor = (incoming && incoming._by) || '';
-        _lastCloudMeta = { by: _lastCloudAuthor, at: (incoming && incoming._at) || 0,
-                           ver: (incoming && incoming._ver) || '', sid: (incoming && incoming._sid) || '' };
-        ['_rev','_by','_at','_ver','_sid'].forEach(k => { if (incoming && (k in incoming)) delete incoming[k]; });
-        // Primera lectura de la sesión: esta copia de la nube es nuestra base.
-        // NO tocar baseState acá: mergeIncomingState necesita saber si es la
-        // primera lectura de la sesión para adoptar la nube tal cual.
-        // Strip any view-state that legacy versions might still send,
-        // so it doesn't override this user's navigation.
-        ['activeTabId','editMode','monthFilters','dashMonth'].forEach(k => { if (k in incoming) delete incoming[k]; });
-        if (incoming.tabs) incoming.tabs.forEach(t => { if ('layout' in t) delete t.layout; });
-
-        // ===== CANDADO DE EDICIÓN =====
-        // Si la usuaria está escribiendo dentro de una nota, NO tocamos el estado ni
-        // re-renderizamos: eso reconstruía el contenteditable, perdía el cursor y dejaba
-        // el texto cortado en la última versión guardada. Encolamos el cambio remoto y
-        // lo aplicamos (fusionado) apenas salga de la nota.
-        // Fusionamos SIEMPRE (aunque estés escribiendo una nota): así el cambio de
-        // la otra usuaria entra en el estado y ya no puede perderse. Lo único que se
-        // difiere es volver a dibujar la pantalla, para no romperte el cursor.
-        if (isEditingSticky()) {
-          mergeIncomingState(incoming, /*render=*/false);
-          _pendingRemoteRender = true;
-          showSyncIndicator('✏️ Escribiendo — se actualiza al salir');
-          return;
-        }
-        mergeIncomingState(incoming, /*render=*/true);
-      } else {
-        // ===== CAUSA RAÍZ DEL BORRADO TOTAL (arreglado en v8.5) =====
-        // Antes acá había un saveState() directo. Si la lectura volvía vacía por
-        // CUALQUIER motivo (hipo de red, corte, permiso), esta pestaña subía su
-        // estado. Y si había abierto sin datos locales, su estado era la plantilla
-        // en blanco: se borraba el estudio entero (sin logo, contraseñas de fábrica,
-        // pestañas por defecto). Ahora no se sube nada solo: se reintenta y, si de
-        // verdad está vacía, se pregunta.
-        handleEmptyCloud();
-      }
-    });
+    // Oct. 2026: la nube se guarda por partes (js/services/sync-partes.js, carpeta wm_v3).
+    // El listener y el «al volver a la pestaña» viven ahí. wm_app_v2 quedó como copia del momento del cambio.
+    wmEscucharPartes();
     showSyncIndicator('🟢 Conectado');
-
-    // Pestaña que estuvo dormida (minimizada, PC suspendida, otro escritorio):
-    // al volver pedimos la nube de nuevo y fusionamos antes de dejarla escribir.
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState !== 'visible' || !firebaseDB) return;
-      firebaseDB.ref('wm_app_v2').once('value').then(function(snap) {
-        var data = snap.val();
-        if (!data) return;
-        var inc = typeof data === 'string' ? JSON.parse(data) : data;
-        var r = (inc && inc._rev) || 0;
-        if (r >= lastSeenRev) lastSeenRev = r;
-        _lastCloudAuthor = (inc && inc._by) || '';
-        _lastCloudMeta = { by: _lastCloudAuthor, at: (inc && inc._at) || 0,
-                           ver: (inc && inc._ver) || '', sid: (inc && inc._sid) || '' };
-        ['_rev','_by','_at','_ver','_sid'].forEach(function(k){ if (inc && (k in inc)) delete inc[k]; });
-        ['activeTabId','editMode','monthFilters','dashMonth'].forEach(function(k){ if (k in inc) delete inc[k]; });
-        if (inc.tabs) inc.tabs.forEach(function(t){ if ('layout' in t) delete t.layout; });
-        mergeIncomingState(inc, !isEditingSticky());
-      }).catch(function(){});
-    });
   } catch(e) {
     console.warn('Firebase no disponible, usando localStorage', e);
   }

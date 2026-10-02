@@ -5,7 +5,9 @@ Excel para leer, en *Respaldos / Página del estudio W. Machado*) y manda un mai
 wmachadocontable@gmail.com con el JSON adjunto. Si falla, manda un mail de **ERROR**. Anota en la base
 cuándo se hizo, y la página avisa en la campanita si pasan 2 días sin respaldo.
 
-**Funciona con la página actual y con la nueva:** solo lee los datos, no depende de la versión publicada.
+**Lee el formato nuevo y el viejo:** desde el 02/10/2026 la página guarda por secciones (`wm_v3/p`); el script las vuelve
+a juntar en un solo JSON (el mismo que se importa en Personalizar → Datos). Si `wm_v3` está vacío, lee `wm_app_v2`.
+**Ojo:** el código de script.google.com tiene que ser el de esta carpeta (versión del 02/10/2026 en adelante).
 
 ## Por qué se hizo nuevo (02/10/2026)
 El respaldo anterior (mails «Respaldo W. Machado – fecha_22-16») llegaba todas las noches hasta

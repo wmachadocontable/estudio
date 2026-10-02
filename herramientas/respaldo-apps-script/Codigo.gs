@@ -5,7 +5,8 @@
  * Firebase «w-machado-contable»). No necesita claves guardadas: usa el permiso de la propia cuenta.
  *
  * - respaldoDiario(): todas las noches (23 h, hora de Uruguay) lee TODA la base de la página
- *   (nodo wm_app_v2), y guarda en Drive → Respaldos / Página del estudio W. Machado:
+ *   (desde oct. 2026 guardada por secciones en wm_v3/p; si no está, el texto viejo wm_app_v2),
+ *   la vuelve a armar en un solo estado, y guarda en Drive → Respaldos / Página del estudio W. Machado:
  *     · un JSON, para restaurar (Personalizar → Datos → Importar JSON), y
  *     · un Excel, para leer.
  *   Manda un mail a wmachadocontable@gmail.com con el JSON adjunto, el resumen y el link a la carpeta.
@@ -16,7 +17,8 @@
  * - probarAhora(): hace un respaldo en el momento (para verificar que anda).
  */
 const BASE_URL = 'https://w-machado-contable-default-rtdb.firebaseio.com/';
-const NODO = 'wm_app_v2';
+const NODO = 'wm_app_v2';          // formato viejo: todo en un texto (queda como copia del día del cambio)
+const NODO_PARTES = 'wm_v3/p';      // formato nuevo: una sección por clave (js/services/sync-partes.js)
 const NODO_ESTADO = 'wm_respaldo';
 const CARPETA = ['Respaldos', 'Página del estudio W. Machado'];
 const AVISO_A = 'wmachadocontable@gmail.com';
@@ -72,14 +74,48 @@ function instalarDisparador() {
 
 /* ===================== BASE (Realtime Database, API REST) ===================== */
 function url_(ruta) { return BASE_URL + ruta + '.json?access_token=' + encodeURIComponent(ScriptApp.getOAuthToken()); }
-function leerEstado_() {
-  const r = UrlFetchApp.fetch(url_(NODO), { muteHttpExceptions: true });
+function leerNodo_(ruta) {
+  const r = UrlFetchApp.fetch(url_(ruta), { muteHttpExceptions: true });
   const c = r.getResponseCode();
   if (c >= 300) throw new Error('No se pudo leer la base (' + c + '): ' + r.getContentText().slice(0, 200));
-  let v = JSON.parse(r.getContentText() || 'null');
-  if (typeof v === 'string') v = JSON.parse(v);           // la página guarda el estado como texto JSON
+  return JSON.parse(r.getContentText() || 'null');
+}
+function leerEstado_() {
+  let v = null;
+  const p = leerNodo_(NODO_PARTES);
+  if (p && Object.keys(p).length) v = estadoDesdePartes_(p);
+  else {
+    v = leerNodo_(NODO);
+    if (typeof v === 'string') v = JSON.parse(v);         // formato viejo: el estado como texto JSON
+  }
   if (!v || !v.tabs) throw new Error('La base respondió vacía o sin pestañas: no se guarda un respaldo vacío.');
   return v;
+}
+// Igual que estadoDesde() de js/services/sync-partes.js: las secciones → un solo estado.
+function estadoDesdePartes_(crudo) {
+  const p = {}; let rev = 0;
+  Object.keys(crudo).forEach(function (ck) {
+    let o = null; try { o = JSON.parse(crudo[ck]); } catch (e) {}
+    if (!o) return;
+    p[decodeURIComponent(ck)] = o.d;
+    if ((o.r || 0) > rev) rev = o.r || 0;
+  });
+  const st = {}, sueltas = {};
+  Object.keys(p).sort().forEach(function (c) {
+    const i = c.indexOf('~');
+    if (i < 0) { if (c !== 'tabs' && p[c] !== '__dividido__') st[c] = p[c]; else if (p[c] === '__dividido__' && !st[c]) st[c] = c === 'auditLog' ? [] : {}; return; }
+    const k = c.slice(0, i), s = c.slice(i + 1);
+    if (k === 'tab') sueltas[s] = p[c];
+    else if (k === 'auditLog') st.auditLog = (st.auditLog || []).concat(p[c] || []);
+    else { if (!st[k] || typeof st[k] !== 'object' || Array.isArray(st[k])) st[k] = {}; st[k][s] = p[c]; }
+  });
+  if (Array.isArray(p.tabs)) {
+    st.tabs = p.tabs.map(function (id) { return sueltas[id]; }).filter(Boolean);
+    Object.keys(sueltas).forEach(function (id) { if (p.tabs.indexOf(id) < 0) st.tabs.push(sueltas[id]); });
+  }
+  if (Array.isArray(st.auditLog)) st.auditLog.sort(function (a, b) { return ((a && a.at) || 0) - ((b && b.at) || 0); });
+  st._rev = rev; st._formato = 'wm_v3 (por secciones)';
+  return st;
 }
 // Lo que lee la página para avisar si el respaldo dejó de hacerse.
 function anotarEstado_(datos, soloAgregar) {

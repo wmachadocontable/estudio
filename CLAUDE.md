@@ -7,8 +7,12 @@
   - `main`: la versión publicada (un solo HTML grande, la vieja).
   - `desarrollo-arquitectura`: la reorganización en archivos que hizo **Álvaro** (técnico).
   - `mejoras-octubre`: los cambios del 02/10/2026 (sale de la rama de Álvaro). **Sin publicar.**
-- **Firebase:** proyecto `w-machado-contable`, Auth + **Realtime Database** (nodo `wm_app_v2`, todo el
-  estado como un texto JSON; la mezcla entre sesiones la hace `merge3` en `js/services/sync.js`).
+- **Firebase:** proyecto `w-machado-contable`, Auth + **Realtime Database**, plan Spark (10 GB de descargas
+  por mes). **Desde el 02/10/2026 el estado se guarda por partes** en `wm_v3/p` (`js/services/sync-partes.js`):
+  una clave por pestaña, por mes de Sueldos, por usuaria, por día de historial, etc.; cada cambio viaja solo con
+  su parte (antes viajaba todo el estudio, ~1,3 MB, y se iba a agotar el límite a mitad de mes). En pantalla sigue
+  habiendo un único `state` y la mezcla entre sesiones es la misma `merge3` de `js/services/sync.js`.
+  `wm_app_v2` (el texto único de antes) quedó como copia del día del cambio; `rescate.html` todavía escribe ahí.
 - **Base real: nunca sin aprobación explícita.** Se prueba con los emuladores (ver abajo).
 - Leer también `README.md` y `docs/` (contratos de Álvaro: qué no tocar).
 
@@ -99,6 +103,17 @@
   copia al mes siguiente; lo que había por año se pasó al mes en curso (ty.years queda).
 - **Celular:** Finanzas y CEDE en fichas (final de `js/modules/celular.js` y `css/celular.css`), «Quién debe»
   en fichas, subpestañas de Finanzas entran en el ancho. Honorarios anual entra en la pantalla (computadora).
+
+## Guardado por partes (02/10/2026, misma rama)
+- Pedido de la usuaria al ver el uso de Firebase: 2 GB de descargas en 2 días (límite 10 GB/mes). Causa: todo el
+  estudio en un texto que viajaba entero con cada tilde. Ahora `wm_v3/p/<clave>` (ver `docs/firebase-contract.md`).
+- Probado en los emuladores: el paso automático desde `wm_app_v2`; un cambio en Empresas sube ~3 KB (antes todo);
+  dos sesiones cambiando a la vez Empresas, Sueldos y Finanzas → se guardan las cuatro cosas; las dos sesiones
+  quedan idénticas a la nube; una pestaña con la versión vieja recibe el cartel rojo y no se le tocan los datos.
+- **El respaldo de las 23 h** (`herramientas/respaldo-apps-script/Codigo.gs`) lee `wm_v3/p` y lo vuelve a juntar.
+  Hay que pegar esa versión en script.google.com («Respaldo W. Machado») al publicar.
+- Después de publicar: que las tres cierren TODAS las pestañas (también el celular). Una pestaña vieja guarda en
+  `wm_app_v2`, que la página nueva ya no lee: lo que cambie ahí se pierde (le aparece el cartel rojo).
 
 ## Publicación (02/10/2026)
 - **Publicada el 02/10/2026** por decisión de la usuaria («publicá y que funcione»), **sin esperar la revisión

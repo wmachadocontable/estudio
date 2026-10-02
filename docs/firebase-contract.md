@@ -31,9 +31,23 @@ Estos nombres de nodo quedan congelados en esta etapa:
 
 ## Detalles operativos relevantes
 
-### `wm_app_v2`
+### `wm_v3/p` (desde el 02/10/2026: guardado por partes)
 
-- Es el estado compartido principal serializado en JSON.
+- El estado compartido, partido en claves (`js/services/sync-partes.js`): una por pestaña (`tab~<id>` + el orden en `tabs`),
+  un mes de Sueldos por clave (`sueldos~AAAA-MM`), avisos y paneles por usuaria, `branding` por campo (el logo aparte)
+  y el historial por día (`auditLog~AAAA-MM-DD`); el resto, una clave por dato de primer nivel.
+- Cada clave es un texto JSON `{ r, by, at, ver, sid, d }`: `r` es la versión de ESA clave (anti-pisado por clave,
+  igual que `_rev`), `d` el dato. Un cambio sube y baja solo las claves que cambiaron.
+- Listener `on('value')` en `wm_v3/p` (el servidor manda solo las claves cambiadas); arma el estado entero y lo pasa
+  por el mismo `mergeIncomingState` / `merge3` de siempre. `wm_v3/meta` anota cuándo se hizo el paso.
+- Paso inicial automático: si `wm_v3/p` está vacío, la primera sesión copia `wm_app_v2` partido (transacción atómica)
+  y le reescribe a `wm_app_v2` el mismo contenido sin `_at`, para que las pestañas viejas muestren el cartel rojo.
+
+### `wm_app_v2` (hasta el 02/10/2026)
+
+- **Ya no se usa** desde el paso a `wm_v3`: queda como copia del momento del cambio. `rescate.html` todavía escribe acá
+  (no tiene efecto en la página nueva).
+- Era el estado compartido principal serializado en JSON.
 - Usa metadata de concurrencia (`_rev`, `_by`, `_at`, `_ver`, `_sid`).
 - Escritura principal via `transaction` para evitar pisado entre pestañas/sesiones.
 - Listener realtime central para merge de 3 vias.

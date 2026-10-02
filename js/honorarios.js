@@ -570,7 +570,8 @@
       if(!confirm('¿Restaurar la copia del '+honBkFmt(e.at)+'?\n\nSe reemplazan los datos actuales de TODA la página por los de esa fecha. Todos los usuarios la verán. Esta acción se puede deshacer restaurando otra copia.')) return;
       try{
         var _restored = Object.assign({}, e.data, { _rev: (typeof lastSeenRev!=='undefined' ? lastSeenRev : 0) + 1000 });
-        db.ref('wm_app_v2').set(JSON.stringify(_restored)).then(function(){
+        // Oct. 2026: la página se guarda por partes (sync-partes.js): se restauran todas.
+        (typeof wmGuardarTodo==='function' ? wmGuardarTodo(e.data) : db.ref('wm_app_v2').set(JSON.stringify(_restored))).then(function(){
           honToast('✓ Restaurado. La página se va a recargar.');
           setTimeout(function(){ location.reload(); }, 900);
         }).catch(function(){ honToast('⚠ No se pudo restaurar'); });
