@@ -144,9 +144,36 @@
 .ing-mini.ondas{background:radial-gradient(ellipse 80% 30% at 50% 108%,rgba(201,209,218,.35) 0%,transparent 70%),radial-gradient(ellipse 60% 20% at 20% 100%,rgba(201,209,218,.25) 0%,transparent 70%),linear-gradient(180deg,var(--ing-fondo-1),var(--c-header))}
 .ing-mini.clasico{background:repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 1px,transparent 1px 12px),var(--c-header)}
 
-/* ===== Saludo arriba del Dashboard y de Personal ===== */
-.saludo-app{display:flex;align-items:center;gap:12px;margin:0 0 18px;animation:saludo-in .6s ease both}
-.saludo-ico{font-size:24px;line-height:1}
+/* ===== Saludo arriba del Dashboard =====
+   Tres estilos (⋯ → Personalizar): «tarjeta» (por defecto, la base de abajo), «banda» y «suave»
+   con la clase sal-<id> en <body>. */
+:root{--c-saludo-suave:#eaeef3}
+.saludo-app{display:flex;align-items:center;gap:16px;margin:0 0 18px;padding:16px 22px;background:var(--c-card);border:1px solid var(--c-border-soft);border-radius:12px;animation:saludo-in .6s ease both}
+.saludo-txt{flex:1;min-width:0}
+.saludo-ico{display:none;font-size:24px;line-height:1}
 .saludo-t{font-family:var(--font-display);font-size:20px;color:var(--c-text)}
 .saludo-f{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--c-text-muted);margin-top:2px}
+#saludo-clima{display:none}
+.saludo-tiempo{display:flex;align-items:center;gap:10px;padding-left:18px;border-left:1px solid var(--c-border-soft)}
+.saludo-ico2{font-size:30px;line-height:1}
+.saludo-tiempo b{display:block;font-family:var(--font-display);font-size:24px;font-weight:400;color:var(--c-header);line-height:1}
+.saludo-tiempo small{display:block;font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--c-text-muted);margin-top:4px;white-space:nowrap}
+/* Banda azul marino y Suave: el ícono a la izquierda y el clima en la línea de la fecha */
+body.sal-banda .saludo-app,body.sal-suave .saludo-app{gap:14px}
+body.sal-banda .saludo-ico,body.sal-suave .saludo-ico{display:block}
+body.sal-banda #saludo-clima,body.sal-suave #saludo-clima{display:inline}
+body.sal-banda .saludo-tiempo,body.sal-suave .saludo-tiempo{display:none}
+body.sal-banda .saludo-app{background:var(--c-header);border-color:var(--c-header)}
+body.sal-banda .saludo-t{color:var(--c-bg)}
+body.sal-banda .saludo-f{color:var(--c-accent)}
+body.sal-suave .saludo-app{background:var(--c-saludo-suave);border-color:transparent;border-radius:14px;padding:14px 20px}
+body.sal-suave .saludo-ico{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:var(--c-card);flex:none}
+@media (max-width:760px){
+  .saludo-app{padding:14px 16px;gap:12px}
+  .saludo-tiempo{padding-left:12px;gap:8px}
+  .saludo-ico2{font-size:24px}
+  .saludo-tiempo b{font-size:20px}
+  .saludo-tiempo small{white-space:normal;max-width:92px;letter-spacing:.8px}
+  body.sal-suave .saludo-ico{width:40px;height:40px;font-size:20px}
+}
 @keyframes saludo-in{from{opacity:0;transform:translate3d(0,-6px,0)}to{opacity:1;transform:none}}

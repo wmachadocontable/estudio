@@ -113,3 +113,11 @@ body.logo-monograma .header-logo-marco img{position:absolute;left:50%;top:50%;he
 .apm-ico-colores,.apm-ico-sobrios{display:flex!important;align-items:center;justify-content:center;gap:7px;background:var(--c-bg-alt)!important;font-size:15px}
 .apm-ico-colores i,.apm-ico-sobrios i{display:none}
 .apm-ico-sobrios svg{width:17px;height:17px;color:var(--c-header)}
+/* Miniaturas del saludo */
+.apm-sal-tarjeta,.apm-sal-banda,.apm-sal-suave{background:var(--c-bg-alt)!important}
+.apm-sal-tarjeta i,.apm-sal-banda i,.apm-sal-suave i{left:8px;right:8px;width:auto;top:8px;height:22px;border-radius:4px}
+.apm-sal-tarjeta i{background:var(--c-card);border:1px solid var(--c-border)}
+.apm-sal-tarjeta::after{content:'16°';position:absolute;right:14px;top:12px;font-family:var(--font-display);font-size:12px;color:var(--c-header)}
+.apm-sal-banda i{background:var(--c-header)}
+.apm-sal-suave i{background:var(--c-saludo-suave);border-radius:6px}
+.apm-sal-suave::after{content:'';position:absolute;left:14px;top:13px;width:12px;height:12px;border-radius:50%;background:var(--c-card)}

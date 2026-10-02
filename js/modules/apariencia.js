@@ -1,6 +1,6 @@
 /*
  * APARIENCIA (oct. 2026): estilo del encabezado y de la barra de pestañas, a elección en
- * ⋯ → Personalizar. Valen para las tres (state.branding.encabezado / state.branding.barraPestanas).
+ * ⋯ → Personalizar. Valen para las tres (state.branding.encabezado / barraPestanas / logoEncabezado / saludo).
  * Estilos en css/apariencia.css. Se aplican con una clase en <body>: enc-<id> y barra-<id>.
  *
  * Además, en todas las opciones: la rueda del mouse mueve las pestañas de costado y la pestaña
@@ -29,6 +29,8 @@ function aplicarApariencia() {
   BARRA_ESTILOS.forEach(x => b.classList.toggle('barra-' + x.id, x.id === barraEstilo()));
   // Logo del encabezado: solo el monograma WM (por defecto) o el logo completo.
   b.classList.toggle('logo-monograma', logoEstilo() === 'monograma');
+  // Saludo del Dashboard (js/modules/ingreso.js)
+  if (typeof SALUDO_ESTILOS !== 'undefined') SALUDO_ESTILOS.forEach(x => b.classList.toggle('sal-' + x.id, x.id === saludoEstilo()));
   // Íconos sobrios (js/modules/iconos.js)
   if (typeof iconosEstilo === 'function') { b.classList.toggle('iconos-sobrios', iconosEstilo() === 'sobrios'); iconosAplicar(); }
   pestanasFlechas();
@@ -100,6 +102,7 @@ function pintarAparienciaCustom() {
   box.innerHTML = grupo('Estilo del encabezado', ENC_ESTILOS, encEstilo(), campo('encabezado'), 'apm-enc')
     + grupo('Logo del encabezado', LOGO_ESTILOS, logoEstilo(), campo('logoEncabezado'), 'apm-logo')
     + grupo('Barra para desplazar las pestañas', BARRA_ESTILOS, barraEstilo(), campo('barraPestanas'), 'apm-barra')
+    + (typeof SALUDO_ESTILOS !== 'undefined' ? grupo('Saludo del Dashboard', SALUDO_ESTILOS, saludoEstilo(), campo('saludo'), 'apm-sal') : '')
     + (typeof ICONOS_OPCIONES !== 'undefined' ? grupo('Íconos', ICONOS_OPCIONES, iconosEstilo(), (id) => 'setIconos(\'' + id + '\')', 'apm-ico') : '')
     + '<small class="ap-nota">Se ve al instante. Vale para las tres.</small>';
   // Las miniaturas de los íconos: unos de muestra de cada tipo.

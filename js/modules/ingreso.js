@@ -117,15 +117,35 @@ function climaPintar() {
     const ico = document.getElementById('saludo-ico'), info = document.getElementById('saludo-clima');
     if (ico) { ico.textContent = k.ico; ico.title = CLIMA_LUGAR.nombre + ': ' + k.txt; }
     if (info) info.textContent = ' · ' + CLIMA_LUGAR.nombre + ' ' + Math.round(g.temp) + '° · ' + k.txt.toLowerCase();
+    // Bloque de la derecha (estilo «Tarjeta con el clima»)
+    const ico2 = document.getElementById('saludo-ico2'), temp = document.getElementById('saludo-temp'), cond = document.getElementById('saludo-cond');
+    if (ico2) { ico2.textContent = k.ico; ico2.title = k.txt; }
+    if (temp) temp.textContent = Math.round(g.temp) + '°';
+    if (cond) cond.textContent = CLIMA_LUGAR.nombre + ' · ' + k.txt;
   }).catch(() => { /* sin clima: queda el ícono según la hora */ });
 }
+
+/*
+ * Cómo se ve el saludo (⋯ → Personalizar → «Saludo del Dashboard», vale para las tres).
+ * Se aplica con una clase en <body>: sal-<id> (css/ingreso.css).
+ */
+const SALUDO_ESTILOS = [
+  { id: 'tarjeta', label: 'Tarjeta con el clima', desc: 'Recuadro blanco; la temperatura grande a la derecha.' },
+  { id: 'banda',   label: 'Banda azul marino',    desc: 'Recuadro azul con letra blanca.' },
+  { id: 'suave',   label: 'Suave',                desc: 'Fondo gris azulado, el ícono en un círculo.' }
+];
+function saludoEstilo() { const v = state && state.branding && state.branding.saludo; return SALUDO_ESTILOS.some(x => x.id === v) ? v : 'tarjeta'; }
 
 function saludoHTML() {
   const u = (typeof currentUser === 'function') ? currentUser() : null;
   const nombre = u ? (u.displayName || u.name) : '';
   const fecha = new Date().toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' });
-  return '<div class="saludo-app"><span class="saludo-ico" id="saludo-ico">' + climaPorHora().ico + '</span><div><div class="saludo-t">' + saludoHora()
-    + (nombre ? ', ' + bbEscape(nombre) : '') + '</div><div class="saludo-f">' + fecha + '<span id="saludo-clima"></span></div></div></div>';
+  const ico = climaPorHora().ico;
+  return '<div class="saludo-app"><span class="saludo-ico" id="saludo-ico">' + ico + '</span>'
+    + '<div class="saludo-txt"><div class="saludo-t">' + saludoHora() + (nombre ? ', ' + bbEscape(nombre) : '') + '</div>'
+    + '<div class="saludo-f">' + fecha + '<span id="saludo-clima"></span></div></div>'
+    + '<div class="saludo-tiempo"><span class="saludo-ico2" id="saludo-ico2">' + ico + '</span>'
+    + '<div><b id="saludo-temp"></b><small id="saludo-cond">' + CLIMA_LUGAR.nombre + '</small></div></div></div>';
 }
 if (typeof registerTabRenderer === 'function') {
   registerTabRenderer('dashboard', (tab, mc) => { mc.innerHTML = saludoHTML() + renderDashboard(); attachDashboardHandlers(); climaPintar(); });

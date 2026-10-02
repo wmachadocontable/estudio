@@ -69,7 +69,7 @@ const ICONOS_OPCIONES = [
 function iconosEstilo() { const v = state && state.branding && state.branding.iconos; return v === 'sobrios' ? 'sobrios' : 'colores'; }
 
 const ICO_EMOJI_RE = /(\p{Extended_Pictographic}(?:️|︎)?(?:‍\p{Extended_Pictographic}(?:️|︎)?)*)/gu;
-const ICO_NO_TOCAR = '[contenteditable],input,textarea,select,option,script,style,[data-edit],.sticky-content,.saludo-ico,.panel-icon,.header-panel-presence,.ico-l,.ico-gris,.no-iconos';
+const ICO_NO_TOCAR = '[contenteditable],input,textarea,select,option,script,style,[data-edit],.sticky-content,.saludo-ico, .saludo-ico2,.panel-icon,.header-panel-presence,.ico-l,.ico-gris,.no-iconos';
 
 function iconoDeEmoji(e) {
   const base = e.replace(/[️︎]/g, '');

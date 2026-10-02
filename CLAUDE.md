@@ -49,6 +49,9 @@
   (pedido de la usuaria: que se vea en todos los dispositivos).
 - **Saludo** «Buenos días / Buenas tardes / Buenas noches, <nombre>» solo arriba del Dashboard, con el ícono
   del **clima de Rivera** (Open-Meteo, sin clave, guardado 30 min; si falla, ícono según la hora).
+  Va en un recuadro con tres estilos en Personalizar (`SALUDO_ESTILOS`, `state.branding.saludo`, clase
+  `sal-<id>` en body): **Tarjeta con el clima** a la derecha (por defecto, elegida por la usuaria), Banda
+  azul marino y Suave.
 - **Sueldos ↔ campanita** (`js/modules/sueldos-avisos.js`): liquidados/emitida → a quien envía; todo
   enviado con controles pendientes → a Lorena; «Envía» asignado; resumen diario de atrasados. La
   campanita se actualiza en vivo al llegar cambios.
@@ -80,10 +83,15 @@
 - **Publicada el 02/10/2026** por decisión de la usuaria («publicá y que funcione»), **sin esperar la revisión
   de Álvaro** (queda para después, sobre `main`). Antes se ensayó con una copia de los datos reales en los
   emuladores: Wendy y Lorena, todas las pestañas, paso de Sueldos (65 notas y 309 tildes sin pérdidas), celular.
-- Se publica con **GitHub Pages desde `main`** (raíz) → https://wmachadocontable.github.io/estudio/. Aunque el
-  repo es privado, la web es pública: `_config.yml` deja afuera CLAUDE.md, README, docs, herramientas y scripts.
+- Se publica con **GitHub Pages desde `main`** (raíz) → https://wmachadocontable.github.io/estudio/.
+  ⚠ **El repositorio es PÚBLICO** (se vio el 02/10/2026; antes estaba anotado como privado): todo lo que se
+  sube se puede leer en github.com. `_config.yml` solo saca de la *web* CLAUDE.md, README, docs, herramientas
+  y scripts. El `index.html` viejo de `main` (una foto de una sesión real) quedó en el historial. Propuesta
+  pendiente de charlar: repo privado + publicar con Firebase Hosting (proyecto `w-machado-contable`, gratis).
 - **Para publicar un cambio:** `node herramientas/version-archivos.js` → commit en `mejoras-octubre` →
   `git push origin mejoras-octubre:main` (avance directo) → a los 2-3 minutos está en la web.
+  La subida (`git push`) la hace la usuaria con los botones ▶: el control automático de Claude Code la frena.
+- **Logo antes de ingresar:** `img/logo-estudio.png` (antes de entrar no se puede leer la base).
 - Después de publicar, que las tres recarguen la página (una pestaña vieja abierta podría seguir escribiendo
   con el formato anterior) y que una administradora haga el paso de Sueldos.
 
