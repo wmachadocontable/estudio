@@ -201,3 +201,16 @@ tbody tr.imp-vacio td{color:var(--c-text-muted)}
   .hon-table.hon-year .hon-yearcol{width:8.5%}
   .hon-table.hon-year td.hon-num,.hon-table.hon-year td.hon-muted{text-align:right;padding-right:5px}
 }
+
+/* Celular (oct. 2026): «Quién debe» como fichas y las tres subpestañas entran en el ancho. */
+@media (max-width:760px){
+  .fin-tabs{gap:0;margin-bottom:16px}
+  .fin-tab{padding-left:8px!important;padding-right:8px!important;font-size:11.5px!important;letter-spacing:.3px!important;gap:5px!important;flex:1 1 auto;justify-content:center;white-space:nowrap}
+  .hon-deu summary{padding:10px 12px;gap:8px}
+  .hon-deu-t2 thead{display:none}
+  .hon-deu-t2,.hon-deu-t2 tbody{display:block;width:100%}
+  .hon-deu-t2 tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:9px 12px;border-top:1px solid var(--c-border-soft)}
+  .hon-deu-t2 td{display:block;padding:0!important;border:none!important;min-width:0}
+  .hon-deu-t2 td:nth-child(2){grid-column:1 / -1;order:3;line-height:1.9}
+  .hon-deu-pie{padding:8px 12px 12px}
+}

@@ -79,6 +79,27 @@
   23 h). Primer respaldo OK (11 pestañas, 94 clientes, 143 filas de Sueldos). Causa del corte: el script viejo («Proyecto sin
   título», 22:16) fallaba con 401 al leer Firebase desde que se ajustaron los permisos de la base; se borró su activador.
 
+## Tercera tanda (02/10/2026, misma rama)
+- **Arreglo de «no se guardan los cambios»** (`js/modules/ids-estables.js`): las filas de Empresas, Sv.
+  Profesionales, Industria y Comercio (y Sueldos antes del paso) no tenían `id`, y `merge3` toma una lista sin
+  ids ENTERA: si dos guardaban casi a la vez, se perdía el cambio de una. Ahora cada fila lleva un id que sale
+  del nombre (todas las sesiones calculan el mismo). Probado con dos sesiones en los emuladores.
+  **Regla:** toda lista nueva en el estado, con `id` en cada elemento.
+- **Empresas y Sv. Profesionales, vista nueva** (`js/modules/empresas-vista.js`, `css/empresas.css`): se elige en
+  Configuración (cada una la suya, `userPrefs.vistaEmpresas`). Mensual / Anual; azul = realizada, verde =
+  enviada con la inicial de quien envió. Diseño «H» elegido por la usuaria, con las tarjetas en blanco.
+- **«Envía» por empresa** (`row.envia`), en las dos vistas.
+- **La ficha de cada mes** (`js/modules/ficha-celda.js` + `#modal-cell` en index.html): estado con botones,
+  «Realizó» (`cell.rq`) y «Envió» (`cell.eq`), que se completan solos con quien la usa. Mismos ids de siempre.
+- **Clientes de Info. Clientes al agregar** (`js/modules/clientes-lista.js`, `pedirCliente()`): Empresas, Sv.
+  Prof., Sueldos, Controles, Declaraciones, Honorarios y CEDE. Lista propia `js/modules/lista.js` (estándar
+  de María Lucía: el `<datalist>` no anda en el celular). También arregla las listas de Finanzas en el celular.
+- **Controles**: «+ Agregar a Controles» (`ctlExtra` del mes) y ✕ para quitar (`sinCtl`), firmados.
+- **CEDE mensual** (`js/declaraciones-cede.js`, `css/cede.css`): `ty.meses['AAAA-MM'].rows`, tipo de DJ que se
+  copia al mes siguiente; lo que había por año se pasó al mes en curso (ty.years queda).
+- **Celular:** Finanzas y CEDE en fichas (final de `js/modules/celular.js` y `css/celular.css`), «Quién debe»
+  en fichas, subpestañas de Finanzas entran en el ancho. Honorarios anual entra en la pantalla (computadora).
+
 ## Publicación (02/10/2026)
 - **Publicada el 02/10/2026** por decisión de la usuaria («publicá y que funcione»), **sin esperar la revisión
   de Álvaro** (queda para después, sobre `main`). Antes se ensayó con una copia de los datos reales en los

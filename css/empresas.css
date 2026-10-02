@@ -1,0 +1,201 @@
+/* =====================================================================
+   EMPRESAS Y SV. PROFESIONALES — vista nueva, «Envía», la ficha de cada mes
+   y los agregados de Controles (oct. 2026). Colores solo acá en :root.
+   ===================================================================== */
+:root{
+  --emp-real:#1a4a7a; --emp-real-bg:#eef4fb; --emp-real-bd:#9dbbe0;
+  --emp-env:#1f6b45;  --emp-env-bg:#e3f3ea;  --emp-env-bd:#b9dfc9;
+  --emp-pend:#b0730a; --emp-pend-bg:#fdf5e4;
+  --emp-rojo:#c0392b; --emp-gris:#8a95a3; --emp-linea:#eef0f3; --emp-suave:#f8f9fa;
+
+  --emp-blanco:#fff; --emp-borde:#dfe3e8; --emp-claro:#c3cad3; --emp-punto:#d5dae0; --emp-pend-bd:#f1dcae; --emp-apagado:#d0d6dd; --emp-env-suave:#f6fbf8; --emp-rojo-bg:#fdf0ee; --emp-gris-bg:#f1f3f5; --emp-texto2:#5d6773; --emp-borde2:#e9ecef; --emp-verde-viejo:#cfe9d9;
+}
+
+/* ---- Circulito con la inicial ---- */
+.emp-ini{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;color:var(--emp-blanco);font-weight:700;
+  font-style:normal;flex:none;line-height:1;vertical-align:middle;margin-left:4px;font-family:var(--font-body)}
+
+/* ---- «Envía» al lado del nombre (vista nueva y clásica) ---- */
+.emp-envia{display:inline-flex;align-items:center;gap:5px;border:1px dashed var(--emp-apagado);background:var(--emp-blanco);border-radius:14px;
+  padding:1px 8px 1px 3px;font-family:var(--font-body);font-size:10.5px;color:var(--emp-gris);cursor:pointer;margin-left:8px;
+  vertical-align:middle;white-space:nowrap;line-height:18px}
+.emp-envia span{letter-spacing:.3px}
+.emp-envia .emp-ini{margin-left:0}
+.emp-envia.on{border-style:solid;border-color:var(--emp-linea);color:var(--c-text);background:var(--emp-suave)}
+.emp-envia:not(.on){padding-left:8px}
+.emp-envia:hover{border-color:var(--c-header);color:var(--c-header)}
+.emp-menu{position:fixed;z-index:700;background:var(--emp-blanco);border:1px solid var(--c-border);border-radius:10px;box-shadow:0 10px 30px rgba(16,32,48,.18);
+  padding:6px;min-width:190px}
+.emp-menu-t{font-size:11px;color:var(--emp-gris);padding:4px 8px 8px;line-height:1.4}
+.emp-menu-t b{color:var(--c-text)}
+.emp-menu-op{display:flex;align-items:center;gap:6px;width:100%;text-align:left;background:none;border:none;border-radius:7px;padding:8px;
+  font-family:inherit;font-size:13px;cursor:pointer;color:var(--c-text)}
+.emp-menu-op .emp-ini{margin-left:0}
+.emp-menu-op:hover,.emp-menu-op.on{background:var(--emp-real-bg)}
+
+/* ---- La vista nueva ---- */
+.emp-v{background:var(--emp-blanco);border:1px solid var(--emp-borde2);border-radius:14px;padding:20px 22px 18px}
+.emp-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.emp-tit{font-family:var(--font-display);font-size:26px;color:var(--c-header)}
+.emp-tit i{color:var(--c-accent);font-style:italic}
+.emp-acc{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.emp-anio{padding:6px 10px;border:1px solid var(--c-border);border-radius:6px;background:var(--emp-blanco);font-family:inherit;font-weight:700;font-size:13px}
+.emp-seg{display:inline-flex;border:1px solid var(--emp-borde);border-radius:22px;padding:3px;background:var(--emp-blanco)}
+.emp-seg button{border:none;border-radius:18px;padding:6px 15px;font-family:inherit;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;
+  font-weight:700;background:transparent;color:var(--c-header);cursor:pointer}
+.emp-seg button.on{background:var(--c-header);color:var(--emp-blanco)}
+.emp-meses{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}
+.emp-meses button{border:1px solid var(--emp-borde);background:var(--emp-blanco);border-radius:16px;padding:4px 12px;font-family:inherit;font-size:11px;letter-spacing:1px;
+  text-transform:uppercase;font-weight:700;color:var(--c-header);cursor:pointer}
+.emp-meses button.on{background:var(--c-header);color:var(--emp-blanco);border-color:var(--c-header)}
+.emp-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.emp-kpi{background:var(--emp-blanco);border:1px solid var(--emp-linea);border-top:3px solid currentColor;border-radius:10px;padding:12px 16px;box-shadow:0 1px 3px rgba(16,32,48,.04)}
+.emp-kpi b{display:block;font-family:var(--font-display);font-size:28px;font-weight:400;line-height:1.1}
+.emp-kpi span{display:block;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--emp-gris);margin-top:3px}
+.emp-kpi.k-real{color:var(--emp-real)} .emp-kpi.k-env{color:var(--emp-env)} .emp-kpi.k-pend{color:var(--emp-rojo)} .emp-kpi.k-pct{color:var(--c-header)}
+.emp-herr{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.emp-buscar{flex:0 1 260px;padding:7px 12px;border:1px solid var(--c-border);border-radius:18px;font-family:inherit;font-size:13px;background:var(--emp-blanco)}
+.emp-leg{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--emp-gris)}
+.emp-vacio{text-align:center;color:var(--emp-gris);padding:34px;border:1px dashed var(--c-border);border-radius:10px}
+
+/* Las pastillas de cada mes */
+.emp-p{display:inline-flex;align-items:center;gap:2px;border-radius:14px;padding:2px 7px;font-weight:700;font-size:11px;white-space:nowrap;
+  line-height:17px;position:relative}
+.emp-p .emp-ini{margin-left:3px}
+.emp-real{color:var(--emp-real);background:var(--emp-real-bg);border:1px dashed var(--emp-real-bd)}
+.emp-env{color:var(--emp-env);background:var(--emp-env-bg);border:1px solid var(--emp-env-bd);padding-right:3px}
+.emp-pend{color:var(--emp-pend);background:var(--emp-pend-bg);border:1px solid var(--emp-pend-bd)}
+.emp-na{color:var(--emp-claro)}
+.emp-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--emp-punto)}
+.emp-com{position:absolute;top:-3px;right:-3px;width:7px;height:7px;border-radius:50%;background:var(--c-pending);border:1.5px solid var(--emp-blanco)}
+
+/* Anual */
+.emp-wrap{border:none;box-shadow:none}
+table.emp-anual{width:100%;border-collapse:collapse;table-layout:fixed}
+table.emp-anual th{background:none;color:var(--emp-gris);font-size:10.5px;letter-spacing:1.5px;font-weight:700;text-transform:uppercase;
+  padding:0 2px 9px;border-bottom:2px solid var(--c-header);text-align:center}
+table.emp-anual th.emp-th-nom{text-align:left;width:230px;padding-left:4px}
+table.emp-anual th.emp-hoy{color:var(--c-header)}
+table.emp-anual td{border-bottom:1px solid var(--emp-gris-bg);padding:8px 2px;text-align:center;vertical-align:middle}
+table.emp-anual td.emp-td-nom{text-align:left;padding-left:4px}
+table.emp-anual td.emp-c{cursor:pointer;transition:background .15s}
+table.emp-anual td.emp-c:hover{background:var(--emp-suave)}
+table.emp-anual tr.row-locked td.emp-c{cursor:default}
+.emp-nom{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;color:var(--c-header)}
+.emp-nom .row-lock,.emp-nom .row-x{opacity:0;transition:opacity .15s;cursor:pointer;font-size:11px}
+tr:hover .emp-nom .row-lock,tr:hover .emp-nom .row-x,.emp-mfila:hover .emp-nom .row-lock,.emp-mfila:hover .emp-nom .row-x,.emp-nom .row-lock.locked{opacity:1}
+.emp-nom-sub{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap}
+.emp-nom-sub .emp-envia{margin-left:0}
+.emp-tag{font-size:9.5px;letter-spacing:1.2px;font-weight:700;color:var(--c-header);background:var(--c-blue-light);border-radius:10px;padding:1px 8px;cursor:pointer}
+
+/* Mensual */
+.emp-mlista{border-top:2px solid var(--c-header)}
+.emp-mcab,.emp-mfila{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,1.3fr);gap:12px;align-items:center}
+.emp-mcab{padding:9px 6px;font-size:10.5px;letter-spacing:1.4px;font-weight:700;text-transform:uppercase;color:var(--emp-gris);border-bottom:1px solid var(--emp-borde2)}
+.emp-mfila{padding:11px 6px;border-bottom:1px solid var(--emp-gris-bg);cursor:pointer;transition:background .15s}
+.emp-mfila:hover{background:var(--emp-suave)}
+.emp-mfila.row-locked{cursor:default}
+.emp-dato{display:inline-flex;align-items:center;font-weight:700;font-size:12.5px}
+.emp-c-real{color:var(--emp-real)} .emp-c-env{color:var(--emp-env)}
+.emp-etq{display:block;font-size:10.5px;color:var(--emp-gris)}
+.emp-falta{font-size:11.5px;font-weight:700;color:var(--emp-pend)}
+.emp-nada{color:var(--emp-claro)}
+.emp-mcom{font-size:12px;color:var(--emp-texto2);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.emp-est{display:inline-block;border-radius:14px;padding:3px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+.emp-est.e-env{background:var(--emp-env-bg);color:var(--emp-env)}
+.emp-est.e-real{background:var(--emp-real-bg);color:var(--emp-real)}
+.emp-est.e-pend{background:var(--emp-pend-bg);color:var(--emp-pend)}
+.emp-est.e-na{background:var(--emp-gris-bg);color:var(--emp-gris)}
+.emp-est.e-vacio{background:var(--emp-rojo-bg);color:var(--emp-rojo)}
+
+/* ---- Configuración: elegir la vista ---- */
+.emp-cfg-ops{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:8px 0}
+.emp-cfg-op{display:flex;flex-direction:column;gap:4px;text-align:left;background:var(--emp-blanco);border:1.5px solid var(--c-border);border-radius:10px;padding:10px;
+  cursor:pointer;font-family:inherit}
+.emp-cfg-op.on{border-color:var(--c-header);box-shadow:0 0 0 2px rgba(16,32,48,.08)}
+.emp-cfg-op b{font-size:13px;color:var(--c-header)}
+.emp-cfg-op small{font-size:11.5px;color:var(--c-text-muted);line-height:1.4}
+.emp-cfg-mini{display:flex;gap:4px;height:30px;align-items:center;padding:0 8px;border-radius:6px;background:var(--emp-suave)}
+.emp-cfg-mini i{flex:1;height:10px;border-radius:5px}
+.emp-cfg-clasica i{background:var(--emp-verde-viejo);border-radius:2px}
+.emp-cfg-nueva i:nth-child(1){background:var(--emp-env-bg);border:1px solid var(--emp-env-bd)}
+.emp-cfg-nueva i:nth-child(2){background:var(--emp-real-bg);border:1px dashed var(--emp-real-bd)}
+.emp-cfg-nueva i:nth-child(3){background:var(--emp-env-bg);border:1px solid var(--emp-env-bd)}
+
+/* =====================================================================
+   LA FICHA DE CADA MES (#modal-cell)
+   ===================================================================== */
+.mc-modal{max-width:520px}
+.mc-head{margin-bottom:14px}
+.mc-oculto{position:absolute!important;opacity:0;pointer-events:none;width:1px!important;height:1px!important}
+.mc-estados{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.mc-est{border:1.5px solid var(--c-border);background:var(--emp-blanco);border-radius:10px;padding:10px 6px;font-family:inherit;font-size:12.5px;font-weight:700;
+  color:var(--c-text-muted);cursor:pointer;transition:all .15s}
+.mc-est:hover{border-color:var(--c-header);color:var(--c-header)}
+.mc-est.on.mc-est-done{background:var(--emp-real-bg);border-color:var(--emp-real);color:var(--emp-real)}
+.mc-est.on.mc-est-pending{background:var(--emp-pend-bg);border-color:var(--emp-pend);color:var(--emp-pend)}
+.mc-est.on.mc-est-na,.mc-est.on.mc-est-empty{background:var(--emp-gris-bg);border-color:var(--emp-gris);color:var(--c-text)}
+.mc-est.on.mc-est-pay{background:var(--emp-pend-bg);border-color:var(--emp-pend);color:var(--emp-pend)}
+.mc-est.on.mc-est-credit{background:var(--emp-env-bg);border-color:var(--emp-env);color:var(--emp-env)}
+.mc-fila2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.mc-nota{font-size:10.5px;color:var(--c-text-muted);font-weight:400;letter-spacing:.3px;text-transform:none}
+.mc-envio{border:1.5px solid var(--c-border);border-radius:12px;padding:12px 14px;margin:4px 0 14px;transition:all .2s}
+.mc-envio.on{border-color:var(--emp-env-bd);background:var(--emp-env-suave)}
+.mc-envio .form-group{margin-bottom:0}
+.mc-envio #modal-sent-date-wrap{margin-top:12px}
+.mc-switch{display:flex!important;align-items:center;gap:10px;cursor:pointer;margin:0!important;font-weight:700;color:var(--c-header);
+  text-transform:none!important;letter-spacing:0!important;font-size:13.5px!important}
+.mc-switch input{position:absolute;opacity:0;width:1px;height:1px}
+.mc-sw{position:relative;width:38px;height:22px;border-radius:11px;background:var(--emp-apagado);flex:none;transition:background .2s}
+.mc-sw::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--emp-blanco);box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.mc-switch input:checked + .mc-sw{background:var(--emp-env)}
+.mc-switch input:checked + .mc-sw::after{transform:translateX(16px)}
+.mc-switch input:focus-visible + .mc-sw{box-shadow:0 0 0 3px rgba(26,74,122,.25)}
+
+/* ---- Controles: agregar y quitar (sueldos-bandeja.js) ---- */
+.sld-ctl-add{margin-left:auto}
+.sld-ctl-emp{display:flex;align-items:center;gap:6px}
+.sld-ctl-x{border:none;background:none;color:var(--emp-claro);cursor:pointer;font-size:11px;padding:2px 4px;opacity:0;transition:opacity .15s}
+tr:hover .sld-ctl-x{opacity:1}
+.sld-ctl-x:hover{color:var(--emp-rojo)}
+.sld-ctl-firma{font-size:10.5px;color:var(--emp-gris);margin-top:2px}
+.sld-ctl-fuera{margin-top:12px;border:1px solid var(--emp-linea);border-radius:10px;padding:8px 12px;background:var(--emp-suave)}
+.sld-ctl-fuera summary{cursor:pointer;font-weight:700;font-size:12.5px;color:var(--c-header)}
+.sld-ctl-fuera-f{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--emp-linea);font-size:12.5px}
+.sld-ctl-fuera-f small{color:var(--emp-gris)}
+
+/* ---- La ventanita para elegir un cliente (clientes-lista.js) ---- */
+.pc-modal{max-width:440px}
+.pc-ayuda{font-size:11.5px;color:var(--c-text-muted);margin:-6px 0 12px}
+
+/* ---- La lista de opciones propia (lista.js, copiada de María Lucía) ---- */
+input.con-lista{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236b7585' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E")!important;
+  background-repeat:no-repeat!important;background-position:right 8px center!important;padding-right:22px!important}
+.lista-pop{position:fixed;z-index:2000;display:none;background:var(--emp-blanco);border:1px solid var(--c-border);border-radius:9px;
+  box-shadow:0 10px 30px rgba(16,32,48,.18);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:4px}
+.lista-pop.abierto{display:block}
+.lista-op{display:block;width:100%;text-align:left;background:none;border:none;border-radius:6px;padding:9px 11px;font-family:inherit;
+  font-size:13.5px;color:var(--c-text);line-height:1.3;cursor:pointer}
+.lista-op:hover,.lista-op.on{background:var(--c-blue-light);color:var(--c-blue)}
+
+/* ---- Celular ---- */
+@media (max-width:760px){
+  .emp-v{padding:14px 12px;border-radius:12px}
+  .emp-tit{font-size:21px}
+  .emp-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .emp-kpi{padding:9px 12px}
+  .emp-kpi b{font-size:22px}
+  .emp-buscar{flex:1 1 100%;font-size:16px}
+  .emp-leg{display:none}
+  table.emp-anual{table-layout:auto}
+  table.emp-anual th.emp-th-nom{width:auto}
+  .emp-mcab{display:none}
+  .emp-mfila{grid-template-columns:1fr;gap:6px;padding:12px 6px}
+  .emp-mfila > div[data-l]{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .emp-mfila > div[data-l]::before{content:attr(data-l);font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--emp-gris);font-weight:700}
+  .emp-mcom{-webkit-line-clamp:3;text-align:right}
+  .mc-estados{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mc-fila2{grid-template-columns:1fr;gap:0}
+  .lista-op{padding:13px 12px;font-size:15px}
+  .sld-ctl-x{opacity:1}
+}

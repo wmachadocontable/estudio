@@ -405,9 +405,9 @@
     if(openCell){ closeModal('modal-hon'); window.honEdit(HON_CEDIT.tabId, HON_CEDIT.cid, m); return; }
     closeModal('modal-hon'); var mc=honHost(); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honScrollToSelected(tab); honToast('\u2713 Cambios guardados');
   };
-  window.honAddClient=function(tabId){
+  window.honAddClient=async function(tabId){
     const tab=state.tabs.find(t=>t.id===tabId); if(!tab)return;
-    const name=prompt('Nombre del nuevo cliente / empresa:',''); if(!name||!name.trim())return;
+    const name=(typeof pedirCliente==='function') ? await pedirCliente({titulo:'Agregar a Honorarios', etiqueta:'Cliente / empresa'}) : prompt('Nombre del nuevo cliente / empresa:',''); if(!name||!name.trim())return;
     const feeStr=prompt('Honorario mensual sin IVA (en $, opcional). Se aplicará a los 12 meses:','');
     const fee = feeStr && !isNaN(parseFloat(feeStr.replace(',','.'))) ? Math.round(parseFloat(feeStr.replace(',','.'))*100)/100 : null;
     const months=[]; for(let i=0;i<12;i++) months.push({sinIva:fee, factura:'', recibo:'', fecha:'', medio:'', extra:{}});

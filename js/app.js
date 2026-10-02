@@ -1774,7 +1774,7 @@ function renderTabAsTable(tab, cols, isMonths) {
     const ri = tab.rows.indexOf(r);
     const lockBtn = `<span class="row-lock${r.locked?' locked':''}" onclick="event.stopPropagation();toggleRowLock('${tab.id}',${ri})" title="${r.locked?'Fila bloqueada - clic para desbloquear':'Bloquear fila'}">${r.locked?'🔒':'🔓'}</span>`;
     const moveBtn = tabSupportsSubTabs(tab) && getTabSubTabs(tab).length ? `<span class="row-move-sub" onclick="event.stopPropagation();openMoveToSubTab('${tab.id}',${ri})" title="Mover a otra carpeta">📁</span>` : '';
-    html += `<tr${r.locked?' class="row-locked"':''}><td><span class="editable-title" data-edit="row" data-tab-id="${tab.id}" data-row="${ri}">${r.name}</span>${moveBtn}${lockBtn}<span class="row-x" onclick="removeRow('${tab.id}',${ri})">✕</span></td>`;
+    html += `<tr${r.locked?' class="row-locked"':''}><td><span class="editable-title" data-edit="row" data-tab-id="${tab.id}" data-row="${ri}">${r.name}</span>${(isMonths && typeof filaEnviaChip==='function') ? filaEnviaChip(tab, ri) : ''}${moveBtn}${lockBtn}<span class="row-x" onclick="removeRow('${tab.id}',${ri})">✕</span></td>`;
     if (tab.hasTag) html += `<td><span class="tag-pill" style="background:var(--c-blue-light);color:var(--c-blue);" onclick="${r.locked?'':`editTag('${tab.id}',${ri})`}">${r.tag||'—'}</span></td>`;
     cols.forEach(ci => {
       const c = getCell(tab, r, ci);
@@ -1796,16 +1796,19 @@ function cellInnerHTML(c) {
   const hasComment = c.c && c.c.trim();
   const dot = hasComment ? '<span class="comment-dot"></span>' : '';
   // Ícono de "enviado al cliente" (solo si la celda está done y tiene es=true)
-  const sentIcon = (c.s === 'done' && c.es) ? `<span class="cell-sent-icon" title="📤 Enviado al cliente${c.ed ? ' el ' + fmtDate(c.ed) : ''}">📤</span>` : '';
+  const sentIcon = (c.s === 'done' && c.es) ? `<span class="cell-sent-icon" title="📤 Enviado al cliente${c.ed ? ' el ' + fmtDate(c.ed) : ''}${c.eq ? ' por ' + c.eq : ''}">📤</span>` : '';
+  // Oct. 2026: la inicial de quién lo envió (o, si falta enviar, de quién lo realizó).
+  const quien = (c.s === 'done') ? (c.es ? c.eq : c.rq) : '';
+  const ini = (quien && typeof empIni === 'function') ? empIni(quien, 15) : '';
   if (c.s === 'done') {
     // Si hay etiqueta corta (cell.t), mostrarla en verde. Si no, mostrar fecha. Si no, ✓.
     const label = (c.t && c.t.trim()) ? c.t.trim() : (c.d ? fmtDate(c.d) : '✓');
     const tooltip = [
-      c.d ? 'Realizado: ' + fmtDate(c.d) : '',
-      c.es && c.ed ? 'Enviado al cliente: ' + fmtDate(c.ed) : (c.es ? 'Enviado al cliente' : ''),
+      c.d ? 'Realizado: ' + fmtDate(c.d) + (c.rq ? ' por ' + c.rq : '') : (c.rq ? 'Realizado por ' + c.rq : ''),
+      c.es && c.ed ? 'Enviado al cliente: ' + fmtDate(c.ed) + (c.eq ? ' por ' + c.eq : '') : (c.es ? 'Enviado al cliente' + (c.eq ? ' por ' + c.eq : '') : ''),
       hasComment ? c.c.replace(/"/g,'&quot;') : ''
     ].filter(Boolean).join(' · ');
-    return `<div class="cell-done${c.es?' cell-done-sent':''}" title="${tooltip}">${label}${sentIcon}${dot}</div>`;
+    return `<div class="cell-done${c.es?' cell-done-sent':''}" title="${tooltip}">${label}${sentIcon}${ini}${dot}</div>`;
   }
   if (c.s === 'pending') return `<div class="cell-pending" title="${hasComment?c.c.replace(/"/g,'&quot;'):''}">⏳${dot}</div>`;
   if (c.s === 'na')      return `<span class="cell-na">—</span>`;

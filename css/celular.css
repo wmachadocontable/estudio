@@ -99,3 +99,29 @@
   .notif-panel.open{right:10px!important}
   .dash-section-header .dash-drag-handle{display:none}
 }
+
+/* ===== Fichas en el celular: Finanzas y CEDE (js/modules/celular.js las marca) ===== */
+@media (max-width:760px){
+  .tw-ficha{background:none!important;border:none!important;box-shadow:none!important;overflow:visible!important;border-radius:0!important}
+  table.t-ficha{display:block;min-width:0!important;width:100%!important}
+  table.t-ficha thead{display:none}
+  table.t-ficha tbody{display:block}
+  table.t-ficha tbody tr{display:block;background:var(--c-card);border:1px solid var(--c-border);border-radius:10px;
+    box-shadow:0 1px 3px rgba(16,32,48,.05);padding:6px 12px 8px;margin-bottom:9px}
+  table.t-ficha tbody td{display:flex!important;align-items:center;justify-content:space-between;gap:12px;padding:6px 0!important;
+    border-bottom:1px solid var(--c-border-soft)!important;text-align:left!important;white-space:normal;width:auto!important;min-width:0;
+    position:static!important;background:transparent!important}
+  table.t-ficha tbody td:last-child{border-bottom:none!important}
+  table.t-ficha tbody td:first-child,table.t-ficha tbody td:first-child > *{max-width:none!important;left:auto!important;box-shadow:none!important}
+  table.t-ficha tbody td::before{content:attr(data-l);flex:0 0 auto;font-size:10px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.7px;color:var(--c-text-muted)}
+  table.t-ficha tbody td:not([data-l]){justify-content:flex-end}
+  table.t-ficha tbody td:not([data-l])::before{display:none}
+  table.t-ficha tbody td[colspan]{display:block!important;padding:6px 0!important;border-bottom:none!important}
+  table.t-ficha tbody td > input,table.t-ficha tbody td > select{flex:1;min-width:0}
+  table.t-ficha tbody td input[type=date]{flex:0 1 auto;width:auto!important;min-width:150px;text-align:right}
+  /* Los números de arriba, de a dos */
+  .fin-app .kpis{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .fin-app .kpis > *{min-width:0!important;margin:0!important}
+  .fin-tab-ico{display:none}
+}

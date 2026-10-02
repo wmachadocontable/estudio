@@ -18,7 +18,7 @@ function sldMesesBandeja() {
 // Todas las tareas pendientes. resp = a quién le toca ('' = sin asignar).
 function sldTareas() {
   const out = [];
-  sldMesesBandeja().forEach(ym => ['sueldos', 'sd', 'reliq'].forEach(sub => sldFilas(ym, sub).forEach(r => {
+  sldMesesBandeja().forEach(ym => ['sueldos', 'sd', 'reliq', 'ctlExtra'].forEach(sub => sldFilas(ym, sub).forEach(r => {
     if (!r._v2) return;
     const base = { ym, sub, id: r.id, nombre: r.name };
     Object.keys(SLD_GRUPOS).forEach(g => {
@@ -27,7 +27,7 @@ function sldTareas() {
       if (!h) out.push(Object.assign({ tipo: 'hacer', grupo: g, paso: G.hecho, resp: SLD_LIQUIDA, orden: 2 }, base));
       else if (!sldMarca(r, G.envio)) out.push(Object.assign({ tipo: 'enviar', grupo: g, paso: G.envio, resp: sldEnvia(r), desde: h, orden: 1, dias: sldDiasDesde(h.t) }, base));
     });
-    if (sub === 'sueldos' && sldEstado(r, sub) === 'enviado') {
+    if ((sub === 'sueldos' && sldEstado(r, sub) === 'enviado') || sub === 'ctlExtra') {
       const faltan = sldControlesDe(r, sub).filter(c => !sldMarca(r, c.key));
       if (faltan.length) out.push(Object.assign({ tipo: 'controles', faltan, resp: SLD_LIQUIDA, orden: 3 }, base));
     }
@@ -94,43 +94,104 @@ function sldTareaHTML(t, mostrarResp) {
     + (det ? '<div class="sld-t-det">' + bbEscape(det) + '</div>' : '') + '</div>' + resp + '<div class="sld-t-btn">' + btn + '</div></div>';
 }
 
-/* ===== CONTROLES ===== */
+/* ===== CONTROLES =====
+   Las empresas de Sueldos del mes + las agregadas solo a Controles (ctlExtra), menos las quitadas
+   (sinCtl). Agregar y quitar queda firmado: quién y cuándo (oct. 2026). */
+function sldCtlFilas(ym) {
+  const out = [];
+  sldFilas(ym, 'sueldos').forEach(r => { if (r._v2 && !r.sinCtl) out.push({ sub: 'sueldos', r }); });
+  sldFilas(ym, 'ctlExtra').forEach(r => { if (!r.sinCtl) out.push({ sub: 'ctlExtra', r }); });
+  return out;
+}
+function sldCtlQuitadas(ym) {
+  const out = [];
+  ['sueldos', 'ctlExtra'].forEach(sub => sldFilas(ym, sub).forEach(r => { if (r.sinCtl) out.push({ sub, r }); }));
+  return out;
+}
 function sldControlesPendientes(ym) {
   let n = 0;
-  sldFilas(ym, 'sueldos').forEach(r => { if (r._v2) sldControlesDe(r, 'sueldos').forEach(c => { if (!sldMarca(r, c.key)) n++; }); });
+  sldCtlFilas(ym).forEach(x => sldControlesDe(x.r, x.sub).forEach(c => { if (!sldMarca(x.r, c.key)) n++; }));
   return n;
 }
 function setSldCtl(campo, v) { userPrefs[campo] = v; saveUserPrefs(); renderContent(); }
+function sldFirma(m) { return m ? (m.u ? sldNombre(m.u) : 'alguien') + ' · ' + sldFechaLarga(m.t) : ''; }
+const sldQ = (x) => "'" + x + "'";
+
+async function sldCtlAgregar(ym) {
+  const nombre = await pedirCliente({ titulo: 'Agregar a Controles', sub: formatYearMonth(ym) + ' y los meses siguientes', etiqueta: 'Empresa' });
+  if (!nombre) return;
+  const igual = (r) => String(r.name || '').trim().toLowerCase() === nombre.trim().toLowerCase();
+  // Si ya estaba quitada, vuelve. Si ya está, avisa.
+  const deSueldos = sldFilas(ym, 'sueldos').find(igual), extra = sldFilas(ym, 'ctlExtra').find(igual), ya = deSueldos || extra;
+  if (ya && !ya.sinCtl) { toast('«' + ya.name + '» ya está en Controles'); return; }
+  if (ya) { sldCtlVolver(ym, deSueldos ? 'sueldos' : 'ctlExtra', ya.id); return; }
+  const mes = ensureSueldosMonth(ym); if (!mes.ctlExtra) mes.ctlExtra = [];
+  mes.ctlExtra.push({ id: sldIdPara(nombre, 'ctlExtra', mes.ctlExtra), name: nombre.trim(), marcas: {}, noLleva: { recibos: true, bps: true },
+    observaciones: '', envia: '', grupo: '', _v2: true, _alta: { u: sldYo() || null, t: sldAhora() } });
+  sldGuardar();
+  toast('✓ ' + nombre.trim() + ' agregada a Controles');
+}
+// Quitar / volver: desde este mes en adelante (en los meses que ya existan), como «No lleva».
+function sldCtlQuitar(ym, sub, id) {
+  const r = sldFila(ym, sub, id); if (!r) return;
+  if (!confirm('¿Quitar «' + r.name + '» de Controles desde ' + formatYearMonth(ym) + '?\n\nNo se borra nada de Sueldos: solo deja de aparecer en Controles. Se puede volver a agregar.')) return;
+  const firma = { u: sldYo() || null, t: sldAhora() };
+  Object.keys(state.sueldos || {}).filter(m => m >= ym).forEach(m => { const x = sldFila(m, sub, id); if (x) x.sinCtl = Object.assign({}, firma); });
+  sldGuardar();
+  toast('Quitada de Controles: ' + r.name);
+}
+function sldCtlVolver(ym, sub, id) {
+  const r = sldFila(ym, sub, id); if (!r) return;
+  const firma = { u: sldYo() || null, t: sldAhora() };
+  Object.keys(state.sueldos || {}).filter(m => m >= ym).forEach(m => {
+    const x = sldFila(m, sub, id); if (!x) return;
+    delete x.sinCtl; if (sub === 'ctlExtra') x._alta = Object.assign({}, firma);
+  });
+  sldGuardar();
+  toast('✓ ' + r.name + ' vuelve a Controles');
+}
 
 function sldControlesHTML(ym) {
-  const filas = sldFilas(ym, 'sueldos');
+  const filas = sldCtlFilas(ym);
   const q = (userPrefs.sldCtlQ || '').toLowerCase(), cf = userPrefs.sldCtlFiltro || '', solo = !!userPrefs.sldCtlPend;
   const ctls = cf ? SLD_CONTROLES.filter(c => c.key === cf) : SLD_CONTROLES;
   // Avance de cada control: «14 de 19 contabilizados» (lo que no lleva no cuenta).
   let h = '<div class="sld-avances">' + SLD_CONTROLES.map(c => {
-    const aplica = filas.filter(r => sldLleva(r, c.key)), hechos = aplica.filter(r => sldMarca(r, c.key)).length;
+    const aplica = filas.filter(x => sldLleva(x.r, c.key)), hechos = aplica.filter(x => sldMarca(x.r, c.key)).length;
     const pct = aplica.length ? Math.round(hechos / aplica.length * 100) : 100;
-    return '<div class="sld-av' + (cf === c.key ? ' on' : '') + '" onclick="setSldCtl(\'sldCtlFiltro\',\'' + (cf === c.key ? '' : c.key) + '\')" title="Tocá para ver solo este control">'
+    return '<div class="sld-av' + (cf === c.key ? ' on' : '') + '" onclick="setSldCtl(' + sldQ('sldCtlFiltro') + ',' + sldQ(cf === c.key ? '' : c.key) + ')" title="Tocá para ver solo este control">'
       + '<div class="sld-av-t">' + c.label + '</div><div class="sld-av-n"><b>' + hechos + '</b> de ' + aplica.length + ' ' + c.avance + '</div>'
       + '<div class="sld-av-bar"><i style="width:' + pct + '%"></i></div></div>';
   }).join('') + '</div>';
-  h += '<div class="sld-barra"><input type="text" class="sld-buscar" placeholder="Buscar empresa…" value="' + bbEscape(userPrefs.sldCtlQ || '') + '" onchange="setSldCtl(\'sldCtlQ\',this.value)">'
-    + '<select class="sld-sel" onchange="setSldCtl(\'sldCtlFiltro\',this.value)"><option value="">Todos los controles</option>'
+  h += '<div class="sld-barra"><input type="text" class="sld-buscar" placeholder="Buscar empresa…" value="' + bbEscape(userPrefs.sldCtlQ || '') + '" onchange="setSldCtl(' + sldQ('sldCtlQ') + ',this.value)">'
+    + '<select class="sld-sel" onchange="setSldCtl(' + sldQ('sldCtlFiltro') + ',this.value)"><option value="">Todos los controles</option>'
     + SLD_CONTROLES.map(c => '<option value="' + c.key + '"' + (cf === c.key ? ' selected' : '') + '>' + c.label + '</option>').join('') + '</select>'
-    + '<div class="gseg-sld"><button class="' + (solo ? 'on' : '') + '" onclick="setSldCtl(\'sldCtlPend\',true)">Solo pendientes</button><button class="' + (!solo ? 'on' : '') + '" onclick="setSldCtl(\'sldCtlPend\',false)">Todo</button></div></div>';
-  const vis = filas.filter(r => (!q || String(r.name || '').toLowerCase().includes(q))
-    && (!solo || ctls.some(c => sldLleva(r, c.key) && !sldMarca(r, c.key))));
+    + '<div class="gseg-sld"><button class="' + (solo ? 'on' : '') + '" onclick="setSldCtl(' + sldQ('sldCtlPend') + ',true)">Solo pendientes</button><button class="' + (!solo ? 'on' : '') + '" onclick="setSldCtl(' + sldQ('sldCtlPend') + ',false)">Todo</button></div>'
+    + '<button class="btn btn-gold sld-ctl-add" onclick="sldCtlAgregar(' + sldQ(ym) + ')">+ Agregar a Controles</button></div>';
+  const vis = filas.filter(x => (!q || String(x.r.name || '').toLowerCase().includes(q))
+    && (!solo || ctls.some(c => sldLleva(x.r, c.key) && !sldMarca(x.r, c.key))));
   h += '<div class="table-wrap sld-wrap"><table class="sld-table sld-ctl-table"><thead><tr><th class="sld-emp">Empresa</th>'
     + ctls.map(c => '<th>' + c.label + '</th>').join('') + '</tr></thead><tbody>';
-  if (!vis.length) h += '<tr><td colspan="' + (ctls.length + 1) + '" class="sld-vacio">' + (filas.length ? (solo ? '✓ No hay controles pendientes.' : 'Nada coincide con la búsqueda.') : 'No hay empresas en ' + formatYearMonth(ym) + '.') + '</td></tr>';
-  vis.forEach(r => {
-    h += '<tr><td class="sld-emp"><strong>' + bbEscape(r.name) + '</strong></td>';
+  if (!vis.length) h += '<tr><td colspan="' + (ctls.length + 1) + '" class="sld-vacio">' + (filas.length ? (solo ? '✓ No hay controles pendientes.' : 'Nada coincide con la búsqueda.') : 'No hay empresas en Controles para ' + formatYearMonth(ym) + '.') + '</td></tr>';
+  vis.forEach(({ sub, r }) => {
+    const a = (x) => sldQ(ym) + ',' + sldQ(sub) + ',' + sldQ(r.id) + (x ? ',' + sldQ(x) : '');
+    const alta = sub === 'ctlExtra' && r._alta ? '<div class="sld-ctl-firma" title="Agregada a Controles">Agregada por ' + bbEscape(sldFirma(r._alta)) + '</div>' : '';
+    h += '<tr><td class="sld-emp"><div class="sld-ctl-emp"><strong>' + bbEscape(r.name) + '</strong>'
+      + '<button class="sld-ctl-x" title="Quitar de Controles" onclick="sldCtlQuitar(' + a() + ')">✕</button></div>' + alta + '</td>';
     ctls.forEach(c => {
-      const nl = !sldLleva(r, c.key), menu = '<button class="sld-mas" title="Opciones" onclick="sldMenuNoLleva(event,\'' + ym + '\',\'sueldos\',\'' + r.id + '\',\'' + c.key + '\')">⋯</button>';
-      h += '<td class="sld-paso-td">' + (nl ? '<span class="sld-nolleva">No lleva</span>' : (sldMarca(r, c.key) ? sldCelda(ym, 'sueldos', r, c.key) : '<button class="sld-pend" onclick="sldTocar(\'' + ym + '\',\'sueldos\',\'' + r.id + '\',\'' + c.key + '\')" title="Tocá para marcarlo hecho">Pendiente</button>')) + menu + '</td>';
+      const nl = !sldLleva(r, c.key), menu = '<button class="sld-mas" title="Opciones" onclick="sldMenuNoLleva(event,' + a(c.key) + ')">⋯</button>';
+      h += '<td class="sld-paso-td">' + (nl ? '<span class="sld-nolleva">No lleva</span>' : (sldMarca(r, c.key) ? sldCelda(ym, sub, r, c.key) : '<button class="sld-pend" onclick="sldTocar(' + a(c.key) + ')" title="Tocá para marcarlo hecho">Pendiente</button>')) + menu + '</td>';
     });
     h += '</tr>';
   });
-  h += '</tbody></table></div><div class="sld-pie">Servicios Domésticos y Reliquidaciones no llevan controles. «⋯» en cada casilla para marcar que esa empresa no lo lleva: queda para los meses siguientes.</div>';
+  h += '</tbody></table></div>';
+  const fuera = sldCtlQuitadas(ym);
+  if (fuera.length) {
+    h += '<details class="sld-ctl-fuera"><summary>Quitadas de Controles (' + fuera.length + ')</summary>'
+      + fuera.map(({ sub, r }) => '<div class="sld-ctl-fuera-f"><span><strong>' + bbEscape(r.name) + '</strong> <small>quitada por ' + bbEscape(sldFirma(r.sinCtl)) + '</small></span>'
+        + '<button class="btn btn-outline" onclick="sldCtlVolver(' + sldQ(ym) + ',' + sldQ(sub) + ',' + sldQ(r.id) + ')">↩ Volver a agregar</button></div>').join('')
+      + '</details>';
+  }
+  h += '<div class="sld-pie">Servicios Domésticos y Reliquidaciones no llevan controles. «⋯» en cada casilla para marcar que esa empresa no lo lleva: queda para los meses siguientes. «+ Agregar a Controles» suma una empresa que no está en Sueldos; ✕ la quita desde este mes (no se borra nada de Sueldos).</div>';
   return h;
 }

@@ -84,7 +84,8 @@ function sldEnvia(row) { return (row && row.envia) || ''; }
 /* ===== ESTADO AUTOMÁTICO =====
    Por liquidar → Listo sin enviar → Enviado → Cerrado.
    Cerrado = todo enviado Y todos los controles que le corresponden hechos (solo Sueldos lleva controles). */
-function sldControlesDe(row, sub) { return sub === 'sueldos' ? SLD_CONTROLES.filter(c => sldLleva(row, c.key)) : []; }
+// Controles: las empresas de Sueldos (menos las quitadas, sinCtl) y las agregadas solo a Controles (ctlExtra).
+function sldControlesDe(row, sub) { return ((sub === 'sueldos' || sub === 'ctlExtra') && !(row && row.sinCtl)) ? SLD_CONTROLES.filter(c => sldLleva(row, c.key)) : []; }
 function sldEstado(row, sub) {
   let faltaEnviar = false, todoEnviado = true;
   Object.keys(SLD_GRUPOS).forEach(g => {
@@ -184,10 +185,12 @@ function sldSetCampo(ym, sub, id, campo, valor) {
   sldGuardar(true);
   if (campo === 'observaciones' && valor.trim()) triggerSueldoObservacionNotify(row, valor.trim(), sub);
 }
-function openAddSueldoRow() {
+async function openAddSueldoRow() {
   const sub = userPrefs.sueldosSubtab || 'sueldos';
   const label = { sueldos: 'la empresa', sd: 'el empleado o familia', reliq: 'la empresa o concepto' }[sub] || 'la fila';
-  const name = prompt('Nombre de ' + label + ':');
+  const name = (typeof pedirCliente === 'function')
+    ? await pedirCliente({ titulo: 'Agregar a Sueldos', sub: formatYearMonth(getCurrentSueldosMonth()) + ' · ' + (SLD_SUBS[sub] || ''), etiqueta: 'Nombre de ' + label })
+    : prompt('Nombre de ' + label + ':');
   if (!name || !name.trim()) return;
   const ym = getCurrentSueldosMonth(), lista = ensureSueldosMonth(ym)[sub];
   const row = { id: sldIdPara(name.trim(), sub, lista), name: name.trim(), grupo: '', observaciones: '', envia: '', marcas: {}, noLleva: {}, _v2: true };
@@ -218,16 +221,21 @@ function copySueldosFromPreviousMonth() {
   sldGuardar();
   toast(n ? '✓ ' + n + ' fila' + (n === 1 ? '' : 's') + ' copiada' + (n === 1 ? '' : 's') + ' de ' + formatYearMonth(prev) : 'No faltaba ninguna');
 }
-// Copia las filas que falten de un mes a otro: empresas, «Envía», «No lleva» y Observaciones, sin tildes.
+// Copia las filas que falten de un mes a otro: empresas, «Envía», «No lleva», Observaciones y lo de
+// Controles (agregadas y quitadas), sin tildes.
 // Cada fila mantiene su id: si dos sesiones copian a la vez, quedan las mismas filas (no se duplican).
 function sldCopiarFilas(src, dst) {
   let n = 0;
-  ['sueldos', 'sd', 'reliq'].forEach(sub => {
+  ['sueldos', 'sd', 'reliq', 'ctlExtra'].forEach(sub => {
+    if (!src[sub] || !src[sub].length) return;
+    if (!dst[sub]) dst[sub] = [];
     (src[sub] || []).forEach(r => {
       if (!r.id || dst[sub].some(x => x.id === r.id)) return;
       const c = { id: r.id, name: r.name, grupo: r.grupo || '', observaciones: r.observaciones || '', envia: r.envia || '',
         marcas: {}, noLleva: Object.assign({}, r.noLleva || {}), _v2: true };
       if (sub === 'reliq') { c.concepto = r.concepto || ''; c.importe = r.importe || ''; }
+      if (r.sinCtl) c.sinCtl = Object.assign({}, r.sinCtl);
+      if (r._alta) c._alta = Object.assign({}, r._alta);
       dst[sub].push(c); n++;
     });
   });

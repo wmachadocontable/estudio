@@ -133,7 +133,7 @@
   function declCell(blkId, col, row){
     const v=row[col.key], k=col.key; const ref="'"+blkId+"','"+row.__key+"','"+k+"'";
     switch(col.ctype){
-      case 'text':   return '<input class="decl-inp" type="text" value="'+bbEscape(v||'')+'" placeholder="—" onchange="declSet('+ref+',this.value)">';
+      case 'text':   return '<input class="decl-inp" type="text"'+(/cliente|empresa|nombre|raz/i.test(col.label||'')?' list="dl-clientes" autocomplete="off"':'')+' value="'+bbEscape(v||'')+'" placeholder="—" onchange="declSet('+ref+',this.value)">';
       case 'number': return '<input class="decl-inp decl-num" type="number" step="any" placeholder="—" value="'+(v!=null?v:'')+'" onchange="declSet('+ref+',this.value===\'\'?null:parseFloat(this.value))">';
       case 'money': { const c=col.currency||'$U'; return '<span class="decl-money"><span class="decl-cur">'+bbEscape(c)+'</span><input class="decl-inp decl-num" type="number" step="any" placeholder="0" value="'+(v!=null?v:'')+'" onchange="declSet('+ref+',this.value===\'\'?null:parseFloat(this.value))"></span>'; }
       case 'date':   return '<input class="decl-inp decl-date" type="date" value="'+(v||'')+'" onchange="declSet('+ref+',this.value)">';

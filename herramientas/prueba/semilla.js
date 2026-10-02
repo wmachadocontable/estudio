@@ -113,6 +113,12 @@ function estadoDePrueba() {
           { name: 'Transportes Rivera Sur', naCols: [3], cellsByYear: { '2026': { 0: { s: 'done', d: '2026-12-31' }, 4: { cs: 'credit', c: 'Crédito fiscal a favor' } } } }
         ] },
       { id: 'clientes', name: '👥 Info. Clientes', type: 'clientes', removable: false },
+      // Declaraciones con un CEDE «por año» como el que crearon el 02/10/2026 (lo pasa a mensual declaraciones-cede.js).
+      { id: 'declaraciones', name: '📋 Declaraciones', type: 'declaraciones', removable: false, types: [
+        { id: 'dty_cede_prueba', name: 'CEDE', icon: '📄', color: '#0f6e72', years: { '2025': { id: 'dyr_cede_2025', rows: [{ __key: 'row_cede_1', c_cli: 'Metalúrgica San Martín' }] } },
+          cols: [{ key: 'c_cli', label: 'Cliente', ctype: 'text' }, { key: 'c_pre', label: 'Presentado', ctype: 'date' }, { key: 'c_imp', label: 'Importe', ctype: 'money', currency: '$U' },
+                 { key: 'c_not', label: 'Saldo / Notas', ctype: 'text' }, { key: 'c_est', label: 'Estado', ctype: 'tag', options: ['Pendiente', 'En curso', 'Presentada', 'Cobrada'] }] }
+      ] },
       { id: 'calendario', name: '📅 Calendario', type: 'calendar', removable: false },
       { id: 'settings', name: 'Configuración', type: 'settings', removable: false },
       { id: 'tab_1780081397523', name: 'Honorarios', type: 'honorarios', tabYear: '2026', privacy: 'private_user', privateOwners: ['Wendy'], honData: honorarios() }
@@ -125,7 +131,7 @@ function estadoDePrueba() {
     calendarEvents: [
       { id: 'ev_prueba1', title: 'Reunión de prueba', date: '2026-10-05', time: '10:00', type: 'reunion', assignedTo: ['Wendy'], notify: false, done: false, notes: '' }
     ],
-    clientes: [],
+    clientes: ['Agropecuaria El Ceibo', 'Metalúrgica San Martín', 'Transportes Rivera Sur', 'Panadería La Espiga', 'Ferretería Los Robles', 'Clínica Sonrisas'].map((n, i) => ({ id: 'cli_prueba_' + i, nombre: n + ' (inventada)', tipo: 'Empresa' })),
     tipoColors: {},
     sueldos: { '2026-09': sueldosMes('2026-09', true), '2026-10': sueldosMes('2026-10', false) },
     sueldosColumns: [

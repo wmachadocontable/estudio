@@ -1,0 +1,52 @@
+/* Declaraciones › CEDE mensual (js/declaraciones-cede.js, oct. 2026). Colores solo en :root. */
+:root{
+  --ce-ok:#1f6b45; --ce-ok-bg:#e3f3ea; --ce-pend:#b0730a; --ce-pend-bg:#fdf5e4; --ce-curso:#1a4a7a; --ce-curso-bg:#eef4fb;
+  --ce-gris:#8a95a3; --ce-gris-bg:#f1f3f5; --ce-linea:#eef0f3; --ce-blanco:#fff; --ce-borde:#dfe3e8; --ce-claro:#c3cad3; --ce-rojo:#c0392b;
+}
+.ce-v{background:var(--ce-blanco);border:1px solid var(--ce-linea);border-radius:14px;padding:18px 20px;margin-top:8px}
+.ce-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.ce-tit{font-family:var(--font-display);font-size:24px;color:var(--c-header)}
+.ce-tit i{color:var(--c-accent)}
+.ce-acc{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ce-anio{padding:6px 10px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-weight:700;font-size:13px;background:var(--ce-blanco)}
+.ce-meses{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.ce-meses button{border:1px solid var(--ce-borde);background:var(--ce-blanco);border-radius:16px;padding:4px 12px;font-family:inherit;font-size:11px;
+  letter-spacing:1px;text-transform:uppercase;font-weight:700;color:var(--c-header);cursor:pointer;position:relative}
+.ce-meses button.hay::after{content:'';position:absolute;top:3px;right:4px;width:5px;height:5px;border-radius:50%;background:var(--ce-ok)}
+.ce-meses button.on{background:var(--c-header);color:var(--ce-blanco);border-color:var(--c-header)}
+.ce-kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.ce-kpi{flex:1;min-width:120px;border:1px solid var(--ce-linea);border-top:3px solid var(--c-header);border-radius:10px;padding:10px 14px;color:var(--c-header)}
+.ce-kpi.k-ok{border-top-color:var(--ce-ok);color:var(--ce-ok)} .ce-kpi.k-pend{border-top-color:var(--ce-rojo);color:var(--ce-rojo)}
+.ce-kpi b{display:block;font-family:var(--font-display);font-size:24px;font-weight:400}
+.ce-kpi span{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ce-gris)}
+table.ce-tabla{width:100%;border-collapse:collapse}
+table.ce-tabla th{background:none;color:var(--ce-gris);font-size:10.5px;letter-spacing:1.4px;font-weight:700;text-transform:uppercase;
+  border-bottom:2px solid var(--c-header);padding:0 6px 8px;text-align:left}
+table.ce-tabla td{border-bottom:1px solid var(--ce-linea);padding:6px}
+.ce-in{width:100%;border:1px solid transparent;border-radius:6px;padding:6px 8px;font-family:inherit;font-size:13px;background:transparent}
+.ce-in:hover{border-color:var(--ce-borde)}
+.ce-in:focus{border-color:var(--c-header);background:var(--ce-blanco);outline:none}
+.ce-cli{font-weight:700;color:var(--c-header)}
+.ce-tipo{font-weight:700;color:var(--ce-curso)}
+.ce-imp{max-width:110px}
+.ce-est{font-weight:700;border-radius:14px;max-width:150px}
+.ce-est.ce-ok{background:var(--ce-ok-bg);color:var(--ce-ok)} .ce-est.ce-pend{background:var(--ce-pend-bg);color:var(--ce-pend)}
+.ce-est.ce-curso{background:var(--ce-curso-bg);color:var(--ce-curso)} .ce-est.ce-nc{background:var(--ce-gris-bg);color:var(--ce-gris)}
+.ce-fin{white-space:nowrap;text-align:right;width:56px}
+.ce-x{border:none;background:none;color:var(--ce-claro);cursor:pointer;font-size:12px;padding:2px 4px}
+.ce-x:hover{color:var(--ce-rojo)}
+.ce-vacio{text-align:center;color:var(--ce-gris);padding:26px!important}
+.ce-pie{font-size:11.5px;color:var(--ce-gris);margin-top:10px;line-height:1.5}
+@media (max-width:760px){
+  .ce-v{padding:14px 12px}
+  .ce-tit{font-size:20px}
+  .ce-in{font-size:16px;border-color:var(--ce-borde);background:var(--ce-blanco);text-align:right}
+  .ce-est,.ce-imp{max-width:none}
+}
+/* Anchos de las columnas en computadora */
+@media (min-width:761px){
+  table.ce-tabla{table-layout:fixed}
+  table.ce-tabla th:nth-child(1){width:25%} table.ce-tabla th:nth-child(2){width:17%} table.ce-tabla th:nth-child(3){width:14%}
+  table.ce-tabla th:nth-child(4){width:15%} table.ce-tabla th:nth-child(5){width:10%} table.ce-tabla th:nth-child(7){width:58px}
+  .ce-est{max-width:none;padding-right:24px}
+}
