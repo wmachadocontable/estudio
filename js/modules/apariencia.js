@@ -14,13 +14,14 @@ const ENC_ESTILOS = [
   { id: 'lineas',   label: 'Líneas finas',          desc: 'Trama de líneas curvas, como la de un billete.' }
 ];
 const BARRA_ESTILOS = [
-  { id: 'fina',      label: 'Fina',        desc: 'La de siempre: una barrita fina abajo.' },
+  { id: 'clasica',   label: 'Clásica',     desc: 'La de siempre: la barra azul debajo de las pestañas.' },
+  { id: 'fina',      label: 'Fina',        desc: 'Una línea finita, casi transparente.' },
   { id: 'flechas',   label: 'Con flechas', desc: 'Botones ‹ › en las puntas para moverse.' },
   { id: 'plateada',  label: 'Plateada',    desc: 'Una barra más visible, redondeada.' },
   { id: 'oculta',    label: 'Oculta',      desc: 'Sin barra; los bordes se difuminan.' }
 ];
 function encEstilo()   { const v = state && state.branding && state.branding.encabezado;    return ENC_ESTILOS.some(x => x.id === v) ? v : 'clasico'; }
-function barraEstilo() { const v = state && state.branding && state.branding.barraPestanas; return BARRA_ESTILOS.some(x => x.id === v) ? v : 'fina'; }
+function barraEstilo() { const v = state && state.branding && state.branding.barraPestanas; return BARRA_ESTILOS.some(x => x.id === v) ? v : 'clasica'; }
 
 function aplicarApariencia() {
   const b = document.body; if (!b) return;

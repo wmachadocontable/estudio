@@ -28,7 +28,9 @@
     background:var(--cel-barra-fondo)!important;border-top:1px solid rgba(255,255,255,.08);border-bottom:none!important;
     box-shadow:0 -6px 20px rgba(0,0,0,.28);overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
     scrollbar-width:none;-webkit-mask-image:none!important;mask-image:none!important}
-  .nav-tabs::-webkit-scrollbar{display:none}
+  /* con #id: declaraciones.css le pone la barra azul con el id, y un id le gana a una clase */
+  #nav-tabs{scrollbar-width:none!important}
+  #nav-tabs::-webkit-scrollbar{display:none!important}
   .nav-tab{flex:1 0 auto;min-width:66px;max-width:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
     padding:7px 6px 6px!important;border-bottom:none!important;border-top:2px solid transparent;border-radius:10px;
     font-size:9.5px!important;letter-spacing:.2px!important;text-transform:none!important;font-weight:700;position:relative;background:none}

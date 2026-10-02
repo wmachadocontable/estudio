@@ -28,11 +28,8 @@ header{border-bottom:1px solid rgba(168,176,184,.28);
 .header-panel .panel-btn{border-radius:var(--pul-radio);position:relative}  /* el número rojo va pegado a la campanita, no al borde del encabezado */
 
 /* ===== Barra de pestañas ===== */
-.nav-tabs{background:var(--pul-nav-fondo);border-bottom:1px solid rgba(255,255,255,.06);gap:2px;
-  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.14) transparent}
-.nav-tabs::-webkit-scrollbar{height:4px}
-.nav-tabs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:4px}
-.nav-tabs::-webkit-scrollbar-track{background:transparent}
+.nav-tabs{background:var(--pul-nav-fondo);border-bottom:1px solid rgba(255,255,255,.06);gap:2px}
+/* La barra para desplazar las pestañas se elige en Personalizar (css/apariencia.css). */
 .nav-tab{color:var(--pul-nav-texto);border-bottom-width:2px;padding:13px 20px;letter-spacing:1.3px;transition:color .2s,background .2s,border-color .2s}
 .nav-tab:hover{color:#fff;background:rgba(255,255,255,.035)}
 .nav-tab.active{color:#fff;border-bottom-color:var(--c-accent);background:rgba(255,255,255,.05)}

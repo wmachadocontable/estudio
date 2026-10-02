@@ -52,7 +52,7 @@
   enviado con controles pendientes → a Lorena; «Envía» asignado; resumen diario de atrasados. La
   campanita se actualiza en vivo al llegar cambios.
 - **Personalizar** (`js/modules/apariencia.js`): estilo del encabezado (Clásico, Brillo, Degradé, Lino,
-  Líneas finas) y barra de pestañas (Fina, Con flechas, Plateada, Oculta). Rueda del mouse = mover pestañas.
+  Líneas finas) y barra de pestañas (Clásica, Fina, Con flechas, Plateada, Oculta; ojo: declaraciones.css pinta la Clásica con #nav-tabs, por eso las opciones van con el id). Rueda del mouse = mover pestañas.
 - **Selectores** con flechita propia (en `css/pulido.css`).
 - **Celular** (`css/celular.css`, `js/modules/celular.js`): pestañas en una barra abajo con ícono, campanita
   visible, tablas con la primera columna fija, ventanas de abajo hacia arriba. Revisado a 375 px.

@@ -39,16 +39,23 @@ body.enc-lineas header::before{content:'';position:absolute;top:0;left:0;right:0
                    repeating-radial-gradient(circle at 100% -40%,transparent 0 17px,var(--ap-plata-suave) 17px 18px)}
 
 /* ===== Barra de pestañas ===== */
+/* OJO: van con #nav-tabs (id) porque declaraciones.css define la barra «Clásica» con el id,
+   y un id le gana a cualquier clase. */
+/* Fina: una línea finita y casi transparente */
+body.barra-fina #nav-tabs{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
+body.barra-fina #nav-tabs::-webkit-scrollbar{height:4px}
+body.barra-fina #nav-tabs::-webkit-scrollbar-track{background:transparent}
+body.barra-fina #nav-tabs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border:none;border-radius:4px}
 /* Plateada: más visible, redondeada */
-body.barra-plateada .nav-tabs{scrollbar-width:auto;scrollbar-color:var(--ap-plata) rgba(255,255,255,.05);padding-bottom:2px}
-body.barra-plateada .nav-tabs::-webkit-scrollbar{height:8px}
-body.barra-plateada .nav-tabs::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:8px;margin:0 40px}
-body.barra-plateada .nav-tabs::-webkit-scrollbar-thumb{background:var(--ap-plata);border-radius:8px}
-body.barra-plateada .nav-tabs::-webkit-scrollbar-thumb:hover{background:rgba(201,209,218,.8)}
+body.barra-plateada #nav-tabs{scrollbar-width:auto;scrollbar-color:var(--ap-plata) rgba(255,255,255,.05);padding-bottom:2px}
+body.barra-plateada #nav-tabs::-webkit-scrollbar{height:8px}
+body.barra-plateada #nav-tabs::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:8px;margin:0 40px}
+body.barra-plateada #nav-tabs::-webkit-scrollbar-thumb{background:var(--ap-plata);border-radius:8px}
+body.barra-plateada #nav-tabs::-webkit-scrollbar-thumb:hover{background:rgba(201,209,218,.8)}
 /* Oculta: sin barra, con los bordes difuminados para que se note que hay más */
-body.barra-oculta .nav-tabs,body.barra-flechas .nav-tabs{scrollbar-width:none;-ms-overflow-style:none}
-body.barra-oculta .nav-tabs::-webkit-scrollbar,body.barra-flechas .nav-tabs::-webkit-scrollbar{display:none}
-body.barra-oculta .nav-tabs{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 36px,#000 calc(100% - 36px),transparent 100%);
+body.barra-oculta #nav-tabs,body.barra-flechas #nav-tabs{scrollbar-width:none;-ms-overflow-style:none}
+body.barra-oculta #nav-tabs::-webkit-scrollbar,body.barra-flechas #nav-tabs::-webkit-scrollbar{display:none}
+body.barra-oculta #nav-tabs{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 36px,#000 calc(100% - 36px),transparent 100%);
   mask-image:linear-gradient(90deg,transparent 0,#000 36px,#000 calc(100% - 36px),transparent 100%)}
 /* Con flechas: botones redondos en las puntas, que aparecen solo si hay más para ver */
 .nav-flecha{display:none}
@@ -58,7 +65,7 @@ body.barra-flechas .nav-flecha{display:flex;align-items:center;justify-content:c
 body.barra-flechas .nav-flecha:hover{background:var(--c-header)}
 body.barra-flechas .nav-flecha-izq{left:4px;margin-right:-32px}
 body.barra-flechas .nav-flecha-der{right:4px;margin-left:-32px}
-body.barra-flechas .nav-tabs.puede-izq .nav-flecha-izq,body.barra-flechas .nav-tabs.puede-der .nav-flecha-der{opacity:1;pointer-events:auto}
+body.barra-flechas #nav-tabs.puede-izq .nav-flecha-izq,body.barra-flechas #nav-tabs.puede-der .nav-flecha-der{opacity:1;pointer-events:auto}
 
 /* ===== Opciones en Personalizar ===== */
 .ap-opciones{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
@@ -78,6 +85,7 @@ body.barra-flechas .nav-tabs.puede-izq .nav-flecha-izq,body.barra-flechas .nav-t
 [class*="apm-barra-"]{background:#0c1620}
 [class*="apm-barra-"] i{top:9px;width:70%;height:5px;background:rgba(255,255,255,.35)}
 [class*="apm-barra-"]::after{content:'';position:absolute;left:8px;bottom:6px;height:2px;width:40%;border-radius:2px;background:rgba(255,255,255,.22)}
+.apm-barra-clasica::after{height:5px;bottom:4px;width:calc(100% - 16px);background:#33506e}
 .apm-barra-plateada::after{height:5px;bottom:5px;background:rgba(201,209,218,.7)}
 .apm-barra-oculta::after{display:none}
 .apm-barra-oculta i{-webkit-mask-image:linear-gradient(90deg,#000 70%,transparent);mask-image:linear-gradient(90deg,#000 70%,transparent)}
