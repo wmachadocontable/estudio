@@ -143,3 +143,10 @@
 .ing-mini.elegante{background:radial-gradient(circle at 15% 10%,var(--ing-acero) 0%,transparent 45%),radial-gradient(circle at 90% 95%,var(--ing-plata-2) 0%,transparent 40%),var(--ing-fondo-1)}
 .ing-mini.ondas{background:radial-gradient(ellipse 80% 30% at 50% 108%,rgba(201,209,218,.35) 0%,transparent 70%),radial-gradient(ellipse 60% 20% at 20% 100%,rgba(201,209,218,.25) 0%,transparent 70%),linear-gradient(180deg,var(--ing-fondo-1),var(--c-header))}
 .ing-mini.clasico{background:repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 1px,transparent 1px 12px),var(--c-header)}
+
+/* ===== Saludo arriba del Dashboard y de Personal ===== */
+.saludo-app{display:flex;align-items:center;gap:12px;margin:0 0 18px;animation:saludo-in .6s ease both}
+.saludo-ico{font-size:24px;line-height:1}
+.saludo-t{font-family:var(--font-display);font-size:20px;color:var(--c-text)}
+.saludo-f{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--c-text-muted);margin-top:2px}
+@keyframes saludo-in{from{opacity:0;transform:translate3d(0,-6px,0)}to{opacity:1;transform:none}}

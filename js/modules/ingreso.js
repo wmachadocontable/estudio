@@ -63,3 +63,18 @@ function ingresoCfgCard() {
       + '<div class="ing-mini ' + x.id + '"></div><b>' + (x.id === f ? '✓ ' : '') + x.label + (x.animado ? ' <small>· animado</small>' : '') + '</b><span>' + x.desc + '</span></button>').join('') + '</div>'
     + '<button class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="verIngresoPrevia()">👁 Ver cómo queda</button></div>';
 }
+
+/* ===== SALUDO EN LA PÁGINA =====
+   Arriba del Dashboard y de Personal: «Buenos días, Wendy · jueves 2 de octubre». */
+function saludoHTML() {
+  const u = (typeof currentUser === 'function') ? currentUser() : null;
+  const nombre = u ? (u.displayName || u.name) : '';
+  const h = new Date().getHours(), ico = h >= 6 && h < 13 ? '☀️' : h >= 13 && h < 20 ? '🌤️' : '🌙';
+  const fecha = new Date().toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' });
+  return '<div class="saludo-app"><span class="saludo-ico">' + ico + '</span><div><div class="saludo-t">' + saludoHora()
+    + (nombre ? ', ' + bbEscape(nombre) : '') + '</div><div class="saludo-f">' + fecha + '</div></div></div>';
+}
+if (typeof registerTabRenderer === 'function') {
+  registerTabRenderer('dashboard', (tab, mc) => { mc.innerHTML = saludoHTML() + renderDashboard(); attachDashboardHandlers(); });
+  registerTabRenderer('mydash', (tab, mc) => { mc.innerHTML = saludoHTML() + renderMyDashboard(tab); });
+}

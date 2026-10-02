@@ -149,7 +149,10 @@ function sldTocar(ym, sub, id, k) {
     if (extra) delete row.marcas[G.envio];
   } else {
     if (G && G.envio === k && !row.marcas[G.hecho]) { toast('Primero tiene que estar «' + G.hLabel + '»'); return; }
+    const antes = sldEstado(row, sub);
     row.marcas[k] = { u: sldYo() || null, t: sldAhora() };
+    // La campanita: le avisa a quien le toca seguir (sueldos-avisos.js).
+    if (typeof sldAvisarMarca === 'function') sldAvisarMarca(ym, sub, row, k, antes);
   }
   sldGuardar();
 }
@@ -169,6 +172,7 @@ function sldNoLleva(ym, sub, id, x, on) {
 function sldSetEnvia(ym, sub, id, quien, soloEste) {
   const meses = soloEste ? [ym] : Object.keys(state.sueldos || {}).filter(m => m >= ym);
   meses.forEach(m => { const r = sldFila(m, sub, id); if (r) r.envia = quien || ''; });
+  if (typeof sldAvisarEnvia === 'function') sldAvisarEnvia(ym, sub, id, quien, soloEste);
   sldGuardar();
   toast((quien ? 'Envía ' + sldNombre(quien) : 'Sin asignar') + (soloEste ? ' · solo ' + formatYearMonth(ym) : ' · desde ' + formatYearMonth(ym)));
 }
