@@ -47,7 +47,7 @@ function setLoginFondo(f) {
 function verIngresoPrevia() {
   const el = document.getElementById('login-screen'); if (!el) return;
   const img = document.getElementById('login-logo-img');
-  if (img && state.branding) { img.src = state.branding.logo; img.className = state.branding.logoInvert ? 'invert' : ''; }
+  if (img && state.branding) { img.src = logoMarca(state.branding); img.className = state.branding.logoInvert ? 'invert' : ''; }
   aplicarFondoIngreso();
   el.classList.add('vista-previa'); el.style.display = 'flex';
   const b = document.createElement('button');

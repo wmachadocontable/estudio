@@ -459,15 +459,18 @@ function stripViewStateFromShared() {
 }
 
 // ============ INIT / APPLY ============
+// El logo de fábrica (un JPG sin transparencia) con el filtro blanco se ve como un cuadro vacío:
+// en su lugar va el del estudio. Vale también para copias viejas guardadas en el navegador.
+function logoMarca(b) { return (!b || !b.logo || b.logo === DEFAULT_LOGO) ? './img/logo-estudio.png' : b.logo; }
 function applyBranding() {
   const b = state.branding;
   const set = (id, fn) => { const el = document.getElementById(id); if (el) fn(el); };
   set('header-name', el => el.textContent = b.name);
   set('header-subtitle', el => el.textContent = b.subtitle);
   set('year-badge', el => el.textContent = b.year);
-  set('header-logo-img', el => { el.src = b.logo; el.className = b.logoInvert ? 'invert' : ''; });
+  set('header-logo-img', el => { el.src = logoMarca(b); el.className = b.logoInvert ? 'invert' : ''; });
   // also sync login screen if visible
-  set('login-logo-img', el => { el.src = b.logo; el.className = b.logoInvert ? 'invert' : ''; });
+  set('login-logo-img', el => { el.src = logoMarca(b); el.className = b.logoInvert ? 'invert' : ''; });
   set('login-name', el => el.textContent = b.name);
   set('login-subtitle', el => el.textContent = b.subtitle);
   set('login-year', el => el.textContent = b.year);
@@ -4477,7 +4480,7 @@ function openCustomize() {
   // Sesión 4: solo admin puede modificar branding y configuración global
   if (!requireRole('admin', 'personalizar la app')) return;
   const b = state.branding;
-  document.getElementById('customize-logo-preview').src = b.logo;
+  document.getElementById('customize-logo-preview').src = logoMarca(b);
   document.getElementById('customize-name').value = b.name;
   document.getElementById('customize-subtitle').value = b.subtitle;
   document.getElementById('color-accent').value = b.colors.accent;
@@ -4539,7 +4542,7 @@ function uploadLogo(e) {
 function resetLogo() {
   state.branding.logo = DEFAULT_LOGO;
   saveState(); applyBranding();
-  document.getElementById('customize-logo-preview').src = DEFAULT_LOGO;
+  document.getElementById('customize-logo-preview').src = logoMarca(state.branding);
 }
 
 function toggleLogoInvert(v) {
@@ -6789,7 +6792,7 @@ function showLogin() {
   document.getElementById('app-container').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   // sync login-side branding
-  document.getElementById('login-logo-img').src = state.branding.logo;
+  document.getElementById('login-logo-img').src = logoMarca(state.branding);
   document.getElementById('login-logo-img').className = state.branding.logoInvert ? 'invert' : '';
   document.getElementById('login-name').textContent = state.branding.name;
   document.getElementById('login-subtitle').textContent = state.branding.subtitle;
