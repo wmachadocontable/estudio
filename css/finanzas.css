@@ -191,3 +191,13 @@ tbody tr.imp-vacio td{color:var(--c-text-muted)}
 .hon-deu-t2 tbody tr:nth-child(even){background:none}
 .hon-deu-mes{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:var(--c-red-light);color:var(--c-red);margin:1px 2px 1px 0}
 .hon-deu-pie{font-size:11.5px;color:var(--c-text-muted);padding:8px 16px 12px}
+
+/* Honorarios › vista anual (oct. 2026): los 12 meses entran en la pantalla, sin tener que
+   correr la tabla de costado. Solo en computadora; en el celular sigue deslizándose. */
+@media (min-width:761px){
+  .hon-table.hon-year{width:100%;table-layout:fixed}
+  .hon-table.hon-year th,.hon-table.hon-year td{padding:7px 3px;font-size:11.5px;letter-spacing:0}
+  .hon-table.hon-year th:first-child,.hon-table.hon-year td:first-child{width:16%;padding-left:10px;white-space:normal;overflow-wrap:anywhere}
+  .hon-table.hon-year .hon-yearcol{width:8.5%}
+  .hon-table.hon-year td.hon-num,.hon-table.hon-year td.hon-muted{text-align:right;padding-right:5px}
+}
