@@ -248,6 +248,42 @@
 
   function wm(op){ return '<div aria-hidden="true" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:0;"><img src="'+LOGO+'" style="width:340px;max-width:55%;opacity:'+op+';filter:grayscale(.1);"></div>'; }
 
+  // ===== Industria y Comercio (oct. 2026) =====
+  // La pestaña «Ej. Económicos» pasó a vivir adentro de Declaraciones con el nombre
+  // «Industria y Comercio». Es un tipo VINCULADO (ty.linkTabId): no copia datos, muestra la
+  // misma tabla anual de siempre, con sus años, carpetas, KPIs y celdas. La pestaña original
+  // sigue existiendo en state.tabs (así no se pierde nada), pero ya no aparece en la barra.
+  const IYC_TAB_ID = 'tab_1779884915309';
+  function iycTabOriginal(){
+    return state.tabs.find(t=>t.id===IYC_TAB_ID) ||
+           state.tabs.find(t=>t.type==='annual' && /ej\.?\s*econ|ejercicio/i.test(t.name||'')) || null;
+  }
+  // ¿Esta pestaña se muestra adentro de Declaraciones? (la usa la barra de pestañas)
+  window.declTabVinculada = function(tabId){
+    return state.tabs.some(t=>t.type==='declaraciones' && Array.isArray(t.types) && t.types.some(ty=>ty.linkTabId===tabId));
+  };
+  if(typeof registerStructureInitializer==='function') registerStructureInitializer('declaraciones-iyc', function(){
+    const tab = state.tabs.find(t=>t.type==='declaraciones'); if(!tab) return false;
+    const L = iycTabOriginal(); if(!L) return false;
+    const ts = window.declEnsureTypes(tab);
+    let changed = false;
+    if(!ts.some(t=>t.linkTabId)){
+      ts.push({ id:'dty_iyc', name:'Industria y Comercio', icon:'🏭', color:'#1e497c', linkTabId:L.id, cols:[], years:{} });
+      changed = true;
+    }
+    if(!L._iycNombre){ L.name = 'Industria y Comercio'; L._iycNombre = true; changed = true; }
+    return changed;
+  });
+  function renderLinkedView(tab, ty){
+    const L = state.tabs.find(t=>t.id===ty.linkTabId);
+    let h = '<div class="decl-crumb"><span onclick="declBackLanding(\''+tab.id+'\')">Declaraciones</span> › <b>'+bbEscape(ty.name)+'</b></div>';
+    if(!L) return h + '<div class="decl-empty">No se encontró la tabla de '+bbEscape(ty.name)+'.</div>';
+    if(!userCanSeeTab(L)) return h + '<div class="decl-empty">⛔ Esta sección es privada.</div>';
+    if(!userCanEnterTab(L)) return h + renderTabLockscreen(L);
+    return h + '<div class="decl-linked">' + (L.type==='annual' ? renderAnnualTable(L) : renderTable(L)) + '</div>';
+  }
+  function linkedActive(tab){ const id=DECL.nav[tab.id]; const ty=id?typeById(tab,id):null; return (ty && ty.linkTabId) ? ty : null; }
+
   // ===== Render principal =====
   window.renderDeclaraciones = function(tab){
     _curTabId = tab.id;
@@ -256,6 +292,7 @@
     const ty = navId ? typeById(tab, navId) : null;
     let h = '<div class="decl-wrap" style="position:relative;">';
     if(!ty){ h += renderLanding(tab); h += '</div>'; return h; }
+    if(ty.linkTabId){ h += renderLinkedView(tab, ty); h += '</div>'; return h; }
     h += renderTypeView(tab, ty); h += '</div>'; return h;
   };
 
@@ -359,7 +396,10 @@
   window.declOnSearch = function(tabId, val){ const tab=declTab(tabId); if(!tab) return; const ty=activeType(tab); const y=activeYear(tab,ty); DECL.search[fkey(ty,y)]=val; const host=document.getElementById('decl-table-host'); if(host) host.innerHTML=declRenderTable(tab,ty,y); };
   window.declSetFilter = function(tabId, val){ const tab=declTab(tabId); if(!tab) return; const ty=activeType(tab); const y=activeYear(tab,ty); DECL.filter[fkey(ty,y)]=val; renderContent(); };
   window.declSetView = function(tabId, v){ const tab=declTab(tabId); if(!tab) return; const ty=activeType(tab); const y=activeYear(tab,ty); DECL.view[fkey(ty,y)]=v; renderContent(); };
-  window.attachDeclHandlers = function(tab){ const i=document.getElementById('decl-search-input'); if(i && i.value){ const v=i.value; i.focus(); try{ i.setSelectionRange(v.length,v.length); }catch(e){} } };
+  window.attachDeclHandlers = function(tab){
+    const lk = linkedActive(tab);
+    if(lk){ const L=state.tabs.find(t=>t.id===lk.linkTabId); document.body.classList.toggle('tab-locked', !!(L&&L.locked)); if(typeof attachInlineEditHandlers==='function') attachInlineEditHandlers(); return; }
+    const i=document.getElementById('decl-search-input'); if(i && i.value){ const v=i.value; i.focus(); try{ i.setSelectionRange(v.length,v.length); }catch(e){} } };
 
   window.declExportCSV = function(tabId){ const tab=declTab(tabId); if(!tab) return; const ty=activeType(tab); const y=activeYear(tab,ty); const cols=ty.cols||[]; const rows=visibleRows(ty,y);
     const esc=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"'; let csv=cols.map(c=>esc(c.label)).join(',')+'\n'; rows.forEach(r=>{ csv+=cols.map(c=>esc(cellText(c,r))).join(',')+'\n'; });

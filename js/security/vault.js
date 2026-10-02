@@ -298,7 +298,6 @@ function vaultToolbarHTML(){
   let h='';
   const pending=(state.clientes||[]).filter(c=>!c._enc).length;
   if(pending>0) h+='<button class="btn btn-outline" style="border-color:#c9a227;color:#8a6d00;" onclick="vaultMigrateAll()" title="Cifrar los clientes que faltan">⚠ Cifrar todos ('+pending+')</button>';
-  h+='<button class="btn btn-outline" onclick="vaultDryRun()" title="Probar el cifrado sin escribir nada">🧪 Probar</button>';
   h+='<button class="btn btn-outline" onclick="vaultOpenChangePin()" title="Cambiar el PIN">🔑 PIN</button>';
   h+='<button class="btn btn-outline" onclick="vaultLock();renderContent();" title="Bloquear ahora">🔒 Bloquear</button>';
   return h;

@@ -14,6 +14,14 @@ function renderRegisteredTab(tab, container) {
 function renderContent() {
   const tab = state.tabs.find(t => t.id === userPrefs.activeTabId);
   if (!tab) { userPrefs.activeTabId = 'dashboard'; saveUserPrefs(); renderContent(); return; }
+  // Oct. 2026: las pestañas que ya no van en la barra redirigen a donde viven ahora.
+  if (typeof tabFueraDelMenu === 'function' && tabFueraDelMenu(tab)) {
+    userPrefs.activeTabId = tabDestinoDe(tab);
+    saveUserPrefs();
+    renderTabs();
+    renderContent();
+    return;
+  }
   const mc = document.getElementById('main-content');
   // Sesión 5: si la usuaria no puede VER esta pestaña (privada-de-usuario sin permiso), redirigir al dashboard
   if (!userCanSeeTab(tab)) {

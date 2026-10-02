@@ -188,6 +188,8 @@ function showSyncIndicator(msg) {
   let el = document.getElementById('sync-indicator');
   if (!el) return;
   el.textContent = msg;
+  // Oct. 2026: el estado normal no se muestra; solo aparece si hay un problema al guardar.
+  el.classList.toggle('sync-alerta', /🔴/.test(msg));
 }
 
 // ============ CANDADO DE EDICIÓN DE NOTAS ============
@@ -540,6 +542,10 @@ function renderSubTabsBar(tab) {
   if (!tabSupportsSubTabs(tab)) return '';
   const subs = getTabSubTabs(tab);
   const active = getActiveSubTabId(tab);
+  // Empresas y Sv. Profesionales (tablas por mes) ya no crean carpetas nuevas (oct. 2026).
+  // Si quedó alguna creada de antes, se sigue mostrando para no esconder sus filas.
+  const sinAlta = tab.type === 'table';
+  if (!subs.length && sinAlta) return '';
   // Si no hay subpestañas, mostrar solo botón "+ Crear carpeta"
   if (!subs.length) {
     return `<div class="subtabs-bar">
@@ -554,7 +560,7 @@ function renderSubTabsBar(tab) {
     const isActive = active === s.id;
     html += `<div class="subtab${isActive?' active':''}" onclick="switchSubTab('${tab.id}','${s.id}')" ondblclick="renameSubTab('${tab.id}','${s.id}')" title="Doble clic para renombrar">📁 ${bbEscape(s.name)} <span class="subtab-count">${count}</span>${isActive?`<span class="subtab-del" onclick="event.stopPropagation();deleteSubTab('${tab.id}','${s.id}')" title="Eliminar carpeta">✕</span>`:''}</div>`;
   });
-  html += `<button class="subtabs-add" onclick="openAddSubTab('${tab.id}')" title="Crear carpeta">+</button>`;
+  if (!sinAlta) html += `<button class="subtabs-add" onclick="openAddSubTab('${tab.id}')" title="Crear carpeta">+</button>`;
   html += `</div>`;
   return html;
 }
@@ -640,7 +646,8 @@ function renderTable(tab) {
   const isMonths = tab.columns.length === 12 && tab.columns.every((c,i)=>MONTHS.includes(c)||MONTHS_SHORT.includes(c));
   const isYearsMode = (tab.colMode === 'years') ||
     (tab.columns.length > 0 && tab.columns.every(c => /^\d{4}$/.test(String(c))));
-  const layout = getTabLayout(tab.id);
+  // Empresas y Sv. Profesionales se ven solo como tabla (oct. 2026: se sacaron Tarjetas, Kanban y Compacta).
+  const layout = 'table';
   const displayYear = tab.tabYear || state.branding.year;
 
   // Build year selector options for monthly tabs (current ± 5 from app branding year)
@@ -652,14 +659,7 @@ function renderTable(tab) {
     <div class="section-header">
       <div class="section-title editable-title" data-edit="tab.name" data-tab-id="${tab.id}">${tab.name} ${isMonths ? `<span>${displayYear}</span>` : (isYearsMode ? `<span>${tab.columns[0]}–${tab.columns[tab.columns.length-1]}</span>` : `<span>${displayYear}</span>`)}</div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        ${isMonths ? `<select id="tab-year-sel" onchange="setTabYear('${tab.id}', this.value)" title="Año de esta pestaña" style="padding:6px 10px;border:1px solid var(--c-border);background:var(--c-card);border-radius:2px;font-family:inherit;font-size:13px;font-weight:700;color:var(--c-text);cursor:pointer;">${yearOpts.map(y => `<option value="${y}"${String(y)===String(displayYear)?' selected':''}>${y}</option>`).join('')}</select>
-        <button class="btn btn-outline btn-sm" onclick="openYearRepairTool('${tab.id}')" title="Ver y reparar datos por año" style="font-size:11px;background:#fff4d6;border-color:var(--c-accent);">🔧 Reparar años</button>` : ''}
-        <div class="layout-switcher" title="Cambiar vista">
-          <button class="layout-opt${layout==='table'?' active':''}" onclick="setTabLayout('${tab.id}','table')" title="Tabla clásica">📊 Tabla</button>
-          <button class="layout-opt${layout==='cards'?' active':''}" onclick="setTabLayout('${tab.id}','cards')" title="Tarjetas">🗂️ Tarjetas</button>
-          <button class="layout-opt${layout==='kanban'?' active':''}" onclick="setTabLayout('${tab.id}','kanban')" title="Kanban por estado">📋 Kanban</button>
-          <button class="layout-opt${layout==='compact'?' active':''}" onclick="setTabLayout('${tab.id}','compact')" title="Vista compacta">≡ Compacta</button>
-        </div>
+        ${isMonths ? `<select id="tab-year-sel" onchange="setTabYear('${tab.id}', this.value)" title="Año de esta pestaña" style="padding:6px 10px;border:1px solid var(--c-border);background:var(--c-card);border-radius:2px;font-family:inherit;font-size:13px;font-weight:700;color:var(--c-text);cursor:pointer;">${yearOpts.map(y => `<option value="${y}"${String(y)===String(displayYear)?' selected':''}>${y}</option>`).join('')}</select>` : ''}
         <div class="legend">
           <div class="legend-item"><div class="legend-dot" style="background:var(--c-green)"></div> Hecho</div>
           <div class="legend-item"><div class="legend-dot" style="background:var(--c-pending)"></div> Pendiente</div>
@@ -760,7 +760,7 @@ function renderAnnualTable(tab) {
         </div>
         <button class="btn btn-outline btn-sm" onclick="openAnnualKPIsConfig('${tab.id}')" title="Configurar qué KPIs ver arriba" style="font-size:11px;">⚙ KPIs</button>
         <button class="btn btn-gold" onclick="openAddEntity('${tab.id}')">+ Agregar fila</button>
-        ${tabPrivacyButton(tab)}
+        ${(typeof declTabVinculada === 'function' && declTabVinculada(tab.id)) ? '' : tabPrivacyButton(tab)}
       </div>
     </div>`;
 
@@ -5164,10 +5164,9 @@ function renderAuditLogList() {
 
 const HEADER_PANELS = [
   { key:'presence',     icon:'🟢', label:'Presencia',     title:'Quién está en línea' },
-  { key:'audit',        icon:'🕒', label:'Historial',     title:'Audit log: ver historial de cambios' },
-  { key:'notifications',icon:'🔔', label:'Notificaciones',title:'Notificaciones' },
-  { key:'chat',         icon:'💬', label:'Chat',          title:'Chat interno' }
+  { key:'notifications',icon:'🔔', label:'Notificaciones',title:'Notificaciones' }
 ];
+// Oct. 2026: se sacaron del encabezado el Historial de cambios y el Chat interno.
 
 function getHeaderLayout() {
   if (!userPrefs.headerLayout) {
@@ -5671,15 +5670,8 @@ function renderMyDashSection(key, d) {
       </div>
     </div>`;
   }
-  if (key === 'agenda') {
-    return `<div class="mydash-section" data-section="agenda" ${dragAttrs}>
-      <div class="mydash-section-head">
-        <span class="mydash-section-title">${dragHandle}📅 Agenda de hoy</span>
-        <button class="btn btn-outline btn-sm" onclick="switchTab('calendario')">Ver calendario</button>
-      </div>
-      ${renderMyDashAgenda()}
-    </div>`;
-  }
+  // Oct. 2026: se sacó el Calendario, y con él la «Agenda de hoy» de Personal.
+  if (key === 'agenda') return '';
   if (key === 'shortcuts') {
     return `<div class="mydash-section" data-section="shortcuts" ${dragAttrs}>
       <div class="mydash-section-head">
@@ -6808,7 +6800,6 @@ function openMyDashSettings() {
     { key:'stickyNotes', label:'📝 Notas adhesivas' },
     { key:'tasks',       label:'✅ Tareas' },
     { key:'kanban',      label:'📋 Kanban' },
-    { key:'agenda',      label:'📅 Agenda del día' },
     { key:'shortcuts',   label:'🔗 Atajos' }
   ];
   document.getElementById('mydash-sections-list').innerHTML = sections.map(s => `
@@ -6990,7 +6981,7 @@ function showApp(userName) {
   }
   const menuBtn = document.getElementById('header-menu-btn');
   if (menuBtn) menuBtn.classList.remove('has-active');
-  startNotificationChecker();
+  // Oct. 2026: sin Calendario no se lanzan los avisos de sus eventos (startNotificationChecker).
   // Sesión 6: renderizar paneles del header (presencia, audit, etc.)
   if (typeof renderHeaderPanels === 'function') renderHeaderPanels();
 }

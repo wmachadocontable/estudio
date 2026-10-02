@@ -20,7 +20,7 @@ function claveDePrueba() {
   const f = path.join(LOCAL, 'usuarias.json');
   if (!fs.existsSync(LOCAL)) fs.mkdirSync(LOCAL);
   if (fs.existsSync(f)) return JSON.parse(fs.readFileSync(f, 'utf8')).clave;
-  const clave = 'prueba-' + crypto.randomBytes(4).toString('hex');
+  const clave = ['prueba', crypto.randomBytes(4).toString('hex')].join('-');
   fs.writeFileSync(f, JSON.stringify({ aviso: 'Solo para los emuladores locales', clave }, null, 2));
   return clave;
 }

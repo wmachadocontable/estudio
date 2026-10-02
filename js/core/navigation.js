@@ -1,8 +1,30 @@
+// ============ PESTAÑAS FUERA DE LA BARRA (oct. 2026) ============
+// Siguen existiendo en state.tabs (no se pierde ningún dato), pero no se muestran:
+//  - el Calendario se sacó;
+//  - Honorarios vive adentro de Finanzas;
+//  - Ej. Económicos vive adentro de Declaraciones como «Industria y Comercio».
+function tabFueraDelMenu(t) {
+  if (!t) return false;
+  if (t.type === 'calendar') return true;
+  if (t.type === 'honorarios' && state.tabs.some(x => x.type === 'finanzas')) return true;
+  if (typeof declTabVinculada === 'function' && declTabVinculada(t.id)) return true;
+  return false;
+}
+// A dónde ir si alguien abre una de esas pestañas (un acceso viejo, una notificación…)
+function tabDestinoDe(t) {
+  if (t.type === 'honorarios') return 'finanzas';
+  if (typeof declTabVinculada === 'function' && declTabVinculada(t.id)) {
+    const d = state.tabs.find(x => x.type === 'declaraciones');
+    if (d) return d.id;
+  }
+  return 'dashboard';
+}
+
 // ============ TABS RENDER ============
 function renderTabs() {
   const nav = document.getElementById('nav-tabs');
   // Sesión 5: filtrar pestañas que la usuaria no puede ver (privadas-de-usuario sin permiso)
-  const visibleTabs = state.tabs.filter(t => userCanSeeTab(t));
+  const visibleTabs = state.tabs.filter(t => userCanSeeTab(t) && !tabFueraDelMenu(t));
   nav.innerHTML = visibleTabs.map((t, i) => {
     const active = t.id === userPrefs.activeTabId ? ' active' : '';
     const removable = t.removable !== false && t.type !== 'dashboard' && t.type !== 'settings';
