@@ -65,16 +65,68 @@ function ingresoCfgCard() {
 }
 
 /* ===== SALUDO EN LA PÁGINA =====
-   Arriba del Dashboard y de Personal: «Buenos días, Wendy · jueves 2 de octubre». */
+   Solo arriba del Dashboard (no en Personal): «Buenos días, Wendy · viernes 2 de octubre».
+   El ícono es el CLIMA DE RIVERA en este momento (sol, nublado, lluvia, tormenta, viento…), con la
+   temperatura al lado. Sale de Open-Meteo (gratis, sin cuenta ni clave; solo se le mandan las
+   coordenadas de Rivera) y se guarda 30 minutos en el navegador. Si no hay internet o el servicio
+   no contesta, queda un ícono según la hora. */
+const CLIMA_LUGAR = { nombre: 'Rivera', lat: -30.9053, lon: -55.5508 };
+const CLIMA_VIGENCIA_MIN = 30;
+const CLIMA_CLAVE = 'wm_clima_rivera';
+
+// Código del tiempo (WMO, el que usa Open-Meteo) → ícono y palabra.
+function climaDe(codigo, esDeDia, vientoKmh) {
+  const c = Number(codigo);
+  let ico, txt;
+  if (c >= 95)                    { ico = '⛈️'; txt = 'Tormenta'; }
+  else if ((c >= 61 && c <= 67) || (c >= 80 && c <= 82)) { ico = '🌧️'; txt = 'Lluvia'; }
+  else if (c >= 51 && c <= 57)    { ico = '🌦️'; txt = 'Llovizna'; }
+  else if ((c >= 71 && c <= 77) || c === 85 || c === 86) { ico = '🌨️'; txt = 'Nieve'; }
+  else if (c === 45 || c === 48)  { ico = '🌫️'; txt = 'Niebla'; }
+  else if (c === 3)               { ico = '☁️'; txt = 'Nublado'; }
+  else if (c === 2)               { ico = esDeDia ? '⛅' : '☁️'; txt = 'Parcialmente nublado'; }
+  else if (c === 1)               { ico = esDeDia ? '🌤️' : '🌙'; txt = 'Mayormente despejado'; }
+  else                            { ico = esDeDia ? '☀️' : '🌙'; txt = 'Despejado'; }
+  // Mucho viento (y sin lluvia ni tormenta): manda el viento.
+  if (vientoKmh >= 35 && c < 51) { ico = '💨'; txt = 'Ventoso'; }
+  return { ico, txt };
+}
+function climaPorHora() { const h = new Date().getHours(); return { ico: h >= 6 && h < 20 ? '☀️' : '🌙', txt: '' }; }
+
+let _climaPedido = null;
+function climaRivera() {
+  try {
+    const g = JSON.parse(localStorage.getItem(CLIMA_CLAVE) || 'null');
+    if (g && Date.now() - g.at < CLIMA_VIGENCIA_MIN * 60000) return Promise.resolve(g);
+  } catch (e) {}
+  if (_climaPedido) return _climaPedido;
+  const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + CLIMA_LUGAR.lat + '&longitude=' + CLIMA_LUGAR.lon
+    + '&current=temperature_2m,weather_code,wind_speed_10m,is_day&timezone=America%2FMontevideo';
+  _climaPedido = fetch(url).then(r => { if (!r.ok) throw new Error('clima ' + r.status); return r.json(); }).then(j => {
+    const a = j.current || {};
+    const g = { at: Date.now(), codigo: a.weather_code, dia: a.is_day === 1, viento: a.wind_speed_10m || 0, temp: a.temperature_2m };
+    try { localStorage.setItem(CLIMA_CLAVE, JSON.stringify(g)); } catch (e) {}
+    return g;
+  }).finally(() => { _climaPedido = null; });
+  return _climaPedido;
+}
+// Pone el ícono y la temperatura en el saludo que esté en pantalla.
+function climaPintar() {
+  climaRivera().then(g => {
+    const k = climaDe(g.codigo, g.dia, g.viento);
+    const ico = document.getElementById('saludo-ico'), info = document.getElementById('saludo-clima');
+    if (ico) { ico.textContent = k.ico; ico.title = CLIMA_LUGAR.nombre + ': ' + k.txt; }
+    if (info) info.textContent = ' · ' + CLIMA_LUGAR.nombre + ' ' + Math.round(g.temp) + '° · ' + k.txt.toLowerCase();
+  }).catch(() => { /* sin clima: queda el ícono según la hora */ });
+}
+
 function saludoHTML() {
   const u = (typeof currentUser === 'function') ? currentUser() : null;
   const nombre = u ? (u.displayName || u.name) : '';
-  const h = new Date().getHours(), ico = h >= 6 && h < 13 ? '☀️' : h >= 13 && h < 20 ? '🌤️' : '🌙';
   const fecha = new Date().toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' });
-  return '<div class="saludo-app"><span class="saludo-ico">' + ico + '</span><div><div class="saludo-t">' + saludoHora()
-    + (nombre ? ', ' + bbEscape(nombre) : '') + '</div><div class="saludo-f">' + fecha + '</div></div></div>';
+  return '<div class="saludo-app"><span class="saludo-ico" id="saludo-ico">' + climaPorHora().ico + '</span><div><div class="saludo-t">' + saludoHora()
+    + (nombre ? ', ' + bbEscape(nombre) : '') + '</div><div class="saludo-f">' + fecha + '<span id="saludo-clima"></span></div></div></div>';
 }
 if (typeof registerTabRenderer === 'function') {
-  registerTabRenderer('dashboard', (tab, mc) => { mc.innerHTML = saludoHTML() + renderDashboard(); attachDashboardHandlers(); });
-  registerTabRenderer('mydash', (tab, mc) => { mc.innerHTML = saludoHTML() + renderMyDashboard(tab); });
+  registerTabRenderer('dashboard', (tab, mc) => { mc.innerHTML = saludoHTML() + renderDashboard(); attachDashboardHandlers(); climaPintar(); });
 }

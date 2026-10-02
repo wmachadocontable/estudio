@@ -47,7 +47,8 @@
 - **Ingreso:** sin marca de agua; tres fondos: **Luces** (por defecto), **Ondas** (animados) y Clásico.
   Solo se anima transform/opacity, sin `:has()`, y la animación NO se apaga con «reducir movimiento»
   (pedido de la usuaria: que se vea en todos los dispositivos).
-- **Saludo** «Buenos días / Buenas tardes / Buenas noches, <nombre>» arriba del Dashboard y de Personal.
+- **Saludo** «Buenos días / Buenas tardes / Buenas noches, <nombre>» solo arriba del Dashboard, con el ícono
+  del **clima de Rivera** (Open-Meteo, sin clave, guardado 30 min; si falla, ícono según la hora).
 - **Sueldos ↔ campanita** (`js/modules/sueldos-avisos.js`): liquidados/emitida → a quien envía; todo
   enviado con controles pendientes → a Lorena; «Envía» asignado; resumen diario de atrasados. La
   campanita se actualiza en vivo al llegar cambios.
