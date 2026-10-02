@@ -89,29 +89,17 @@
         
       </div>
     </div></div>
-    <div class="form-group" style="display:flex;gap:8px;align-items:center;border-top:1px solid var(--c-border);padding-top:14px;">
-      <input type="text" id="new-user-name" placeholder="Nombre del nuevo usuario..." style="flex:1;">
-      <select id="new-user-role" style="padding:9px 12px;border:1px solid var(--c-border);border-radius:3px;font-family:inherit;font-size:13px;">
-        <option value="editor">✎ Editor</option>
-        <option value="viewer">👁 Solo lectura</option>
-        <option value="admin">👑 Administrador</option>
-        <option value="maintenance">🔧 Mantenimiento</option>
-      </select>
-      <button class="btn btn-gold" onclick="addUser()">+ Agregar</button>
-    </div>
     <div style="background:var(--c-bg-alt);border:1px solid var(--c-border);border-radius:4px;padding:12px;margin-top:14px;">
-      <div style="font-weight:700;font-size:13px;margin-bottom:6px;">🔐 Código maestro de emergencia</div>
-      <div style="font-size:12px;color:var(--c-text-muted);line-height:1.5;">Permite recuperar acceso si nadie recuerda su contraseña. Anotalo en un lugar seguro fuera del sistema (sobre cerrado, gestor de contraseñas, etc.).</div>
-      <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="openMasterCodeSettings()">⚙ Configurar código maestro</button>
+      <div style="font-weight:700;font-size:13px;margin-bottom:6px;">🔐 Cuentas de acceso</div>
+      <div style="font-size:12px;color:var(--c-text-muted);line-height:1.5;">Las cuentas y contraseñas se gestionan únicamente desde Firebase Authentication. Esta pantalla solo administra perfil interno (nombre visible, avatar y rol).</div>
+      <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="showUsersManagedInFirebaseInfo()">ℹ Ver instrucciones</button>
     </div>
     <div style="background:#fff8e8;border:1px solid #f0c050;border-radius:4px;padding:12px;margin-top:10px;">
       <div style="font-weight:700;font-size:13px;margin-bottom:6px;">🔧 Rol de mantenimiento — info importante</div>
       <div style="font-size:12px;color:#5a4a00;line-height:1.5;">
-        Cuando al menos una usuaria tiene este rol, <strong>la contraseña <code style="background:#fff;padding:1px 5px;border-radius:3px;">adm.2026</code> permite entrar a cualquier usuaria</strong> sin saber su contraseña personal.
-        Pensado para situaciones de soporte/mantenimiento técnico de la página.
-        <br>• El acceso queda registrado en el historial de auditoría.
-        <br>• Aparece un banner naranja arriba mientras se está en modo mantenimiento.
-        <br>• Si nadie tiene este rol, la contraseña no funciona (modo seguro).
+        Este rol conserva permisos internos de administración para tareas funcionales dentro de la app.
+        <br>• El acceso sigue auditado en el historial.
+        <br>• Las contraseñas no se gestionan en esta UI: se administran en Firebase Authentication.
       </div>
     </div>
     <div class="form-actions">
@@ -212,49 +200,7 @@
   </div>
 </div>
 
-<!-- RESET USER PASSWORD MODAL (admin → otro usuario) -->
-<div class="modal-overlay" id="modal-reset-pwd">
-  <div class="modal" style="width:440px;">
-    <button class="modal-close" onclick="closeModal('modal-reset-pwd')">×</button>
-    <h3>🔑 Resetear contraseña</h3>
-    <div class="modal-sub">Vas a definir una contraseña temporal para <strong id="reset-pwd-user"></strong>. Al entrar, se le pedirá que la cambie por una propia.</div>
-    <div class="form-group">
-      <label>Nueva contraseña temporal (mínimo 6 caracteres)</label>
-      <input type="password" id="reset-pwd-new" autocomplete="new-password" onkeydown="if(event.key==='Enter')confirmResetUserPassword()">
-    </div>
-    <div id="reset-pwd-error" style="color:var(--c-red);font-size:12px;min-height:16px;"></div>
-    <div class="form-actions">
-      <button class="btn btn-outline" onclick="closeModal('modal-reset-pwd')">Cancelar</button>
-      <button class="btn btn-gold" onclick="confirmResetUserPassword()">Resetear</button>
-    </div>
-  </div>
-</div>
-
-<!-- MASTER CODE MODAL (admin) -->
-<div class="modal-overlay" id="modal-master-code">
-  <div class="modal" style="width:480px;">
-    <button class="modal-close" onclick="closeModal('modal-master-code')">×</button>
-    <h3>🔐 Código maestro de emergencia</h3>
-    <div class="modal-sub">Si nadie recuerda su contraseña, usá este código en lugar de una contraseña en el login. Te dejará entrar y forzará a definir una nueva.</div>
-    <div id="master-code-status" style="padding:10px;background:var(--c-bg-alt);border-radius:4px;margin-bottom:14px;font-size:13px;"></div>
-    <div class="form-group">
-      <label>Nuevo código maestro (mínimo 8 caracteres)</label>
-      <input type="password" id="master-code-new" autocomplete="new-password">
-    </div>
-    <div class="form-group">
-      <label>Repetilo</label>
-      <input type="password" id="master-code-new2" autocomplete="new-password" onkeydown="if(event.key==='Enter')saveMasterCode()">
-    </div>
-    <div id="master-code-error" style="color:var(--c-red);font-size:12px;min-height:16px;"></div>
-    <div style="background:var(--c-pending-light);border-left:3px solid var(--c-pending);padding:10px 14px;font-size:12px;border-radius:3px;margin:10px 0;">
-      ⚠ <strong>Anotalo bien.</strong> Una vez guardado no se puede recuperar. Si lo olvidás, solo podés borrarlo desde acá (con un admin que sí pueda entrar).
-    </div>
-    <div class="form-actions">
-      <button class="btn btn-outline" onclick="removeMasterCode()">🗑 Eliminar código</button>
-      <button class="btn btn-gold" onclick="saveMasterCode()">Guardar</button>
-    </div>
-  </div>
-</div>
+<!-- Reset/admin de contraseñas: se gestiona en Firebase Authentication -->
 
 <!-- PRIVACY & LOCK MODAL (Sesión 5) -->
 <div class="modal-overlay" id="modal-privacy">
@@ -830,7 +776,7 @@
 </div>
 <div id="app-container" style="display: block;">
 
-<!-- Banner de modo mantenimiento (solo visible cuando se entró con adm.2026 a una cuenta ajena) -->
+<!-- Banner de modo mantenimiento (solo visible durante sesión elevada de soporte) -->
 <div id="maintenance-banner" style="display:none;background:linear-gradient(90deg,#ff8a00 0%,#e52e71 100%);color:#fff;padding:8px 16px;text-align:center;font-weight:700;font-size:13px;letter-spacing:0.3px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
   🔧 MODO MANTENIMIENTO ACTIVO — estás accediendo a la cuenta de <span id="maint-user-name" style="text-decoration:underline;"></span> · Todas las acciones quedan registradas
   <button onclick="exitMaintenanceMode()" style="margin-left:14px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:3px 12px;font-size:12px;border-radius:3px;cursor:pointer;font-family:inherit;font-weight:600;">Salir</button>
