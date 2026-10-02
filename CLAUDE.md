@@ -104,6 +104,14 @@
 - **Celular:** Finanzas y CEDE en fichas (final de `js/modules/celular.js` y `css/celular.css`), «Quién debe»
   en fichas, subpestañas de Finanzas entran en el ancho. Honorarios anual entra en la pantalla (computadora).
 
+## «Se borró Sv. Profesionales» (02/10/2026) — no se había borrado
+- El año del estudio estaba guardado como `"2026 "` (con un espacio). Sv. Profesionales tenía los datos en el
+  formato viejo (`row.cells`) y no tenía `tabYear`; al elegir un año en el selector se puso `tabYear: '2026'`,
+  `getCells` comparó `'2026'` con `'2026 '`, creó `cellsByYear['2026'] = {}` vacío y mostró ese.
+- Arreglo en `js/app.js`: los años se comparan sin espacios, un año vacío no tapa los datos viejos, y el
+  inicializador `celdas-del-anio` (`repararCeldasDelAnio`) pasa `row.cells` al año del estudio sin pisar lo
+  cargado y deja el año sin el espacio. Probado reproduciendo el caso en los emuladores.
+
 ## Modo noche «Medianoche» (02/10/2026)
 - De **20:00 a 8:00** toda la página pasa a modo noche, sola y con la página abierta (`js/modules/noche.js`,
   clase `noche` en `<html>` y `<body>`). Se desactiva en el menú **⋯ → Modo noche** (cada una la suya:

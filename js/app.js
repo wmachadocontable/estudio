@@ -1383,12 +1383,14 @@ function getCells(tab, row) {
   //   - Si el año pedido === año global Y row.cells tiene datos Y cellsByYear no existe, usa row.cells (compat).
   if (tabStoresCellsByYear(tab)) {
     if (!row.cellsByYear) row.cellsByYear = {};
-    const tabY = String(tab.tabYear);
-    const globalY = String(state.branding.year || '');
+    const tabY = String(tab.tabYear).trim();
+    // Oct. 2026: el año del estudio estaba guardado como «2026 » (con un espacio) y no coincidía con el de la
+    // pestaña: se creaba un año vacío y los datos viejos (row.cells) dejaban de verse. Ahora se compara sin espacios.
+    const globalY = String(state.branding.year || '').trim();
 
     // Modo compatibilidad: si el año pedido es el global y solo hay datos en row.cells, devolverlos.
     if (tabY === globalY && row.cells && Object.keys(row.cells).length) {
-      if (!row.cellsByYear[tabY]) {
+      if (!row.cellsByYear[tabY] || !Object.keys(row.cellsByYear[tabY]).length) {
         row.cellsByYear[tabY] = row.cells;
         row.cells = {}; // ya migrado, nunca más se va a tocar
       }
@@ -1400,6 +1402,31 @@ function getCells(tab, row) {
   if (!row.cells) row.cells = {};
   return row.cells;
 }
+
+// Reparación (oct. 2026): datos que quedaron en row.cells (formato viejo, del año del estudio) mientras la
+// pestaña ya mostraba row.cellsByYear. Se pasan al año del estudio sin pisar nada de lo que ya esté cargado ahí.
+// Lo hace cualquier sesión después de leer la nube; da el mismo resultado en todas.
+function repararCeldasDelAnio() {
+  if (!state || !state.branding || !Array.isArray(state.tabs)) return false;
+  let cambio = false;
+  const y0 = state.branding.year;
+  if (typeof y0 === 'string' && y0.trim() !== y0) { state.branding.year = y0.trim(); cambio = true; }
+  const Y = String(state.branding.year || '').trim();
+  if (!Y) return cambio;
+  state.tabs.forEach(tab => {
+    if (!tabStoresCellsByYear(tab) || !Array.isArray(tab.rows)) return;
+    tab.rows.forEach(row => {
+      if (!row || !row.cells || !Object.keys(row.cells).length) return;
+      if (!row.cellsByYear) row.cellsByYear = {};
+      const destino = row.cellsByYear[Y] || (row.cellsByYear[Y] = {});
+      Object.keys(row.cells).forEach(k => { if (!(k in destino)) destino[k] = row.cells[k]; });
+      row.cells = {};
+      cambio = true;
+    });
+  });
+  return cambio;
+}
+if (typeof registerStructureInitializer === 'function') registerStructureInitializer('celdas-del-anio', repararCeldasDelAnio);
 
 function getCell(tab, row, colIdx) {
   const cells = getCells(tab, row);
