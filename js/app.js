@@ -37,7 +37,7 @@ function buildInitState() {
       name: 'W. Machado',
       subtitle: 'Estudio Contable',
       year: '2026',
-      logo: DEFAULT_LOGO,
+      logo: './img/logo-estudio.png',   // el del estudio (antes de ingresar no se puede leer la base)
       logoInvert: true,
       colors: { accent:'#b8c1cc', header:'#102030', bg:'#ffffff', text:'#0a0a0a' },
       fonts: { display: "'Playfair Display', serif", body: "'Lato', sans-serif" }
