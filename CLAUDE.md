@@ -71,8 +71,10 @@
 - **Honorarios atrasados:** «Quién debe» arriba de Honorarios + aviso diario a Wendy (`js/finanzas/honorarios-deudores.js`).
 - **Respaldo:** el viejo (Apps Script, no estaba en el repo) se cortó en silencio el **19/08/2026**. Nuevo script en
   `herramientas/respaldo-apps-script/` (ver su LEEME): 23 h, JSON + Excel en Drive y mail. Anota `wm_respaldo` en la base;
-  la página lo muestra en Configuración y avisa si pasan 2 días (`js/modules/respaldo-estado.js`). **Falta instalarlo** en
-  script.google.com con la cuenta wmachadocontable y apagar el activador viejo.
+  la página lo muestra en Configuración y avisa si pasan 2 días (`js/modules/respaldo-estado.js`).
+  **Instalado el 02/10/2026** en script.google.com (cuenta wmachadocontable, proyecto «Respaldo W. Machado», todas las noches
+  23 h). Primer respaldo OK (11 pestañas, 94 clientes, 143 filas de Sueldos). Causa del corte: el script viejo («Proyecto sin
+  título», 22:16) fallaba con 401 al leer Firebase desde que se ajustaron los permisos de la base; se borró su activador.
 
 ## Pendiente
 - Revisión de **Álvaro** (pull request de `mejoras-octubre`).

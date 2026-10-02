@@ -12,6 +12,10 @@ El respaldo anterior (mails «Respaldo W. Machado – fecha_22-16») llegaba tod
 principios de julio, empezó a fallar y el último fue el **19/08/2026**. Google no mandó ningún aviso
 de error: dejó de correr en silencio. El script viejo no estaba en el repositorio.
 
+## Estado
+**Instalado el 02/10/2026** (proyecto «Respaldo W. Machado» en la cuenta wmachadocontable). El viejo («Proyecto sin título»)
+fallaba con «código 401» al leer Firebase: se le borró el activador; el proyecto quedó guardado.
+
 ## Cómo instalarlo (una sola vez, con la cuenta wmachadocontable@gmail.com)
 1. Entrar a https://script.google.com con **wmachadocontable@gmail.com** → **Nuevo proyecto**.
    Ponerle de nombre **Respaldo W. Machado**.
