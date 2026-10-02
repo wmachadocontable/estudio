@@ -20,6 +20,16 @@ function tabDestinoDe(t) {
   return 'dashboard';
 }
 
+// El ícono de una pestaña: el emoji con que empieza su nombre («🏢 Empresas») o, si no tiene, uno
+// por tipo (auto: true = solo se muestra en el celular, para no cambiar la vista de la computadora).
+const TAB_ICONOS_TIPO = { dashboard:'🏠', settings:'⚙️', mydash:'📌', sueldos:'💼', clientes:'👥', declaraciones:'📋', finanzas:'💲', table:'📄', annual:'📊' };
+function tabIcono(t) {
+  const nombre = String(t.name || '');
+  const m = nombre.match(/^\s*((?:\p{Extended_Pictographic}|\p{Regional_Indicator})(?:️|‍(?:\p{Extended_Pictographic})️?)*)\s*/u);
+  if (m) return { ico: m[1], txt: nombre.slice(m[0].length) || nombre, auto: false };
+  return { ico: TAB_ICONOS_TIPO[t.type] || '📄', txt: nombre, auto: true };
+}
+
 // ============ TABS RENDER ============
 function renderTabs() {
   const nav = document.getElementById('nav-tabs');
@@ -44,7 +54,11 @@ function renderTabs() {
     }
     // Oct. 2026: un número rojo al lado del nombre (ej. Sueldos: lo pendiente propio). Lo da tabBadge() de cada módulo.
     const badge = (typeof tabBadge === 'function') ? tabBadge(t) : '';
-    return `<div class="nav-tab${active}" data-tab-id="${t.id}" data-tab-idx="${i}"${draggable} onclick="${t.type==='declaraciones'?`declTabClick('${t.id}')`:`switchTab('${t.id}')`}"${editable}>${privacyIcon}<span>${bbEscape(t.name)}</span>${badge}${x}</div>`;
+    // Oct. 2026: ícono y nombre por separado. En la computadora se ven igual que siempre; en el
+    // celular la barra va abajo, con el ícono arriba y el nombre abajo (css/celular.css).
+    const ic = tabIcono(t);
+    const nombre = `<span class="nt-ico${ic.auto ? ' nt-ico-auto' : ''}">${ic.ico}</span><span class="nt-txt">${bbEscape(ic.txt)}</span>`;
+    return `<div class="nav-tab${active}" data-tab-id="${t.id}" data-tab-idx="${i}"${draggable} onclick="${t.type==='declaraciones'?`declTabClick('${t.id}')`:`switchTab('${t.id}')`}"${editable}>${privacyIcon}${nombre}${badge}${x}</div>`;
   }).join('') + `<span class="nav-tab-add" onclick="openAddTab()">+ Nueva pestaña</span>`;
   if (userPrefs.editMode) attachTabDragHandlers();
 }

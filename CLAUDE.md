@@ -43,6 +43,20 @@
 - **Pulido visual:** `css/pulido.css` (se carga último; sacándolo vuelve todo a como estaba).
 - **index.html limpio:** antes era una foto de una sesión real (chat, fotos, Dashboard, 2,8 MB).
 
+## Segunda tanda (02/10/2026, misma rama)
+- **Ingreso:** sin marca de agua; tres fondos: **Luces** (por defecto), **Ondas** (animados) y Clásico.
+  Solo se anima transform/opacity, sin `:has()`, y la animación NO se apaga con «reducir movimiento»
+  (pedido de la usuaria: que se vea en todos los dispositivos).
+- **Saludo** «Buenos días / Buenas tardes / Buenas noches, <nombre>» arriba del Dashboard y de Personal.
+- **Sueldos ↔ campanita** (`js/modules/sueldos-avisos.js`): liquidados/emitida → a quien envía; todo
+  enviado con controles pendientes → a Lorena; «Envía» asignado; resumen diario de atrasados. La
+  campanita se actualiza en vivo al llegar cambios.
+- **Personalizar** (`js/modules/apariencia.js`): estilo del encabezado (Clásico, Brillo, Degradé, Lino,
+  Líneas finas) y barra de pestañas (Fina, Con flechas, Plateada, Oculta). Rueda del mouse = mover pestañas.
+- **Selectores** con flechita propia (en `css/pulido.css`).
+- **Celular** (`css/celular.css`, `js/modules/celular.js`): pestañas en una barra abajo con ícono, campanita
+  visible, tablas con la primera columna fija, ventanas de abajo hacia arriba. Revisado a 375 px.
+
 ## Pendiente
 - Revisión de **Álvaro** (pull request de `mejoras-octubre`).
 - Publicar: **solo con aprobación explícita**. Antes: `node herramientas/version-archivos.js`. Después de

@@ -1,0 +1,99 @@
+/*
+ * CELULAR (oct. 2026) — estándar de Wydan: la página se usa también desde el teléfono.
+ * Todo lo del celular está acá (y un poco en js/celular.js), para no ensuciar los demás archivos.
+ * En la computadora solo cambia una cosa mínima: el espacio entre el ícono y el nombre de cada
+ * pestaña (antes era un espacio dentro del texto).
+ *
+ * En el celular (hasta 760 px):
+ *  - las pestañas pasan a una BARRA ABAJO, como en las aplicaciones: ícono arriba y nombre abajo,
+ *    se desliza de costado si no entran, y la abierta queda marcada;
+ *  - el encabezado se achica y la campanita queda a mano;
+ *  - las tablas anchas se deslizan con la primera columna fija;
+ *  - los indicadores van de a dos, las ventanas ocupan el ancho y los campos miden 16 px (si no,
+ *    el teléfono agranda la pantalla al tocarlos).
+ */
+:root{
+  --cel-barra-alto: 62px;
+  --cel-barra-fondo: #0c1620;
+}
+
+/* ===== Computadora: ícono y nombre de cada pestaña ===== */
+.nav-tab .nt-ico{margin-right:6px}
+.nav-tab .nt-ico-auto{display:none}
+
+@media (max-width:760px){
+  /* ===== Barra de pestañas abajo ===== */
+  .nav-tabs{position:fixed!important;top:auto!important;bottom:0;left:0;right:0;z-index:150;
+    display:flex;gap:0;padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px))!important;
+    background:var(--cel-barra-fondo)!important;border-top:1px solid rgba(255,255,255,.08);border-bottom:none!important;
+    box-shadow:0 -6px 20px rgba(0,0,0,.28);overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;-webkit-mask-image:none!important;mask-image:none!important}
+  .nav-tabs::-webkit-scrollbar{display:none}
+  .nav-tab{flex:1 0 auto;min-width:66px;max-width:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    padding:7px 6px 6px!important;border-bottom:none!important;border-top:2px solid transparent;border-radius:10px;
+    font-size:9.5px!important;letter-spacing:.2px!important;text-transform:none!important;font-weight:700;position:relative;background:none}
+  .nav-tab .nt-ico,.nav-tab .nt-ico-auto{display:block;margin:0;font-size:20px;line-height:1;filter:saturate(.9)}
+  .nav-tab .nt-txt{max-width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nav-tab.active{border-top-color:transparent;background:rgba(255,255,255,.08);color:#fff}
+  .nav-tab.active .nt-ico{transform:translateY(-1px)}
+  .nav-tab.active::after{content:'';position:absolute;top:2px;left:50%;width:18px;height:3px;margin-left:-9px;border-radius:3px;background:var(--c-accent)}
+  .nav-tab .tab-privacy-icon,.nav-tab .tab-x,.nav-tab-add,.nav-flecha{display:none!important}
+  .nav-tab .nav-badge{position:absolute;top:2px;right:8px;margin:0;min-width:16px;padding:0 4px;font-size:9px;line-height:15px}
+  /* Lugar para la barra de abajo */
+  body{padding-bottom:calc(var(--cel-barra-alto) + env(safe-area-inset-bottom,0px))}
+  .tooltip-msg{bottom:calc(var(--cel-barra-alto) + 16px)!important;right:12px!important;left:12px!important;text-align:center}
+  #wm-modo-prueba{bottom:calc(var(--cel-barra-alto) + 8px)!important}
+
+  /* ===== Encabezado compacto, con la campanita a mano ===== */
+  header{padding:10px 14px!important}
+  .header-logo{gap:10px}
+  .header-logo img{height:38px}
+  .header-title h1{font-size:16px}
+  .header-title p{font-size:8.5px;letter-spacing:2px}
+  .header-right{gap:8px}
+  .header-panels{display:flex!important}
+  .header-panel-presence{display:none!important}
+  .header-panel .panel-handle{display:none}
+  .header-menu-btn{width:34px;height:32px}
+  .user-pill{padding:3px}
+
+  /* ===== Contenido ===== */
+  .main-content{padding:16px 14px 24px!important}
+  .section-header{flex-direction:column;align-items:stretch;gap:10px}
+  .section-header>div{flex-wrap:wrap}
+  .section-title{font-size:20px}
+  .stats-bar{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important}
+  .stat-card{min-width:0!important;padding:12px 14px!important}
+  .stat-num{font-size:22px!important}
+  .stat-label{font-size:10px}
+  .month-filter{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none}
+  .month-filter::-webkit-scrollbar{display:none}
+  .month-btn{flex-shrink:0}
+  .saludo-t{font-size:18px}
+  /* Configuración: las tarjetas se achican (la grilla no las dejaba por los campos de adentro) */
+  .settings-grid{grid-template-columns:minmax(0,1fr)!important}
+  .settings-card{min-width:0;padding:18px!important}
+  .add-entity-form{flex-wrap:wrap}
+  .add-entity-form input{min-width:0;flex:1 1 140px}
+
+  /* Tablas anchas: se deslizan con la primera columna fija */
+  .table-wrap{-webkit-overflow-scrolling:touch}
+  .table-wrap table th:first-child,.table-wrap table td:first-child{position:-webkit-sticky;position:sticky;left:0;z-index:1;background:var(--c-card);box-shadow:2px 0 4px rgba(16,32,48,.06)}
+  .table-wrap table thead th:first-child{background:var(--c-header);z-index:2}
+  .table-wrap table tbody tr:nth-child(even) td:first-child{background:var(--c-bg-alt)}
+  .table-wrap table tbody td:first-child{min-width:130px;max-width:160px;white-space:normal}
+
+  /* Ventanas: ocupan el ancho, con lugar para el teclado */
+  .modal-overlay{padding:10px!important;align-items:flex-end!important}
+  .modal{width:100%!important;max-width:100%!important;max-height:88vh!important;padding:22px 18px!important;border-radius:14px 14px 8px 8px!important}
+  .form-row{flex-direction:column;gap:0}
+  .form-actions{flex-wrap:wrap}
+
+  /* Campos de 16 px: así el teléfono no agranda la pantalla al tocarlos */
+  input[type="text"],input[type="password"],input[type="number"],input[type="date"],input[type="email"],input[type="search"],select,textarea{font-size:16px!important}
+
+  /* Panel de notificaciones: casi todo el ancho, escondido a la derecha hasta que se abre */
+  .notif-panel{top:64px!important;width:calc(100vw - 20px)!important;max-width:none!important;right:-110vw!important;max-height:calc(100vh - 150px)!important}
+  .notif-panel.open{right:10px!important}
+  .dash-section-header .dash-drag-handle{display:none}
+}
