@@ -1,0 +1,177 @@
+/*
+ * FINANZAS (oct. 2026): subpestañas Honorarios · Gastos · Impuestos.
+ * Todo va dentro de .fin-app, para no tocar el resto de la página.
+ * Los colores salen de las variables de :root de app.css; los de cada organismo están acá abajo.
+ */
+:root{
+  --v-sp: var(--c-blue);      /* IVA Servicios Personales */
+  --v-irpf: #1d6b74;          /* IRPF */
+  --v-cede: #2f5f8f;          /* CEDE */
+  --v-nocede: var(--c-green); /* No CEDE */
+  --v-ivamin: #b7651b;        /* IVA mínimo */
+  --v-bps: #6b4a8f;           /* BPS */
+}
+
+/* ===== Subpestañas ===== */
+.fin-tabs{display:flex;gap:4px;border-bottom:1px solid var(--c-border);margin:0 0 22px;overflow-x:auto}
+.fin-tab{display:inline-flex;align-items:center;gap:8px;background:none;border:none;border-bottom:2px solid transparent;
+  padding:10px 18px;margin-bottom:-1px;font-family:var(--font-body);font-size:12px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--c-text-muted);cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s}
+.fin-tab:hover{color:var(--c-header)}
+.fin-tab.active{color:var(--c-header);border-bottom-color:var(--c-header)}
+.fin-tab-ico{font-size:14px}
+.fin-badge{background:var(--c-red);color:#fff;border-radius:10px;font-size:10px;padding:1px 7px;letter-spacing:0}
+
+/* ===== Encabezado de cada subpestaña ===== */
+.fin-app .view-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.fin-app .view-head h2{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--c-text);margin:0}
+.fin-app .view-head h2 span{color:var(--c-text-muted)!important}
+.fin-app .view-head .sub{font-size:12px;color:var(--c-text-muted);margin-top:4px}
+.fin-app .sld-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fin-app .fin-ysel,.fin-app .filt{padding:6px 10px;border:1px solid var(--c-border);background:var(--c-card);border-radius:3px;
+  font-family:inherit;font-size:13px;font-weight:700;color:var(--c-text);cursor:pointer}
+.fin-app .btn.fin-on{border-color:var(--c-header);color:var(--c-header);background:var(--c-bg-alt)}
+/* Selector de dos opciones (Mensual / Anual · Bimestral / Mensual · Contado / Crédito) */
+.fin-app .gseg{display:inline-flex;border:1px solid var(--c-border);border-radius:3px;overflow:hidden;background:var(--c-card)}
+.fin-app .gv{background:none;border:none;padding:6px 12px;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--c-text-muted);cursor:pointer}
+.fin-app .gv+.gv{border-left:1px solid var(--c-border)}
+.fin-app .gv.active{background:var(--c-header);color:#fff}
+
+/* ===== Barra de búsqueda ===== */
+.fin-app .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.fin-app .search{flex:1;min-width:200px}
+.fin-app .search input{width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:3px;font-family:inherit;font-size:13px;background:var(--c-card)}
+.fin-app .search input:focus,.fin-app .filt:focus{outline:none;border-color:var(--c-accent-dark)}
+
+/* ===== Indicadores (usan .stat-card del resto de la página) ===== */
+.fin-app .stats-bar,.fin-app .kpis{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.fin-app .stat-card{min-width:170px}
+.fin-app .stat-card .stat-num{font-size:22px}
+.fin-app .stat-card.amber{border-left-color:var(--c-pending)}
+.fin-kpi-sub{font-size:11px;color:var(--c-text-muted);margin-top:4px}
+
+/* ===== Tablas ===== */
+.fin-app table td.num,.fin-app table th.num{text-align:right;white-space:nowrap}
+.fin-app thead th{text-align:left}
+.fin-app .cell-in{width:100%;min-width:90px;padding:6px 8px;border:1px solid transparent;border-radius:3px;background:transparent;
+  font-family:inherit;font-size:13px;color:var(--c-text)}
+.fin-app .cell-in:hover{border-color:var(--c-border)}
+.fin-app .cell-in:focus{outline:none;border-color:var(--c-accent-dark);background:var(--c-card)}
+.fin-app .cell-in.num{text-align:right}
+.fin-app .muted-cell{color:var(--c-text-muted)}
+.fin-app .name-cell{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fin-app .name-cell .cell-in{flex:1 1 150px;min-width:120px}
+.fin-app .row-act{display:flex;gap:2px;justify-content:flex-end}
+.fin-app .btn-ghost{background:none;border:none;cursor:pointer;padding:4px 7px;border-radius:3px;color:var(--c-text-muted);font-size:14px}
+.fin-app .btn-ghost:hover{background:var(--c-bg-alt);color:var(--c-header)}
+.fin-app tr.gst-tot td{background:var(--c-bg-alt);font-weight:700;border-top:2px solid var(--c-border)}
+.fin-vacio{text-align:center;padding:30px 10px;color:var(--c-text-muted)}
+.fin-vacio .e-ico{font-size:26px;margin-bottom:6px;opacity:.6}
+
+/* Pastillas de estado (se tocan para cambiar) */
+.fin-app .pill{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  padding:3px 10px;border-radius:10px;border:1px solid transparent;white-space:nowrap}
+.fin-app .pill.clk{cursor:pointer}
+.fin-app .pill.st-done,.fin-app .pill.imp-pag{background:var(--c-green-light);color:var(--c-green);border-color:#bfe0cc}
+.fin-app .pill.st-pend,.fin-app .pill.imp-pen{background:var(--c-pending-light);color:var(--c-pending);border-color:#f0dcb0}
+.fin-app .pill.imp-venc{background:var(--c-red-light);color:var(--c-red);border-color:#efc5bf}
+
+/* ===== Gastos ===== */
+.gst-ico{font-size:15px;width:20px;text-align:center}
+.gst-nom{font-weight:700}
+.gst-cuota,.gst-fijo{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border-radius:10px;padding:2px 8px}
+.gst-cuota{background:var(--c-blue-light);color:var(--c-blue)}
+.gst-fijo{background:var(--c-bg-alt);color:var(--c-text-muted);border:1px solid var(--c-border)}
+.gst-fecha{font-size:13px;color:var(--c-text-muted);padding-left:8px}
+.gst-ded{display:block;font-size:10.5px;color:var(--c-text-muted)}
+.gst-res{display:flex;flex-wrap:wrap;gap:0;margin-top:16px;border:1px solid var(--c-border);border-radius:4px;background:var(--c-card);overflow:hidden}
+.gst-res-i{flex:1;min-width:160px;padding:12px 16px;border-right:1px solid var(--c-border-soft)}
+.gst-res-i:last-child{border-right:none}
+.gst-res-i span{display:block;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--c-text-muted);margin-bottom:4px}
+.gst-res-i b{font-family:var(--font-display);font-size:18px}
+.gst-res-i b.ok{color:var(--c-green)}
+.gst-res-i b.neg{color:var(--c-red)}
+.fin-nota{margin-top:18px;font-size:12px;color:var(--c-text-muted);line-height:1.6;background:var(--c-bg-alt);
+  border-left:3px solid var(--c-accent);padding:10px 14px;border-radius:0 3px 3px 0}
+
+/* ===== Ficha de gasto ===== */
+.fin-ficha{width:600px}
+.fin-ficha .field{margin-bottom:14px}
+.fin-ficha .field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:6px;color:var(--c-text)}
+.fin-ficha .field input,.fin-ficha .field textarea{width:100%;padding:9px 12px;border:1px solid var(--c-border);border-radius:3px;font-family:inherit;font-size:13px;background:#fff}
+.fin-ficha .field input:focus,.fin-ficha .field textarea:focus{outline:none;border-color:var(--c-accent-dark)}
+.fin-ficha .field textarea{min-height:70px;resize:vertical}
+.fin-ficha .field-2{display:flex;gap:12px}
+.fin-ficha .field-2>.field{flex:1;min-width:0}
+.fin-ficha .req{color:var(--c-red)}
+.fin-ficha .opt{font-weight:400;text-transform:none;letter-spacing:0;color:var(--c-text-muted)}
+.fin-ficha .chkline{display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 14px;cursor:pointer}
+.fin-ficha .chkline input{width:auto}
+.gst-box{border:1px solid var(--c-border);border-radius:4px;background:var(--c-bg-alt);padding:12px 14px;margin-bottom:14px}
+.gst-box .chkline{margin:0}
+.gst-sub{font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:var(--c-text-muted);margin:12px 0 6px}
+.gst-forma{display:flex}
+.gst-ayuda{font-size:11.5px;color:var(--c-text-muted);margin-top:5px;line-height:1.5}
+.gst-ayuda2{color:var(--c-text-muted);font-size:12px}
+.gst-desglose{margin-top:12px;border-top:1px dashed var(--c-border);padding-top:8px}
+.gd-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}
+.gd-row.gd-tot{font-weight:700;border-top:1px solid var(--c-border);margin-top:4px;padding-top:6px}
+.gd-row.gd-ded{color:var(--c-green)}
+.gst-plan{margin-top:12px;font-size:13px;line-height:1.6}
+.gst-plan-d{display:block;color:var(--c-text-muted);font-size:12px}
+
+/* ===== Impuestos ===== */
+.fin-app .card-head.imp-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:6px 0 10px}
+.fin-app .card-head h3{font-family:var(--font-display);font-size:17px;font-weight:600;margin:0}
+th.imp-venc{width:1%;white-space:nowrap}
+td.imp-venc .cell-in{width:130px;min-width:0;font-size:12.5px}
+td.imp-venc .imp-falta{font-size:10.5px;color:var(--c-text-muted);line-height:1.35;max-width:140px;padding-left:8px}
+.cell-in.imp-sug::placeholder{color:var(--c-blue);opacity:.6;font-style:italic}
+tbody tr.imp-vacio td{color:var(--c-text-muted)}
+
+/* ===== ⚙ Mis impuestos ===== */
+.fin-app .card{border:1px solid var(--c-border);border-radius:4px;background:var(--c-card);margin-bottom:18px}
+.fin-app .card>.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--c-border-soft)}
+.fin-app .card .csub{font-size:11px;color:var(--c-text-muted);letter-spacing:.5px}
+.fin-app .card-body{padding:14px 18px}
+.venc-aviso{background:var(--c-pending-light);border-left:3px solid var(--c-pending);border-radius:0 3px 3px 0;
+  padding:10px 13px;font-size:12.5px;line-height:1.55;color:#6b4a06;margin-bottom:12px}
+.venc-aviso a{color:inherit;font-weight:700}
+.venc-g{border:1px solid var(--c-border);border-radius:4px;padding:11px 13px;margin-bottom:9px;background:var(--c-card)}
+.venc-g.mio{border-color:var(--c-accent-dark);background:var(--c-bg-alt)}
+.venc-g-top{display:flex;align-items:center;gap:9px;font-size:13.5px;cursor:pointer}
+.venc-g-top i{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.venc-g-top input{width:auto}
+.venc-ok{margin-left:auto;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:3px 9px;
+  border-radius:10px;background:var(--c-border-soft);color:var(--c-text-muted);cursor:pointer;white-space:nowrap}
+.venc-ok.on{background:var(--c-green-light);color:var(--c-green)}
+.venc-nota{font-size:11.5px;color:var(--c-text-muted);margin:5px 0 9px;line-height:1.5}
+.venc-grupo{border:1px solid var(--c-border);border-radius:4px;background:var(--c-card);overflow:hidden}
+.venc-grupo summary{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;list-style:none}
+.venc-grupo summary::-webkit-details-marker{display:none}
+.venc-grupo summary:hover,.venc-grupo[open] summary{background:var(--c-bg-alt)}
+.venc-grupo[open] summary{border-bottom:1px solid var(--c-border-soft)}
+.vg-ico{font-size:18px}
+.vg-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.vg-t b{font-size:14px;font-family:var(--font-display)}
+.vg-t span{font-size:12px;color:var(--c-text-muted)}
+.vg-n{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;background:var(--c-border-soft);color:var(--c-text-muted);border-radius:10px;padding:3px 10px}
+.vg-n.on{background:var(--c-header);color:#fff}
+.venc-grupo summary::after{content:'›';font-size:20px;color:var(--c-text-muted);transition:transform .2s}
+.venc-grupo[open] summary::after{transform:rotate(90deg)}
+.vg-body{padding:14px 16px}
+.venc-meses{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.venc-m{display:flex;align-items:center;gap:6px;border:1px solid var(--c-border);border-radius:3px;padding:4px 7px;font-size:11px;background:var(--c-card)}
+.venc-m>span{font-weight:700;color:var(--c-text-muted);letter-spacing:.5px}
+.venc-m input{border:none;background:none;font-size:12px;width:100%;min-width:0;padding:2px 0;font-family:inherit}
+.venc-m input:focus{outline:none}
+.venc-m.mano{border-color:var(--c-blue);background:var(--c-blue-light)}
+.venc-m.cambio{border-color:var(--c-pending)}
+.venc-m.cambio>span::after{content:'*';color:var(--c-pending)}
+
+@media (max-width:760px){
+  .fin-ficha .field-2{flex-direction:column;gap:0}
+  td.imp-venc .cell-in{width:auto}
+  .fin-tab{padding:10px 12px}
+}

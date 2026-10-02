@@ -12,6 +12,8 @@
   const HON_METHODS = ['Scotiabank','BBVA','Abitab','Efectivo'];
   const HON_TAB_ID = 'tab_1780081397523';
   const HON_OWNER = 'Wendy';
+  // Oct. 2026: Honorarios se dibuja adentro de Finanzas (#fin-hon-host); si no, en la página entera.
+  function honHost(){ return document.getElementById('fin-hon-host') || document.getElementById('main-content'); }
 
   function honDefaults(){ return { taxRate:0.22, methods: HON_METHODS.slice(), extraCols:[], colors:{} }; }
 
@@ -98,7 +100,7 @@
   function setHonView(tabId,v){ if(!userPrefs.honView) userPrefs.honView={}; userPrefs.honView[tabId]=v; if(typeof saveUserPrefs==='function') saveUserPrefs(); renderContent(); }
   function honMonth(tabId){ const m=(userPrefs.honMonth&&userPrefs.honMonth[tabId]); return (m===undefined)? (new Date()).getMonth() : m; }
   function setHonMonth(tabId,m){ if(!userPrefs.honMonth) userPrefs.honMonth={}; userPrefs.honMonth[tabId]=m; if(typeof saveUserPrefs==='function') saveUserPrefs();
-    const tab=state.tabs.find(t=>t.id===tabId); const mc=document.getElementById('main-content');
+    const tab=state.tabs.find(t=>t.id===tabId); const mc=honHost();
     if(tab&&mc){ mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honScrollToSelected(tab); } }
   function honSel(tabId){ return (userPrefs.honSel&&userPrefs.honSel[tabId])||null; }
   function setHonSel(tabId,cid){ if(!userPrefs.honSel) userPrefs.honSel={}; userPrefs.honSel[tabId]=cid; if(typeof saveUserPrefs==='function') saveUserPrefs(); }
@@ -110,7 +112,7 @@
   function setHonSearchVal(tabId,v){ if(!userPrefs.honSearch) userPrefs.honSearch={}; userPrefs.honSearch[tabId]=v; }
   function honShowArch(tabId){ return !!(userPrefs.honShowArch && userPrefs.honShowArch[tabId]); }
   function setHonShowArch(tabId,v){ if(!userPrefs.honShowArch) userPrefs.honShowArch={}; userPrefs.honShowArch[tabId]=v; if(typeof saveUserPrefs==='function') saveUserPrefs();
-    const tab=state.tabs.find(t=>t.id===tabId); const mc=document.getElementById('main-content');
+    const tab=state.tabs.find(t=>t.id===tabId); const mc=honHost();
     if(tab&&mc){ mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); } }
   function honMatchesSearch(c,q){ if(!q) return true; return String(c.name||'').toLowerCase().indexOf(String(q).toLowerCase())>=0; }
   // ¿archivado a la altura de (year, monthIdx)? Oculto desde el mes de corte en adelante.
@@ -129,14 +131,14 @@
     if(!confirm(msg)) return;
     c.archivedFrom = year+'-'+String(mi+1).padStart(2,'0');
     honSave(); try{closeModal('modal-hon');}catch(e){}
-    var mc=document.getElementById('main-content'); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('📦 Cliente archivado desde '+MONTHS_SHORT[mi]+'/'+year);
+    var mc=honHost(); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('📦 Cliente archivado desde '+MONTHS_SHORT[mi]+'/'+year);
   };
   window.honUnarchiveClient=function(tabId,cid){
     var tab=state.tabs.find(t=>t.id===tabId); if(!tab)return;
     var c=tab.honData.clients.find(x=>x.id===cid); if(!c)return;
     delete c.archivedFrom;
     honSave(); try{closeModal('modal-hon');}catch(e){}
-    var mc=document.getElementById('main-content'); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Cliente desarchivado');
+    var mc=honHost(); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Cliente desarchivado');
   };
   window.honToggleArch=function(tabId,checked){ setHonShowArch(tabId, !!checked); };
 
@@ -331,7 +333,7 @@
     if(!cell.extra) cell.extra={};
     document.querySelectorAll('#hon-m-body [data-extra]').forEach(inp=>{ cell.extra[inp.getAttribute('data-extra')]=inp.value.trim(); });
     honSave(); closeModal('modal-hon');
-    const mc=document.getElementById('main-content'); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honScrollToSelected(tab); honToast('✓ Guardado');
+    const mc=honHost(); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honScrollToSelected(tab); honToast('✓ Guardado');
   };
 
   var HON_CEDIT=null;
@@ -341,7 +343,7 @@
     var nn=prompt('Nuevo nombre de la empresa / cliente:', c.name);
     if(nn===null) return; nn=String(nn).trim(); if(!nn) return;
     c.name=nn; honSave();
-    var mc=document.getElementById('main-content'); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honScrollToSelected(tab); honToast('\u2713 Nombre actualizado');
+    var mc=honHost(); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honScrollToSelected(tab); honToast('\u2713 Nombre actualizado');
   };
   window.honOpenClient=function(tabId,cid){
     var tab=state.tabs.find(function(t){return t.id===tabId;}); if(!tab)return;
@@ -401,7 +403,7 @@
     }
     honSave();
     if(openCell){ closeModal('modal-hon'); window.honEdit(HON_CEDIT.tabId, HON_CEDIT.cid, m); return; }
-    closeModal('modal-hon'); var mc=document.getElementById('main-content'); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honScrollToSelected(tab); honToast('\u2713 Cambios guardados');
+    closeModal('modal-hon'); var mc=honHost(); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honScrollToSelected(tab); honToast('\u2713 Cambios guardados');
   };
   window.honAddClient=function(tabId){
     const tab=state.tabs.find(t=>t.id===tabId); if(!tab)return;
@@ -410,20 +412,20 @@
     const fee = feeStr && !isNaN(parseFloat(feeStr.replace(',','.'))) ? Math.round(parseFloat(feeStr.replace(',','.'))*100)/100 : null;
     const months=[]; for(let i=0;i<12;i++) months.push({sinIva:fee, factura:'', recibo:'', fecha:'', medio:'', extra:{}});
     tab.honData.clients.push({id:'hc_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6), name:name.trim(), color:'', months});
-    honSave(); const mc=document.getElementById('main-content'); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Cliente agregado');
+    honSave(); const mc=honHost(); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Cliente agregado');
   };
   window.honDelClient=function(tabId,cid){
     const tab=state.tabs.find(t=>t.id===tabId); if(!tab)return;
     const c=tab.honData.clients.find(x=>x.id===cid); if(!c)return;
     if(!confirm('¿Eliminar a "'+c.name+'" y todos sus datos del año?'))return;
     tab.honData.clients=tab.honData.clients.filter(x=>x.id!==cid);
-    honSave(); const mc=document.getElementById('main-content'); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Cliente eliminado');
+    honSave(); const mc=honHost(); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Cliente eliminado');
   };
   window.honAddCol=function(tabId){
     const tab=state.tabs.find(t=>t.id===tabId); if(!tab)return;
     const name=prompt('Nombre de la nueva columna (ej: Observaciones, Vencimiento):',''); if(!name||!name.trim())return;
     tab.honData.extraCols.push({id:'xc_'+Date.now().toString(36)+Math.random().toString(36).slice(2,4), name:name.trim()});
-    honSave(); const mc=document.getElementById('main-content'); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Columna agregada');
+    honSave(); const mc=honHost(); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Columna agregada');
   };
   window.honDelCol=function(tabId,colId){
     const tab=state.tabs.find(t=>t.id===tabId); if(!tab)return;
@@ -431,7 +433,7 @@
     if(!confirm('¿Eliminar la columna "'+col.name+'"?'))return;
     tab.honData.extraCols=tab.honData.extraCols.filter(x=>x.id!==colId);
     tab.honData.clients.forEach(c=>c.months.forEach(m=>{ if(m.extra) delete m.extra[colId]; }));
-    honSave(); const mc=document.getElementById('main-content'); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Columna eliminada');
+    honSave(); const mc=honHost(); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Columna eliminada');
   };
   window.honColors=function(tabId){
     const tab=state.tabs.find(t=>t.id===tabId); if(!tab)return; const hd=tab.honData;
@@ -446,8 +448,8 @@
     act.innerHTML='<button class="btn btn-gold" onclick="window.honSaveColors(\''+tabId+'\')">Aplicar</button><button class="btn btn-outline" onclick="window.honResetColors(\''+tabId+'\')">Restablecer</button><button class="btn btn-outline" onclick="closeModal(\'modal-hon\')">Cancelar</button>';
     document.getElementById('modal-hon').classList.add('open');
   };
-  window.honSaveColors=function(tabId){ const tab=state.tabs.find(t=>t.id===tabId); if(!tab)return; if(!tab.honData.colors) tab.honData.colors={}; tab.honData.colors.accent=document.getElementById('hon-c-accent').value; honSave(); closeModal('modal-hon'); const mc=document.getElementById('main-content'); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Colores aplicados'); };
-  window.honResetColors=function(tabId){ const tab=state.tabs.find(t=>t.id===tabId); if(!tab)return; if(tab.honData.colors) tab.honData.colors.accent=''; honSave(); closeModal('modal-hon'); const mc=document.getElementById('main-content'); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Restablecido'); };
+  window.honSaveColors=function(tabId){ const tab=state.tabs.find(t=>t.id===tabId); if(!tab)return; if(!tab.honData.colors) tab.honData.colors={}; tab.honData.colors.accent=document.getElementById('hon-c-accent').value; honSave(); closeModal('modal-hon'); const mc=honHost(); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Colores aplicados'); };
+  window.honResetColors=function(tabId){ const tab=state.tabs.find(t=>t.id===tabId); if(!tab)return; if(tab.honData.colors) tab.honData.colors.accent=''; honSave(); closeModal('modal-hon'); const mc=honHost(); mc.innerHTML=renderHonorarios(tab); attachHonorariosHandlers(tab); honToast('✓ Restablecido'); };
 
   window.honSetView=setHonView; window.honSetMonth=setHonMonth;
   window.attachHonorariosHandlers=function(tab){
