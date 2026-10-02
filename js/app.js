@@ -2183,11 +2183,13 @@ function computeDashSectorsAll() {
     ];
     const g = { pendiente:[], realizado:[], finalizado:[] };
     items.forEach(it=>{
-      const st = it.status || 'pendiente';
-      const row = { name: it.name, tag: it._g + (it.grupo ? ' · '+it.grupo : ''), detail: getSueldoStateInfo(st).label };
-      if (st==='enviado' || st==='finalizado') g.finalizado.push(row);
-      else if (st==='pronto') g.realizado.push(row);           // pronto = hecho, listo para enviar
-      else g.pendiente.push(row);                               // pendiente + proceso
+      // Oct. 2026: el estado se calcula con los tildes (sldEstado, js/modules/sueldos.js).
+      const sub = it._g === 'Sueldo' ? 'sueldos' : 'sd';
+      const st = sldEstado(it, sub);
+      const row = { name: it.name, tag: it._g + (it.grupo ? ' · '+it.grupo : ''), detail: sldEstadoInfo(st).label };
+      if (st==='enviado' || st==='cerrado') g.finalizado.push(row);
+      else if (st==='listo') g.realizado.push(row);             // hecho, falta enviar
+      else g.pendiente.push(row);                                // por liquidar
     });
     cats.forEach(cat => { if (g[cat].length) out[cat].push({ sector:'Sueldos', tabId:'sueldos', period: periodLabel, items: g[cat] }); });
   }
@@ -2238,81 +2240,33 @@ function openDashDrill(cat) {
 function buildSueldosDashboardDescriptor() {
   if (!state.sueldos) return null;
   const ym = getCurrentSueldosMonth();
-  ensureSueldosMonth(ym);
-  const [y, m] = ym.split('-');
-  const monthLabel = MONTHS[parseInt(m)-1] + ' ' + y;
-  const monthData = state.sueldos[ym] || { sueldos:[], sd:[], reliq:[] };
-  const allItems = [
-    ...(monthData.sueldos||[]).map(r => ({...r, _grp:'Sueldos'})),
-    ...(monthData.sd||[]).map(r => ({...r, _grp:'Serv. Doméstico'}))
+  const monthData = ensureSueldosMonth(ym);
+  const items = [
+    ...(monthData.sueldos||[]).map(r => ({ r, sub:'sueldos', grp:'Sueldos' })),
+    ...(monthData.sd||[]).map(r => ({ r, sub:'sd', grp:'Serv. Doméstico' }))
   ];
-  const groups = {};
-  SUELDO_STATES.forEach(s => groups[s.key] = []);
-  allItems.forEach(it => {
-    const st = it.status || 'pendiente';
-    if (groups[st]) groups[st].push(it);
-  });
-  const counts = {};
-  SUELDO_STATES.forEach(s => counts[s.key] = groups[s.key].length);
-
-  let body = `<div style="font-size:11px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Período: <strong style="color:var(--c-accent)">${monthLabel}</strong> · <span onclick="switchTab('sueldos')" style="color:var(--c-accent);cursor:pointer;font-weight:700;">Ir a Sueldos →</span></div>
-    <div class="stats-bar" style="margin-bottom:16px;">`;
-  SUELDO_STATES.forEach(s => {
-    body += `<div class="stat-card" style="border-left-color:${s.color};cursor:pointer;" onclick="switchTab('sueldos')">
-      <div class="stat-num" style="color:${s.color}">${counts[s.key]}</div>
-      <div class="stat-label">${s.label}</div>
-    </div>`;
-  });
-  body += `</div>`;
-
-  // Sub-cards: Prontos + En proceso/pendientes
-  body += `<div class="dashboard-grid">`;
-  body += `<div class="dash-card" style="border-left:3px solid var(--c-green,#2e7d52);">
-    <h4 style="color:var(--c-green,#2e7d52);">✅ Prontos para enviar <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">${groups.pronto.length}</span></h4>
-    <ul class="pending-list">`;
-  if (groups.pronto.length === 0) {
-    body += '<li style="color:var(--c-text-muted);padding:14px 0;font-style:italic;">Ningún sueldo pronto este mes</li>';
-  } else {
-    groups.pronto.slice(0,12).forEach(it => {
-      const grp = it.grupo ? `<span style="font-size:10px;color:var(--c-text-muted);">${it.grupo}</span>` : '';
-      body += `<li><span class="pending-name">${it.name} ${grp}</span><span style="font-size:10px;color:var(--c-text-muted);">${it._grp}</span></li>`;
-    });
-  }
-  body += `</ul></div>`;
-
-  body += `<div class="dash-card" style="border-left:3px solid var(--c-pending,#d4860a);">
-    <h4 style="color:var(--c-pending,#d4860a);">⏳ Pendientes / en proceso <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">${groups.pendiente.length + groups.proceso.length}</span></h4>
-    <ul class="pending-list">`;
-  const wait = [...groups.proceso, ...groups.pendiente];
-  if (wait.length === 0) {
-    body += '<li style="color:var(--c-green);padding:14px 0;">✓ Todos avanzados</li>';
-  } else {
-    wait.slice(0,12).forEach(it => {
-      const stinfo = getSueldoStateInfo(it.status||'pendiente');
-      const grp = it.grupo ? `<span style="font-size:10px;color:var(--c-text-muted);">${it.grupo}</span>` : '';
-      body += `<li><span class="pending-name">${it.name} ${grp}</span><span class="tag-pill" style="background:${stinfo.bg};color:${stinfo.color};">${stinfo.label}</span></li>`;
-    });
-  }
-  body += `</ul></div></div>`;
-
-  if (groups.enviado.length > 0 || groups.finalizado.length > 0) {
-    body += `<div class="dash-card" style="border-left:3px solid var(--c-blue,#1a4a7a);margin-top:16px;">
-      <h4 style="color:var(--c-blue,#1a4a7a);">✈ Enviados / finalizados <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">${groups.enviado.length + groups.finalizado.length}</span></h4>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">`;
-    [...groups.enviado, ...groups.finalizado].forEach(it => {
-      const stinfo = getSueldoStateInfo(it.status||'enviado');
-      body += `<span class="tag-pill" style="background:${stinfo.bg};color:${stinfo.color};font-size:11px;padding:4px 10px;">${stinfo.icon} ${it.name}${sueldoSentChip(it)}</span>`;
-    });
-    body += `</div></div>`;
-  }
-
-  return {
-    id: 'sueldos_dashboard',
-    icon: '💼',
-    title: 'Sueldos — Vista operativa',
-    count: null,
-    body
-  };
+  const groups = {}; SLD_ESTADOS.forEach(s => groups[s.key] = []);
+  items.forEach(it => groups[sldEstado(it.r, it.sub)].push(it));
+  const esc = bbEscape;
+  let body = '<div class="dash-sld-per">Período: <strong>' + formatYearMonth(ym) + '</strong> · <a onclick="switchTab(\'sueldos\')">Ir a Sueldos →</a></div>';
+  body += '<div class="stats-bar sld-stats" style="margin-bottom:16px;">' + SLD_ESTADOS.map(s =>
+    '<div class="stat-card sld-st-' + s.key + '" onclick="userPrefs.sldFiltroEstado=\'' + s.key + '\';switchTab(\'sueldos\')"><div class="stat-num">' + groups[s.key].length + '</div><div class="stat-label">' + s.label + '</div></div>').join('') + '</div>';
+  const lista = (arr, vacio, extra) => '<ul class="pending-list">' + (arr.length ? arr.slice(0, 12).map(it =>
+      '<li><span class="pending-name">' + esc(it.r.name) + (it.r.grupo ? ' <span class="dash-sld-g">' + esc(it.r.grupo) + '</span>' : '') + '</span>' + extra(it) + '</li>').join('')
+      + (arr.length > 12 ? '<li class="dash-sld-mas">y ' + (arr.length - 12) + ' más…</li>' : '')
+    : '<li class="dash-sld-vacio">' + vacio + '</li>') + '</ul>';
+  body += '<div class="dashboard-grid">';
+  body += '<div class="dash-card dash-sld-listo"><h4>📤 Listos sin enviar <span>' + groups.listo.length + '</span></h4>'
+    + lista(groups.listo, 'Nada esperando para enviar', it => { const f = sldFaltaEnviar(it.r); const env = sldEnvia(it.r);
+        return '<span class="dash-sld-d' + (f && f.dias !== null && f.dias >= SLD_DIAS_ALERTA ? ' rojo' : '') + '">' + (env ? sldIni(env) + ' ' : '<i>sin asignar</i> ')
+          + (f && f.dias !== null ? (f.dias === 0 ? 'hoy' : f.dias + (f.dias === 1 ? ' día' : ' días')) : '') + '</span>'; }) + '</div>';
+  body += '<div class="dash-card dash-sld-liq"><h4>⏳ Por liquidar <span>' + groups.liquidar.length + '</span></h4>'
+    + lista(groups.liquidar, '✓ Todo liquidado', it => '<span class="dash-sld-d">' + it.grp + '</span>') + '</div>';
+  body += '</div>';
+  const env = groups.enviado.concat(groups.cerrado);
+  if (env.length) body += '<div class="dash-card dash-sld-env"><h4>✈ Enviados y cerrados <span>' + env.length + '</span></h4><div class="dash-sld-chips">'
+    + env.map(it => { const st = sldEstado(it.r, it.sub); return '<span class="sld-est sld-est-' + st + '">' + esc(it.r.name) + '</span>'; }).join('') + '</div></div>';
+  return { id: 'sueldos_dashboard', icon: '💼', title: 'Sueldos — Vista operativa', count: null, body };
 }
 
 // ============ NOTAS RAPIDAS EN DASHBOARD ============
@@ -2557,100 +2511,6 @@ function buildTabOperationalSection(tab, activeCol) {
     count: null,
     body
   };
-}
-
-function renderSueldosDashboardSection() {
-  if (!state.sueldos) return '';
-  const ym = getCurrentSueldosMonth();
-  ensureSueldosMonth(ym);
-  const [y, m] = ym.split('-');
-  const monthLabel = MONTHS[parseInt(m)-1] + ' ' + y;
-  const monthData = state.sueldos[ym] || { sueldos:[], sd:[], reliq:[] };
-  const allItems = [
-    ...(monthData.sueldos||[]).map(r => ({...r, _grp:'Sueldos'})),
-    ...(monthData.sd||[]).map(r => ({...r, _grp:'Serv. Doméstico'}))
-  ];
-
-  // Group by status
-  const groups = {};
-  SUELDO_STATES.forEach(s => groups[s.key] = []);
-  allItems.forEach(it => {
-    const st = it.status || 'pendiente';
-    if (groups[st]) groups[st].push(it);
-  });
-
-  // Counters
-  const counts = {};
-  SUELDO_STATES.forEach(s => counts[s.key] = groups[s.key].length);
-
-  let html = `<div style="margin-top:32px;">
-    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-      <div>
-        <div class="section-title" style="font-size:18px;">💼 Sueldos <span style="color:var(--c-text-muted);font-size:14px;font-family:var(--font-body);font-weight:400;">— Vista operativa rápida</span></div>
-        <div style="font-size:11px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;">Período: <strong style="color:var(--c-accent)">${monthLabel}</strong></div>
-      </div>
-      <button class="btn btn-outline" onclick="switchTab('sueldos')">Ir a Sueldos →</button>
-    </div>
-    <div class="stats-bar">`;
-  SUELDO_STATES.forEach(s => {
-    html += `<div class="stat-card" style="border-left-color:${s.color};cursor:pointer;" onclick="switchTab('sueldos')">
-      <div class="stat-num" style="color:${s.color}">${counts[s.key]}</div>
-      <div class="stat-label">${s.label}</div>
-    </div>`;
-  });
-  html += `</div>`;
-
-  // Two highlighted blocks: PRONTOS to send, and ENVIADOS recently
-  html += `<div class="dashboard-grid">`;
-
-  // Block 1: Prontos para enviar (workflow handoff)
-  html += `<div class="dash-card" style="border-left:3px solid var(--c-green,#2e7d52);">
-    <h4 style="color:var(--c-green,#2e7d52);">✅ Sueldos PRONTOS para enviar <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">${groups.pronto.length} ${groups.pronto.length===1?'item':'items'}</span></h4>
-    <ul class="pending-list">`;
-  if (groups.pronto.length === 0) {
-    html += '<li style="color:var(--c-text-muted);padding:14px 0;font-style:italic;">Ningún sueldo pronto todavía este mes</li>';
-  } else {
-    groups.pronto.slice(0,12).forEach(it => {
-      const grp = it.grupo ? `<span style="font-size:10px;color:var(--c-text-muted);">${it.grupo}</span>` : '';
-      const tag = `<span style="font-size:10px;color:var(--c-text-muted);">${it._grp}</span>`;
-      html += `<li><span class="pending-name">${it.name} ${grp}</span>${tag}</li>`;
-    });
-    if (groups.pronto.length > 12) html += `<li style="color:var(--c-text-muted);padding-top:8px;font-style:italic;">+ ${groups.pronto.length-12} más...</li>`;
-  }
-  html += `</ul></div>`;
-
-  // Block 2: En proceso + Pendientes
-  html += `<div class="dash-card" style="border-left:3px solid var(--c-pending,#d4860a);">
-    <h4 style="color:var(--c-pending,#d4860a);">⏳ Pendientes / en proceso <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">${groups.pendiente.length + groups.proceso.length} items</span></h4>
-    <ul class="pending-list">`;
-  const wait = [...groups.proceso, ...groups.pendiente];
-  if (wait.length === 0) {
-    html += '<li style="color:var(--c-green);padding:14px 0;">✓ Todos avanzados</li>';
-  } else {
-    wait.slice(0,12).forEach(it => {
-      const stinfo = getSueldoStateInfo(it.status||'pendiente');
-      const grp = it.grupo ? `<span style="font-size:10px;color:var(--c-text-muted);">${it.grupo}</span>` : '';
-      html += `<li><span class="pending-name">${it.name} ${grp}</span><span class="tag-pill" style="background:${stinfo.bg};color:${stinfo.color};">${stinfo.label}</span></li>`;
-    });
-    if (wait.length > 12) html += `<li style="color:var(--c-text-muted);padding-top:8px;font-style:italic;">+ ${wait.length-12} más...</li>`;
-  }
-  html += `</ul></div>`;
-
-  html += `</div>`;
-
-  // Recently sent block (full width)
-  if (groups.enviado.length > 0 || groups.finalizado.length > 0) {
-    html += `<div class="dash-card" style="border-left:3px solid var(--c-blue,#1a4a7a);margin-top:16px;">
-      <h4 style="color:var(--c-blue,#1a4a7a);">✈ Enviados / finalizados este mes <span style="float:right;color:var(--c-text-muted);font-weight:400;font-size:12px;">${groups.enviado.length + groups.finalizado.length} items</span></h4>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">`;
-    [...groups.enviado, ...groups.finalizado].forEach(it => {
-      const stinfo = getSueldoStateInfo(it.status||'enviado');
-      html += `<span class="tag-pill" style="background:${stinfo.bg};color:${stinfo.color};font-size:11px;padding:4px 10px;">${stinfo.icon} ${it.name}${sueldoSentChip(it)}</span>`;
-    });
-    html += `</div></div>`;
-  }
-
-  return html;
 }
 
 function setDashMonth(val) {
@@ -7819,421 +7679,6 @@ function normalizeAssignees(ev) {
   return [];
 }
 
-// ============ SUELDOS ============
-// Sueldos workflow states (status)
-const SUELDO_STATES = [
-  { key:'pendiente', label:'Pendiente', icon:'○', color:'#888', bg:'#f0eee8' },
-  { key:'proceso',   label:'En proceso', icon:'⏳', color:'#d4860a', bg:'#fef8e8' },
-  { key:'pronto',    label:'Pronto',     icon:'✓', color:'#2e7d52', bg:'#e8f5ee' },
-  { key:'enviado',   label:'Enviado',    icon:'✈', color:'#1a4a7a', bg:'#e8f0f8' },
-  { key:'finalizado',label:'Finalizado', icon:'★', color:'#5b2c6f', bg:'#ebdef0' }
-];
-
-function getSueldoStateInfo(key) {
-  return SUELDO_STATES.find(s => s.key === key) || SUELDO_STATES[0];
-}
-
-function getCurrentSueldosMonth() {
-  if (userPrefs.sueldosMonth) return userPrefs.sueldosMonth;
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-}
-
-function ensureSueldosMonth(ym) {
-  if (!state.sueldos) state.sueldos = {};
-  if (!state.sueldos[ym]) {
-    state.sueldos[ym] = { sueldos: [], sd: [], reliq: [] };
-    saveState();
-  }
-}
-
-function setSueldosMonth(ym) {
-  userPrefs.sueldosMonth = ym;
-  saveUserPrefs();
-  ensureSueldosMonth(ym);
-  renderContent();
-}
-
-function setSueldosSubtab(name) {
-  userPrefs.sueldosSubtab = name;
-  saveUserPrefs();
-  renderContent();
-}
-
-function renderSueldos() {
-  const ym = getCurrentSueldosMonth();
-  ensureSueldosMonth(ym);
-  const monthData = state.sueldos[ym];
-  const subtab = userPrefs.sueldosSubtab || 'sueldos';
-  const search = (userPrefs.sueldosSearch || '').toLowerCase();
-  const cols = state.sueldosColumns || [];
-
-  const [y, m] = ym.split('-');
-  const monthLabel = MONTHS[parseInt(m)-1] + ' ' + y;
-
-  // Build month/year options
-  const yearOpts = [];
-  for (let yy = 2024; yy <= 2030; yy++) yearOpts.push(yy);
-  const monthOpts = MONTHS.map((mn,i) => ({ val: String(i+1).padStart(2,'0'), label: mn }));
-  const curYear = parseInt(y);
-  const curMonth = m;
-
-  let html = `
-    <div class="section-header">
-      <div>
-        <div class="section-title">💼 Sueldos <span>${monthLabel}</span></div>
-        <div style="font-size:12px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px;">Coordinación mensual de trabajos</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <select id="sueldos-month-sel" style="padding:8px 12px;border:1px solid var(--c-border);background:var(--c-card);border-radius:2px;font-family:inherit;font-size:13px;font-weight:700;color:var(--c-text);cursor:pointer;">
-          ${monthOpts.map(o => `<option value="${o.val}"${o.val===curMonth?' selected':''}>${o.label}</option>`).join('')}
-        </select>
-        <select id="sueldos-year-sel" style="padding:8px 12px;border:1px solid var(--c-border);background:var(--c-card);border-radius:2px;font-family:inherit;font-size:13px;font-weight:700;color:var(--c-text);cursor:pointer;">
-          ${yearOpts.map(yy => `<option value="${yy}"${yy===curYear?' selected':''}>${yy}</option>`).join('')}
-        </select>
-        <button class="btn btn-outline" onclick="copySueldosFromPreviousMonth()" title="Copiar listado y observaciones del mes anterior"><span style="font-size:14px;">⎘</span> Copiar mes anterior</button>
-      </div>
-    </div>
-
-    <div class="sueldos-subtabs">
-      <button class="sueldos-subtab${subtab==='sueldos'?' active':''}" onclick="setSueldosSubtab('sueldos')">Sueldos <span class="sueldos-subtab-count">${monthData.sueldos.length}</span></button>
-      <button class="sueldos-subtab${subtab==='sd'?' active':''}" onclick="setSueldosSubtab('sd')">Servicios Domésticos <span class="sueldos-subtab-count">${monthData.sd.length}</span></button>
-      <button class="sueldos-subtab${subtab==='reliq'?' active':''}" onclick="setSueldosSubtab('reliq')">Reliquidaciones <span class="sueldos-subtab-count">${(monthData.reliq||[]).length}</span></button>
-    </div>
-
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
-      <input id="sueldos-search-input" placeholder="Buscar empresa..." value="${search}" style="flex:1;min-width:200px;max-width:380px;padding:8px 12px;border:1px solid var(--c-border);border-radius:4px;font-family:inherit;font-size:13px;background:var(--c-card);">
-      <div class="sueldos-legend">
-        ${SUELDO_STATES.map(s => `<span class="sueldos-legend-item"><span class="sueldos-status-dot" style="background:${s.color}"></span>${s.label}</span>`).join('')}
-      </div>
-      <button class="btn btn-gold" onclick="openAddSueldoRow()">+ Agregar fila</button>
-    </div>`;
-
-  // Stats bar — count items per state across active subtab
-  const items = monthData[subtab] || [];
-  const stateCounts = {};
-  SUELDO_STATES.forEach(s => stateCounts[s.key] = 0);
-  items.forEach(it => { const st = it.status || 'pendiente'; if (stateCounts[st] !== undefined) stateCounts[st]++; });
-  html += `<div class="stats-bar">`;
-  SUELDO_STATES.forEach(s => {
-    html += `<div class="stat-card" style="border-left-color:${s.color};cursor:pointer;" onclick="filterSueldosByState('${s.key}')">
-      <div class="stat-num">${stateCounts[s.key]}</div>
-      <div class="stat-label">${s.label}</div>
-    </div>`;
-  });
-  html += `</div>`;
-
-  // Table
-  const filteredItems = items
-    .map((it, idx) => ({...it, _idx: idx}))
-    .filter(it => !search || (it.name||'').toLowerCase().includes(search) || (it.observaciones||'').toLowerCase().includes(search) || (it.grupo||'').toLowerCase().includes(search));
-
-  html += `<div class="table-wrap"><table class="sueldos-table"><thead><tr>
-    <th style="text-align:left;width:180px;">Empresa</th>
-    <th style="width:140px;">Estado</th>`;
-  if (subtab === 'sueldos' || subtab === 'sd') {
-    cols.forEach((c,ci) => {
-      if (subtab === 'sd' && !['prontos','avisadoEnviado','fosmetal','bps'].includes(c.key)) return;
-      html += `<th style="width:90px;"><span title="${c.label}">${c.label}</span></th>`;
-    });
-  } else {
-    // reliq: simpler columns
-    html += `<th style="width:120px;">Empleado/Concepto</th>`;
-    html += `<th style="width:120px;">Importe</th>`;
-  }
-  html += `<th style="width:120px;">Grupo</th>
-    <th style="text-align:left;min-width:200px;">Observaciones</th>
-    <th style="width:50px;"></th>
-  </tr></thead><tbody>`;
-
-  if (filteredItems.length === 0) {
-    const colspan = 5 + (subtab === 'sueldos' ? cols.length : (subtab === 'sd' ? 4 : 2));
-    html += `<tr><td colspan="${colspan}" style="text-align:center;padding:32px;color:var(--c-text-muted);">No hay registros. ${search ? 'Probá con otra búsqueda o' : 'Hacé clic en'} <strong>+ Agregar fila</strong>.</td></tr>`;
-  } else {
-    filteredItems.forEach(item => {
-      const stinfo = getSueldoStateInfo(item.status || 'pendiente');
-      html += `<tr data-row-idx="${item._idx}">
-        <td><strong>${item.name||'—'}</strong></td>
-        <td>
-          <select class="sueldos-status-select" onchange="changeSueldoStatus('${subtab}',${item._idx},this.value)" style="background:${stinfo.bg};color:${stinfo.color};">
-            ${SUELDO_STATES.map(s => `<option value="${s.key}"${s.key===(item.status||'pendiente')?' selected':''}>${s.icon} ${s.label}</option>`).join('')}
-          </select>
-        </td>`;
-      if (subtab === 'sueldos' || subtab === 'sd') {
-        cols.forEach(c => {
-          if (subtab === 'sd' && !['prontos','avisadoEnviado','fosmetal','bps'].includes(c.key)) return;
-          const checked = item[c.key] ? 'checked' : '';
-          const fl = (item.flagLabels || {})[c.key];
-          const flText = fl ? (fl.t || (fl.d ? fmtDate(fl.d) : '')) : '';
-          const flTextSafe = flText.replace(/</g,'&lt;').replace(/"/g,'&quot;');
-          const flTitle = fl && fl.t && fl.d ? (flTextSafe + ' — ' + fmtDate(fl.d)) : flTextSafe;
-          const chip = flText ? `<span class="sueldos-flag-chip" title="${flTitle} · Clic para editar" onclick="openSueldoFlagModal('${subtab}',${item._idx},'${c.key}')">${flTextSafe}</span>` : '';
-          html += `<td style="text-align:center;"><div class="sueldos-flag-cell"><label class="sueldos-check-wrap"><input type="checkbox" class="sueldos-check" ${checked} onchange="toggleSueldoFlag('${subtab}',${item._idx},'${c.key}',this.checked)"><span class="sueldos-check-box"></span></label>${chip}<span class="sueldos-flag-edit" title="Agregar etiqueta o fecha en esta celda (como en Empresas)" onclick="openSueldoFlagModal('${subtab}',${item._idx},'${c.key}')">✎</span></div></td>`;
-        });
-      } else {
-        html += `<td><input type="text" value="${(item.concepto||'').replace(/"/g,'&quot;')}" onblur="updateReliqField(${item._idx},'concepto',this.value)" style="width:100%;padding:5px 8px;border:1px solid var(--c-border);border-radius:3px;font-size:12px;"></td>`;
-        html += `<td><input type="text" value="${(item.importe||'').replace(/"/g,'&quot;')}" onblur="updateReliqField(${item._idx},'importe',this.value)" style="width:100%;padding:5px 8px;border:1px solid var(--c-border);border-radius:3px;font-size:12px;font-family:monospace;"></td>`;
-      }
-      html += `<td><input type="text" value="${(item.grupo||'').replace(/"/g,'&quot;')}" onblur="updateSueldoField('${subtab}',${item._idx},'grupo',this.value)" placeholder="—" style="width:100%;padding:5px 8px;border:1px solid var(--c-border);border-radius:3px;font-size:12px;"></td>`;
-      html += `<td><input type="text" value="${(item.observaciones||'').replace(/"/g,'&quot;')}" onblur="updateSueldoField('${subtab}',${item._idx},'observaciones',this.value)" placeholder="—" style="width:100%;padding:5px 8px;border:1px solid var(--c-border);border-radius:3px;font-size:12px;"></td>`;
-      html += `<td><button class="sueldos-del-btn" onclick="removeSueldoRow('${subtab}',${item._idx})" aria-label="Eliminar fila">✕</button></td>`;
-      html += `</tr>`;
-      // Nota interna row (if any)
-      if (item.notaInterna) {
-        html += `<tr class="sueldos-nota-row"><td colspan="${5 + (subtab==='sueldos'?cols.length:(subtab==='sd'?4:2))}" style="background:#fef9e7;font-size:11px;color:#7d6608;padding:4px 14px;font-style:italic;border-left:3px solid #d4ac0d;">💬 Nota interna: ${item.notaInterna}</td></tr>`;
-      }
-    });
-  }
-
-  html += `</tbody></table></div>`;
-
-  // Note at the bottom
-  html += `<div style="margin-top:16px;font-size:11px;color:var(--c-text-muted);">
-    Tip: cuando un sueldo queda en estado <strong style="color:var(--c-green)">Pronto</strong>, aparece en el Dashboard para que quien envía sepa qué empresas están listas.
-  </div>`;
-
-  return html;
-}
-
-function attachSueldosHandlers() {
-  const m = document.getElementById('sueldos-month-sel');
-  const y = document.getElementById('sueldos-year-sel');
-  const trigger = () => {
-    if (!m || !y) return;
-    setSueldosMonth(y.value + '-' + m.value);
-  };
-  if (m) m.addEventListener('change', trigger);
-  if (y) y.addEventListener('change', trigger);
-  const s = document.getElementById('sueldos-search-input');
-  if (s) {
-    s.addEventListener('input', () => {
-      userPrefs.sueldosSearch = s.value;
-      saveUserPrefs();
-      // Re-render but try to keep focus
-      renderContent();
-      const ns = document.getElementById('sueldos-search-input');
-      if (ns) { ns.focus(); ns.setSelectionRange(ns.value.length, ns.value.length); }
-    });
-  }
-}
-
-function changeSueldoStatus(subtab, rowIdx, newStatus) {
-  const ym = getCurrentSueldosMonth();
-  if (!state.sueldos[ym]) return;
-  const row = state.sueldos[ym][subtab][rowIdx];
-  if (!row) return;
-  row.status = newStatus;
-  // Auto-set flags based on transitions (optional convenience)
-  if (newStatus === 'pronto' && !row.prontos) row.prontos = true;
-  if (newStatus === 'enviado') { row.prontos = true; row.avisadoEnviado = true; autoSetSueldoSentDate(row); }
-  saveState();
-  renderContent();
-}
-
-// Si se marca como enviado y no hay etiqueta/fecha cargada, registrar la fecha de hoy automáticamente
-function autoSetSueldoSentDate(row) {
-  if (!row.flagLabels) row.flagLabels = {};
-  if (!row.flagLabels.avisadoEnviado) {
-    row.flagLabels.avisadoEnviado = { d: new Date().toISOString().slice(0,10), auto: true };
-  }
-}
-
-function toggleSueldoFlag(subtab, rowIdx, flagKey, checked) {
-  const ym = getCurrentSueldosMonth();
-  if (!state.sueldos[ym]) return;
-  const row = state.sueldos[ym][subtab][rowIdx];
-  if (!row) return;
-  row[flagKey] = checked;
-  // Convenience: if user manually checks "Prontos", set status to 'pronto' if it was 'pendiente'
-  if (flagKey === 'prontos' && checked && (!row.status || row.status === 'pendiente')) row.status = 'pronto';
-  if (flagKey === 'avisadoEnviado' && checked && row.status !== 'finalizado') row.status = 'enviado';
-  // Fecha de envío automática al tildar Avisado/Enviado; si se destilda, borrar solo la automática
-  if (flagKey === 'avisadoEnviado') {
-    if (checked) autoSetSueldoSentDate(row);
-    else if (row.flagLabels && row.flagLabels.avisadoEnviado && row.flagLabels.avisadoEnviado.auto && !row.flagLabels.avisadoEnviado.t) {
-      delete row.flagLabels.avisadoEnviado;
-    }
-  }
-  saveState();
-  renderContent();
-}
-
-// ===== Etiqueta/fecha personalizada en celdas de Sueldos (estilo Empresas) =====
-let _sueldoFlagCtx = null;
-function openSueldoFlagModal(subtab, rowIdx, flagKey) {
-  const ym = getCurrentSueldosMonth();
-  const row = state.sueldos[ym] && state.sueldos[ym][subtab] ? state.sueldos[ym][subtab][rowIdx] : null;
-  if (!row) return;
-  _sueldoFlagCtx = { subtab, rowIdx, flagKey };
-  const colDef = (state.sueldosColumns || []).find(c => c.key === flagKey);
-  document.getElementById('sueldo-flag-row-name').textContent = row.name || '—';
-  document.getElementById('sueldo-flag-col-name').textContent = (colDef ? colDef.label : flagKey) + ' · ' + ym;
-  const fl = (row.flagLabels || {})[flagKey] || {};
-  document.getElementById('sueldo-flag-label').value = fl.t || '';
-  document.getElementById('sueldo-flag-date').value = fl.d || '';
-  document.getElementById('modal-sueldo-flag').classList.add('open');
-  setTimeout(() => document.getElementById('sueldo-flag-label').focus(), 100);
-}
-
-function saveSueldoFlagLabel() {
-  if (!_sueldoFlagCtx) return;
-  const { subtab, rowIdx, flagKey } = _sueldoFlagCtx;
-  const ym = getCurrentSueldosMonth();
-  const row = state.sueldos[ym] && state.sueldos[ym][subtab] ? state.sueldos[ym][subtab][rowIdx] : null;
-  if (!row) return;
-  const t = document.getElementById('sueldo-flag-label').value.trim();
-  const d = document.getElementById('sueldo-flag-date').value;
-  if (!row.flagLabels) row.flagLabels = {};
-  if (!t && !d) {
-    delete row.flagLabels[flagKey];
-  } else {
-    row.flagLabels[flagKey] = {};
-    if (t) row.flagLabels[flagKey].t = t;
-    if (d) row.flagLabels[flagKey].d = d;
-  }
-  saveState();
-  closeModal('modal-sueldo-flag');
-  _sueldoFlagCtx = null;
-  renderContent();
-}
-
-function clearSueldoFlagLabel() {
-  if (!_sueldoFlagCtx) return;
-  const { subtab, rowIdx, flagKey } = _sueldoFlagCtx;
-  const ym = getCurrentSueldosMonth();
-  const row = state.sueldos[ym] && state.sueldos[ym][subtab] ? state.sueldos[ym][subtab][rowIdx] : null;
-  if (row && row.flagLabels) delete row.flagLabels[flagKey];
-  saveState();
-  closeModal('modal-sueldo-flag');
-  _sueldoFlagCtx = null;
-  renderContent();
-}
-
-// Chip con la etiqueta/fecha de envío (celda Avisado/Enviado) — estilo Empresas, para el Dashboard
-function sueldoSentChip(it) {
-  const fl = (it.flagLabels || {}).avisadoEnviado;
-  if (!fl) return '';
-  const raw = fl.t || (fl.d ? fmtDate(fl.d) : '');
-  if (!raw) return '';
-  const txt = raw.replace(/</g,'&lt;').replace(/"/g,'&quot;');
-  const title = fl.t && fl.d ? (txt + ' — ' + fmtDate(fl.d)) : txt;
-  return `<span class="cell-date-only" style="font-size:10px;padding:2px 7px;min-width:0;margin-left:4px;vertical-align:middle;" title="Enviado: ${title}">📤 ${txt}</span>`;
-}
-
-function updateSueldoField(subtab, rowIdx, field, value) {
-  const ym = getCurrentSueldosMonth();
-  if (!state.sueldos[ym]) return;
-  const row = state.sueldos[ym][subtab][rowIdx];
-  if (!row) return;
-  if (row[field] === value) return;
-  const oldValue = row[field];
-  row[field] = value;
-  saveState();
-  // 🔔 Trigger: si se modifica el campo "observaciones" y hay contenido nuevo,
-  // notificar a Lorena y crearle una tarea automática en Mi Dashboard
-  if (field === 'observaciones' && value && value.trim() && value.trim() !== (oldValue||'').trim()) {
-    triggerSueldoObservacionNotify(row, value.trim(), subtab);
-  }
-}
-
-// Notificar a Lorena cuando se carga una observación en Sueldos
-function triggerSueldoObservacionNotify(sueldoRow, observacion, subtab) {
-  const targetUser = 'Lorena';
-  // Verificar que la usuaria destino exista
-  if (!findUserByName(targetUser)) return;
-  const me = currentUser();
-  // No auto-notificar a uno mismo
-  if (me && me.name === targetUser) return;
-  const empresaName = sueldoRow.name || '(sin nombre)';
-  const ym = getCurrentSueldosMonth();
-  const monthLabel = formatYearMonth(ym);
-  const title = `📋 Observación en Sueldos`;
-  const body = `${me ? me.name + ' agregó' : 'Se agregó'} una observación en "${empresaName}" (${monthLabel}): ${observacion.slice(0, 80)}${observacion.length > 80 ? '…' : ''}`;
-  notifyUserByName(targetUser, 'cell_comment', title, body, { type:'tab', tabId:'sueldos' });
-  // Crear tarea automática
-  addTaskToUser(targetUser, `📋 Revisar observación en Sueldos · ${empresaName} (${monthLabel}): ${observacion.slice(0, 60)}${observacion.length > 60 ? '…' : ''}`, {
-    origin: 'sueldos-observacion',
-    empresa: empresaName,
-    ym: ym,
-    subtab: subtab
-  });
-}
-
-// Formatear "2026-05" como "Mayo 2026"
-function formatYearMonth(ym) {
-  if (!ym || typeof ym !== 'string') return ym || '';
-  const [y, m] = ym.split('-');
-  const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const idx = parseInt(m, 10) - 1;
-  return (months[idx] || m) + ' ' + y;
-}
-
-function updateReliqField(rowIdx, field, value) {
-  updateSueldoField('reliq', rowIdx, field, value);
-}
-
-function openAddSueldoRow() {
-  const subtab = userPrefs.sueldosSubtab || 'sueldos';
-  const labelMap = { sueldos: 'Empresa', sd: 'Empleado/Familia', reliq: 'Empresa o concepto' };
-  const name = prompt(`Nombre de ${labelMap[subtab]||'fila'}:`);
-  if (!name || !name.trim()) return;
-  const ym = getCurrentSueldosMonth();
-  ensureSueldosMonth(ym);
-  if (!state.sueldos[ym][subtab]) state.sueldos[ym][subtab] = [];
-  const newRow = { name: name.trim(), status: 'pendiente' };
-  if (subtab === 'reliq') { newRow.concepto = ''; newRow.importe = ''; }
-  state.sueldos[ym][subtab].push(newRow);
-  saveState();
-  renderContent();
-  toast('Agregado: ' + name);
-}
-
-function removeSueldoRow(subtab, rowIdx) {
-  const ym = getCurrentSueldosMonth();
-  if (!state.sueldos[ym] || !state.sueldos[ym][subtab]) return;
-  const row = state.sueldos[ym][subtab][rowIdx];
-  if (!row) return;
-  if (!confirm('¿Eliminar "' + row.name + '"?')) return;
-  state.sueldos[ym][subtab].splice(rowIdx, 1);
-  saveState();
-  renderContent();
-}
-
-function copySueldosFromPreviousMonth() {
-  const ym = getCurrentSueldosMonth();
-  const [y, m] = ym.split('-').map(Number);
-  let prevY = y, prevM = m - 1;
-  if (prevM === 0) { prevM = 12; prevY--; }
-  const prevYm = prevY + '-' + String(prevM).padStart(2,'0');
-  if (!state.sueldos[prevYm]) {
-    toast('No hay datos del mes anterior (' + prevYm + ')');
-    return;
-  }
-  if (!confirm(`Esto copiará todas las filas y observaciones de ${prevYm} a ${ym}.\nLos estados volverán a "Pendiente", los checkboxes se desmarcarán y las etiquetas de celda se borrarán.\n¿Continuar?`)) return;
-  const src = state.sueldos[prevYm];
-  const dst = { sueldos: [], sd: [], reliq: [] };
-  ['sueldos','sd','reliq'].forEach(k => {
-    (src[k]||[]).forEach(r => {
-      const copy = JSON.parse(JSON.stringify(r));
-      // Reset flags
-      copy.status = 'pendiente';
-      ['prontos','avisadoEnviado','fosmetal','bps','contabilizado','controlFacturaBps','auditoria'].forEach(f => copy[f] = false);
-      delete copy.flagLabels;
-      dst[k].push(copy);
-    });
-  });
-  state.sueldos[ym] = dst;
-  saveState();
-  renderContent();
-  toast('Datos copiados desde ' + prevYm);
-}
-
-function filterSueldosByState(stateKey) {
-  // Reuses the search box — just sets search to nothing and renderContent.
-  // For now, just visual feedback via toast.
-  toast('Filtro por estado próximamente. Usá el buscador.');
-}
-
 // ============ CLIENTES ============
 
 function _loadScriptOnce(src) {
@@ -8346,63 +7791,53 @@ function _xlsxTablaSheet(wb, sheetName, tabId, titleName){
 
 // ---------- SUELDOS (Sueldos / Servicios Domésticos / Reliquidaciones) ----------
 function _chk(v){ return v ? '✓' : ''; }
-function _sueldoStatusColor(s){
-  s = (s||'').toLowerCase();
-  if (s==='finalizado') return 'FFE7DEF2';
+// Oct. 2026: el estado se calcula (sldEstado) y cada tilde dice quién y cuándo (js/modules/sueldos.js).
+function _sueldoStatusColor(label){
+  var s = String(label||'').toLowerCase();
+  if (s==='cerrado') return 'FFDCF0E1';
   if (s==='enviado') return 'FFD9E8F5';
-  if (s==='pronto') return 'FFDCF0E1';
-  if (s==='en proceso' || s==='enproceso') return 'FFFCF3D6';
-  if (s==='pendiente') return 'FFECEEF0';
+  if (s==='listo sin enviar') return 'FFFCF3D6';
+  if (s==='por liquidar') return 'FFECEEF0';
   return null;
 }
 function _sortedSueldoMonths(){ return Object.keys(state.sueldos||{}).sort(); }
+// Una casilla: «No lleva», «L 05/09» (quién y cuándo), «✓» si es un tilde viejo sin fecha, o vacío.
+function _sldXlsxCelda(r, k, lleva){
+  if (!lleva) return 'No lleva';
+  var m = sldMarca(r, k); if (!m) return '';
+  return (m.u ? sldNombre(m.u).charAt(0) + ' ' : '— ') + (m.t ? sldFechaCorta(m.t) : '✓');
+}
 function _xlsxSueldosSheets(wb){
   var meses = _sortedSueldoMonths();
-  // Sueldos + Servicios Domésticos comparten estructura
-  var colsFull = [
-    ['status','Estado'],['prontos','Prontos'],['avisadoEnviado','Avisado/Enviado'],['fosmetal','Fosmetal'],
-    ['bps','BPS'],['contabilizado','Contabilizado'],['controlFacturaBps','Control Fact. BPS'],
-    ['auditoria','Auditoría'],['grupo','Grupo'],['observaciones','Observaciones'],['notaInterna','Nota interna']
-  ];
-  function buildFull(sheetName, subKey, titleName){
-    var headers = ['Mes','Empresa'].concat(colsFull.map(function(x){ return x[1]; }));
-    var widths  = [10,30, 14,10,16,10,8,14,16,12,14,26,30];
+  function hoja(sheetName, sub, titleName){
+    var reliq = sub === 'reliq', ctl = sub === 'sueldos';
+    var headers = ['Mes','Empresa'].concat(reliq ? ['Concepto','Importe'] : [])
+      .concat(['Estado','Envía','Recibos liquidados','Recibos enviados','Factura BPS emitida','Factura BPS enviada'])
+      .concat(ctl ? SLD_CONTROLES.map(function(c){ return c.label; }) : []).concat(['Grupo','Observaciones']);
+    var widths = headers.map(function(h){ return h==='Empresa' ? 30 : h==='Observaciones' ? 40 : h==='Mes' ? 10 : 14; });
     var rows = [];
     meses.forEach(function(mes){
-      var lst = (state.sueldos[mes] && state.sueldos[mes][subKey]) || [];
-      lst.forEach(function(r){
+      sldFilas(mes, sub).forEach(function(r){
+        if (!r._v2) return;
         var line = [mes, r.name || ''];
-        colsFull.forEach(function(x){
-          var k = x[0], v = r[k];
-          if (k==='status') line.push(v || '');
-          else if (typeof v === 'boolean') line.push(_chk(v));
-          else line.push(v==null ? '' : String(v));
-        });
+        if (reliq) line.push(r.concepto || '', r.importe || '');
+        line.push(sldEstadoInfo(sldEstado(r, sub)).label, r.envia ? sldNombre(r.envia) : 'Sin asignar');
+        ['recibos','bps'].forEach(function(g){ var G = SLD_GRUPOS[g], ll = sldLleva(r, g); line.push(_sldXlsxCelda(r, G.hecho, ll), _sldXlsxCelda(r, G.envio, ll)); });
+        if (ctl) SLD_CONTROLES.forEach(function(c){ line.push(_sldXlsxCelda(r, c.key, sldLleva(r, c.key))); });
+        line.push(r.grupo || '', r.observaciones || '');
         rows.push(line);
       });
     });
     if (!rows.length) return;
+    var estCol = reliq ? 4 : 2;
     buildStyledSheet(wb, sheetName, 'W. Machado — ' + titleName, headers, widths, rows, {
-      wrapCols: [12,13],
-      freezeCols: 2,
-      cellFill: function(r,c,v){ if (c===2) return _sueldoStatusColor(v); return null; }
+      wrapCols: [headers.length - 1], freezeCols: 2,
+      cellFill: function(r,c,v){ if (c===estCol) return _sueldoStatusColor(v); return null; }
     });
   }
-  buildFull('Sueldos', 'sueldos', 'Sueldos (todos los meses)');
-  buildFull('Serv. Domésticos', 'sd', 'Servicios Domésticos');
-  // Reliquidaciones (estructura distinta)
-  var relRows = [];
-  meses.forEach(function(mes){
-    var lst = (state.sueldos[mes] && state.sueldos[mes].reliq) || [];
-    lst.forEach(function(r){ relRows.push([mes, r.name||'', r.status||'', r.concepto||'', r.importe||'', r.observaciones||'']); });
-  });
-  if (relRows.length){
-    buildStyledSheet(wb, 'Reliquidaciones', 'W. Machado — Reliquidaciones',
-      ['Mes','Empresa','Estado','Concepto','Importe','Observaciones'], [10,30,14,26,14,30], relRows, {
-      wrapCols: [3,5], freezeCols: 2,
-      cellFill: function(r,c,v){ if (c===2) return _sueldoStatusColor(v); return null; }
-    });
-  }
+  hoja('Sueldos', 'sueldos', 'Sueldos (todos los meses)');
+  hoja('Serv. Domésticos', 'sd', 'Servicios Domésticos');
+  hoja('Reliquidaciones', 'reliq', 'Reliquidaciones');
 }
 
 function _xlsxDownload(wb, filename){

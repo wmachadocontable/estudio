@@ -1,0 +1,185 @@
+/*
+ * SUELDOS (rediseño oct. 2026): tabla con quién y cuándo, bandeja, Controles.
+ * Colores: solo variables de :root (app.css). Los de cada usuaria salen de su perfil.
+ */
+:root{
+  --sld-amarillo: #fff7dc;      /* fila con algo hecho que falta enviar */
+  --sld-amarillo-borde: #e9b949;
+  --sld-rojo: #fdecea;          /* ...y ya pasaron SLD_DIAS_ALERTA días */
+  --sld-rojo-borde: var(--c-red);
+}
+
+.sld-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sld-sel{padding:6px 10px;border:1px solid var(--c-border);background:var(--c-card);border-radius:3px;font-family:inherit;font-size:13px;font-weight:700;color:var(--c-text);cursor:pointer}
+.sld-barra{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px}
+.sld-buscar{flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--c-border);border-radius:3px;font-family:inherit;font-size:13px;background:var(--c-card)}
+.sld-buscar:focus{outline:none;border-color:var(--c-accent-dark)}
+
+/* ===== Número rojo en la pestaña ===== */
+.nav-badge{display:inline-block;min-width:18px;margin-left:6px;padding:1px 6px;border-radius:9px;background:var(--c-red);color:#fff;
+  font-size:10px;font-weight:700;letter-spacing:0;line-height:16px;text-align:center;vertical-align:1px}
+.sld-cnt-alerta{background:var(--c-red-light)!important;color:var(--c-red)!important}
+
+/* ===== Indicadores por estado (se tocan para filtrar) ===== */
+.sld-stats .stat-card{cursor:pointer;transition:box-shadow .15s,transform .15s}
+.sld-stats .stat-card:hover{box-shadow:0 2px 10px rgba(16,32,48,.08)}
+.sld-stats .stat-card.sld-st-on{box-shadow:0 0 0 2px var(--c-header) inset}
+.stat-card.sld-st-liquidar{border-left-color:var(--c-text-muted)}
+.stat-card.sld-st-listo{border-left-color:var(--sld-amarillo-borde)}
+.stat-card.sld-st-enviado{border-left-color:var(--c-blue)}
+.stat-card.sld-st-cerrado{border-left-color:var(--c-green)}
+.sld-filtro-on{font-size:12px;color:var(--c-text-muted);margin:-8px 0 12px}
+.sld-filtro-on a{color:var(--c-blue);cursor:pointer;text-decoration:underline}
+
+/* ===== Estado ===== */
+.sld-est{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:3px 10px;border-radius:10px;white-space:nowrap}
+.sld-est-liquidar{background:var(--c-bg-alt);color:var(--c-text-muted);border:1px solid var(--c-border)}
+.sld-est-listo{background:var(--c-pending-light);color:var(--c-pending)}
+.sld-est-enviado{background:var(--c-blue-light);color:var(--c-blue)}
+.sld-est-cerrado{background:var(--c-green-light);color:var(--c-green)}
+.sld-falta{font-size:10.5px;font-weight:700;color:#8a6200;margin-top:4px;white-space:nowrap}
+.sld-falta.rojo{color:var(--c-red)}
+
+/* ===== Tabla ===== */
+.sld-table{font-size:12.5px}
+.sld-table th,.sld-table td{padding:7px 9px;vertical-align:middle}
+.sld-table thead th{text-align:center}
+.sld-table thead th.sld-emp,.sld-table thead th.sld-obs-th{text-align:left}
+.sld-table th.sld-grupo-th{border-bottom:1px solid rgba(255,255,255,.18)}
+.sld-table tr.sld-sub-th th{font-size:10px;padding-top:5px;padding-bottom:6px;opacity:.85}
+.sld-table td.sld-emp{min-width:170px}
+.sld-fila td{transition:background .15s}
+/* El amarillo queda SOLO para «falta enviar» */
+.sld-table tbody tr.sld-fila-amarilla td{background:var(--sld-amarillo)}
+.sld-table tbody tr.sld-fila-amarilla td:first-child{box-shadow:inset 3px 0 0 var(--sld-amarillo-borde)}
+.sld-table tbody tr.sld-fila-roja td{background:var(--sld-rojo)}
+.sld-table tbody tr.sld-fila-roja td:first-child{box-shadow:inset 3px 0 0 var(--sld-rojo-borde)}
+.sld-vacio{text-align:center;color:var(--c-text-muted);padding:26px 10px!important}
+.sld-pie{font-size:11.5px;color:var(--c-text-muted);margin-top:10px}
+
+/* Casillas de paso: inicial + fecha, o casillero para marcar */
+.sld-paso-td{text-align:center;white-space:nowrap;position:relative}
+.sld-hecho{display:inline-flex;align-items:center;gap:5px;background:none;border:1px solid transparent;border-radius:12px;padding:2px 7px 2px 2px;cursor:pointer;font-family:inherit}
+.sld-hecho:hover{border-color:var(--c-border);background:var(--c-card)}
+.sld-f{font-size:11.5px;font-weight:700;color:var(--c-text)}
+.sld-tilde{width:22px;height:22px;border:2px solid var(--c-border);border-radius:5px;background:var(--c-card);cursor:pointer;vertical-align:middle;transition:border-color .15s}
+.sld-tilde:hover{border-color:var(--c-green)}
+.sld-tilde.sld-bloq{opacity:.35;cursor:not-allowed}
+.sld-pend{font-family:inherit;font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-pending);
+  background:var(--c-pending-light);border:1px dashed #e7c46d;border-radius:10px;padding:3px 10px;cursor:pointer}
+.sld-pend:hover{border-style:solid}
+.sld-nolleva{font-size:10.5px;color:var(--c-text-muted);font-style:italic;white-space:nowrap}
+.sld-nl-td{text-align:center;background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(16,32,48,.03) 6px 12px)}
+.sld-mas{background:none;border:none;color:var(--c-text-muted);cursor:pointer;font-size:13px;padding:0 3px;margin-left:2px;opacity:0;transition:opacity .15s}
+.sld-table tr:hover .sld-mas,.sld-mas:focus{opacity:1}
+
+/* Circulito con la inicial */
+.sld-ini{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;color:#fff;font-size:10.5px;font-weight:700;flex-shrink:0}
+.sld-ini-nadie{background:var(--c-border)!important;color:var(--c-text-muted)}
+
+/* Envía */
+.sld-envia{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid transparent;border-radius:12px;padding:2px 8px 2px 2px;cursor:pointer;font-family:inherit;font-size:12px;white-space:nowrap}
+.sld-envia:hover{border-color:var(--c-border);background:var(--c-card)}
+.sld-sin{font-size:11px;color:var(--c-text-muted);font-style:italic;padding-left:6px}
+
+/* Campos de texto */
+.sld-in{width:100%;min-width:70px;padding:5px 7px;border:1px solid transparent;border-radius:3px;background:transparent;font-family:inherit;font-size:12.5px}
+.sld-in:hover{border-color:var(--c-border)}
+.sld-in:focus{outline:none;border-color:var(--c-accent-dark);background:var(--c-card)}
+.sld-grupo{max-width:90px;text-align:center}
+.sld-num{font-family:monospace}
+/* Observaciones: más ancha; se abre entera al tocarla, y al pasar el mouse muestra el texto completo */
+.sld-obs-th{min-width:280px}
+.sld-obs-td{min-width:280px;width:32%}
+.sld-obs{width:100%;min-height:30px;height:30px;resize:none;overflow:hidden;padding:6px 8px;border:1px solid transparent;border-radius:3px;
+  background:transparent;font-family:inherit;font-size:12.5px;line-height:1.4;white-space:nowrap;text-overflow:ellipsis}
+.sld-obs:hover{border-color:var(--c-border)}
+.sld-obs.abierta{white-space:pre-wrap;background:var(--c-card);border-color:var(--c-accent-dark);outline:none;box-shadow:0 4px 14px rgba(16,32,48,.12);position:relative;z-index:2}
+
+/* Menú chiquito */
+.sld-menu{position:fixed;z-index:400;background:var(--c-card);border:1px solid var(--c-border);border-radius:6px;box-shadow:0 10px 30px rgba(16,32,48,.18);padding:8px;min-width:220px;max-width:280px}
+.sld-menu-t{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--c-text-muted);padding:4px 6px 8px}
+.sld-menu-op{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:none;border-radius:4px;padding:7px 6px;font-family:inherit;font-size:13px;cursor:pointer;color:var(--c-text)}
+.sld-menu-op:hover{background:var(--c-bg-alt)}
+.sld-menu-op.on{background:var(--c-blue-light);font-weight:700}
+.sld-menu-chk{display:flex;align-items:center;gap:7px;font-size:12px;padding:8px 6px 2px;border-top:1px solid var(--c-border-soft);margin-top:6px;cursor:pointer}
+.sld-menu-chk input{width:auto}
+.sld-menu-ayuda{font-size:11px;color:var(--c-text-muted);padding:4px 6px;line-height:1.45}
+
+/* ===== Bandeja «Esto está esperando por vos» ===== */
+.sld-bandeja{border:1px solid var(--c-border);border-left:4px solid var(--c-header);border-radius:4px;background:var(--c-card);padding:14px 16px;margin-bottom:20px}
+.sld-band-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.sld-band-t{font-family:var(--font-display);font-size:18px;font-weight:600}
+.sld-band-s{font-size:11px;color:var(--c-text-muted);letter-spacing:.5px;margin-top:2px}
+.sld-band-f,.gseg-sld{display:inline-flex;border:1px solid var(--c-border);border-radius:3px;overflow:hidden}
+.sld-band-f button,.gseg-sld button{background:none;border:none;padding:5px 11px;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--c-text-muted);cursor:pointer}
+.sld-band-f button+button,.gseg-sld button+button{border-left:1px solid var(--c-border)}
+.sld-band-f button.on,.gseg-sld button.on{background:var(--c-header);color:#fff}
+.sld-band-vacia{font-size:13px;color:var(--c-green);padding:4px 0}
+.sld-band-lista{display:flex;flex-direction:column;gap:6px}
+.sld-tarea{display:flex;align-items:center;gap:12px;padding:9px 12px;border:1px solid var(--c-border-soft);border-radius:4px;background:var(--c-bg-alt)}
+.sld-tarea.amarilla{background:var(--sld-amarillo);border-color:#f0dca0}
+.sld-tarea.rojo{background:var(--sld-rojo);border-color:#efc5bf}
+.sld-t-ico{font-size:17px;flex-shrink:0}
+.sld-t-txt{flex:1;min-width:0;font-size:13px}
+.sld-t-mes{font-size:11px;color:var(--c-text-muted)}
+.sld-t-det{font-size:11.5px;color:var(--c-text-muted);margin-top:2px}
+.sld-tarea.rojo .sld-t-det{color:var(--c-red);font-weight:700}
+.sld-t-sin{font-size:10.5px;font-style:italic;color:var(--c-text-muted);white-space:nowrap}
+.sld-t-btn{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.sld-band-mas{margin-top:8px;background:none;border:none;color:var(--c-blue);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:4px 0}
+
+/* ===== Controles ===== */
+.sld-avances{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px}
+.sld-av{border:1px solid var(--c-border);border-radius:4px;background:var(--c-card);padding:12px 14px;cursor:pointer;transition:box-shadow .15s}
+.sld-av:hover{box-shadow:0 2px 10px rgba(16,32,48,.08)}
+.sld-av.on{box-shadow:0 0 0 2px var(--c-header) inset}
+.sld-av-t{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--c-text-muted)}
+.sld-av-n{font-size:13px;margin:4px 0 8px}
+.sld-av-n b{font-family:var(--font-display);font-size:20px}
+.sld-av-bar{height:5px;border-radius:3px;background:var(--c-border-soft);overflow:hidden}
+.sld-av-bar i{display:block;height:100%;background:var(--c-green);border-radius:3px}
+
+/* ===== Paso al formato nuevo ===== */
+.sld-mig{border:1px solid var(--c-border);border-top:4px solid var(--c-header);border-radius:4px;background:var(--c-card);padding:22px 24px;max-width:980px}
+.sld-mig h3{font-family:var(--font-display);font-size:20px;margin:0 0 10px}
+.sld-mig h4{font-size:12px;letter-spacing:1px;text-transform:uppercase;margin:18px 0 8px;color:var(--c-text-muted)}
+.sld-mig p,.sld-mig li{font-size:13px;line-height:1.6}
+.sld-mig ul{margin:8px 0 12px 20px}
+.sld-mig-t td{font-size:12px;vertical-align:top}
+.sld-mig-acc{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px}
+.sld-mig-esp{font-size:12px;color:var(--c-text-muted)}
+.sld-mig-nota{font-size:11.5px;color:var(--c-text-muted)}
+
+/* ===== Celular: la bandeja arriba, la tabla se desliza con la Empresa fija ===== */
+.sld-wrap{position:relative}
+@media (max-width:760px){
+  .sld-table td.sld-emp,.sld-table th.sld-emp{position:sticky;left:0;z-index:1;background:var(--c-card);min-width:130px;max-width:150px;box-shadow:2px 0 4px rgba(16,32,48,.06)}
+  .sld-table thead th.sld-emp{background:var(--c-header);z-index:2}
+  .sld-table tbody tr.sld-fila-amarilla td.sld-emp{background:var(--sld-amarillo)}
+  .sld-table tbody tr.sld-fila-roja td.sld-emp{background:var(--sld-rojo)}
+  .sld-wrap::before{content:'Deslizá la tabla de costado para ver todo →';display:block;font-size:11px;color:var(--c-text-muted);padding:6px 10px;border-bottom:1px solid var(--c-border-soft)}
+  .sueldos-subtabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .sueldos-subtab{white-space:nowrap;flex-shrink:0}
+  .sld-mas{opacity:1}
+  .sld-tarea{flex-wrap:wrap}
+  .sld-t-btn{width:100%;justify-content:flex-start}
+  .sld-band-f{flex-wrap:wrap}
+  .sld-obs-th,.sld-obs-td{min-width:220px}
+  .sld-buscar,.sld-in,.sld-obs,.sld-sel{font-size:16px}
+}
+
+/* ===== Vista operativa de Sueldos en el Dashboard ===== */
+.dash-sld-per{font-size:11px;color:var(--c-text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.dash-sld-per strong{color:var(--c-text)}
+.dash-sld-per a{color:var(--c-blue);cursor:pointer;text-transform:none;letter-spacing:0;font-weight:700}
+.dash-card.dash-sld-listo{border-left:3px solid var(--sld-amarillo-borde)}
+.dash-card.dash-sld-liq{border-left:3px solid var(--c-text-muted)}
+.dash-card.dash-sld-env{border-left:3px solid var(--c-blue);margin-top:16px}
+.dash-card h4 span{float:right;color:var(--c-text-muted);font-weight:400;font-size:12px}
+.dash-sld-g{font-size:10px;color:var(--c-text-muted)}
+.dash-sld-d{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--c-text-muted);white-space:nowrap}
+.dash-sld-d.rojo{color:var(--c-red);font-weight:700}
+.dash-sld-vacio{color:var(--c-text-muted);padding:14px 0;font-style:italic}
+.dash-sld-mas{color:var(--c-text-muted);font-size:11px}
+.dash-sld-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}

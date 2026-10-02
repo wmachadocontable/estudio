@@ -42,7 +42,9 @@ function renderTabs() {
       const unlocked = _unlockedTabsThisSession.has(t.id);
       privacyIcon += `<span class="tab-privacy-icon" title="${unlocked?'Desbloqueada esta sesión':'Protegida con contraseña'}">${unlocked?'🔓':'🔐'}</span>`;
     }
-    return `<div class="nav-tab${active}" data-tab-id="${t.id}" data-tab-idx="${i}"${draggable} onclick="${t.type==='declaraciones'?`declTabClick('${t.id}')`:`switchTab('${t.id}')`}"${editable}>${privacyIcon}<span>${bbEscape(t.name)}</span>${x}</div>`;
+    // Oct. 2026: un número rojo al lado del nombre (ej. Sueldos: lo pendiente propio). Lo da tabBadge() de cada módulo.
+    const badge = (typeof tabBadge === 'function') ? tabBadge(t) : '';
+    return `<div class="nav-tab${active}" data-tab-id="${t.id}" data-tab-idx="${i}"${draggable} onclick="${t.type==='declaraciones'?`declTabClick('${t.id}')`:`switchTab('${t.id}')`}"${editable}>${privacyIcon}<span>${bbEscape(t.name)}</span>${badge}${x}</div>`;
   }).join('') + `<span class="nav-tab-add" onclick="openAddTab()">+ Nueva pestaña</span>`;
   if (userPrefs.editMode) attachTabDragHandlers();
 }
