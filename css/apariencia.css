@@ -1,0 +1,85 @@
+/*
+ * APARIENCIA (oct. 2026): estilos del encabezado y de la barra de pestañas (⋯ → Personalizar).
+ * Se activan con una clase en <body> (js/modules/apariencia.js). Mismos colores del estudio.
+ */
+:root{
+  --ap-marino-1: #0b1724;
+  --ap-marino-2: #1d3550;
+  --ap-plata: rgba(201,209,218,.55);
+  --ap-plata-suave: rgba(201,209,218,.08);
+}
+
+/* ===== Encabezado ===== */
+header::before,header::after{content:none}
+body[class*="enc-"]:not(.enc-clasico) header>*{position:relative;z-index:1}
+
+/* Brillo plateado: un reflejo cruza cada tanto, y una línea plateada abajo que se desliza */
+body.enc-brillo header::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;
+  background-image:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.09) 50%,transparent 58%);background-size:300% 100%;
+  animation:enc-brillo 10s ease-in-out infinite}
+body.enc-brillo header::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;pointer-events:none;
+  background-image:linear-gradient(90deg,transparent,var(--ap-plata),transparent);background-size:50% 100%;background-repeat:no-repeat;
+  animation:enc-linea 7s ease-in-out infinite}
+@keyframes enc-brillo{0%,45%{background-position:150% 0}100%{background-position:-50% 0}}
+@keyframes enc-linea{0%{background-position:-60% 0}100%{background-position:160% 0}}
+
+/* Degradé en movimiento */
+body.enc-degrade header{background-color:var(--c-header);
+  background-image:linear-gradient(120deg,var(--ap-marino-1),var(--c-header),var(--ap-marino-2),var(--c-header),var(--ap-marino-1));
+  background-size:300% 100%;animation:enc-degrade 26s ease-in-out infinite alternate}
+@keyframes enc-degrade{from{background-position:0% 50%}to{background-position:100% 50%}}
+
+/* Textura de lino */
+body.enc-lino header::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;
+  background-image:repeating-linear-gradient(45deg,var(--ap-plata-suave) 0 1px,transparent 1px 4px),repeating-linear-gradient(-45deg,var(--ap-plata-suave) 0 1px,transparent 1px 4px)}
+
+/* Líneas finas (guilloché) */
+body.enc-lineas header::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;opacity:.9;
+  background-image:repeating-radial-gradient(circle at 0 130%,transparent 0 13px,var(--ap-plata-suave) 13px 14px),
+                   repeating-radial-gradient(circle at 100% -40%,transparent 0 17px,var(--ap-plata-suave) 17px 18px)}
+
+/* ===== Barra de pestañas ===== */
+/* Plateada: más visible, redondeada */
+body.barra-plateada .nav-tabs{scrollbar-width:auto;scrollbar-color:var(--ap-plata) rgba(255,255,255,.05);padding-bottom:2px}
+body.barra-plateada .nav-tabs::-webkit-scrollbar{height:8px}
+body.barra-plateada .nav-tabs::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:8px;margin:0 40px}
+body.barra-plateada .nav-tabs::-webkit-scrollbar-thumb{background:var(--ap-plata);border-radius:8px}
+body.barra-plateada .nav-tabs::-webkit-scrollbar-thumb:hover{background:rgba(201,209,218,.8)}
+/* Oculta: sin barra, con los bordes difuminados para que se note que hay más */
+body.barra-oculta .nav-tabs,body.barra-flechas .nav-tabs{scrollbar-width:none;-ms-overflow-style:none}
+body.barra-oculta .nav-tabs::-webkit-scrollbar,body.barra-flechas .nav-tabs::-webkit-scrollbar{display:none}
+body.barra-oculta .nav-tabs{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 36px,#000 calc(100% - 36px),transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0,#000 36px,#000 calc(100% - 36px),transparent 100%)}
+/* Con flechas: botones redondos en las puntas, que aparecen solo si hay más para ver */
+.nav-flecha{display:none}
+body.barra-flechas .nav-flecha{display:flex;align-items:center;justify-content:center;position:-webkit-sticky;position:sticky;z-index:3;flex-shrink:0;
+  width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(12,22,32,.94);color:#fff;
+  font-size:20px;line-height:1;padding:0 0 2px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .2s,background .2s;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+body.barra-flechas .nav-flecha:hover{background:var(--c-header)}
+body.barra-flechas .nav-flecha-izq{left:4px;margin-right:-32px}
+body.barra-flechas .nav-flecha-der{right:4px;margin-left:-32px}
+body.barra-flechas .nav-tabs.puede-izq .nav-flecha-izq,body.barra-flechas .nav-tabs.puede-der .nav-flecha-der{opacity:1;pointer-events:auto}
+
+/* ===== Opciones en Personalizar ===== */
+.ap-opciones{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ap-op{display:flex;flex-direction:column;align-items:stretch;gap:2px;text-align:left;border:2px solid var(--c-border);border-radius:8px;padding:7px;
+  background:var(--c-card);cursor:pointer;font-family:inherit;transition:border-color .15s,box-shadow .15s}
+.ap-op:hover{border-color:var(--c-accent-dark)}
+.ap-op.on{border-color:var(--c-header);box-shadow:0 0 0 3px rgba(16,32,48,.08)}
+.ap-op b{font-size:12.5px;margin-top:6px}
+.ap-op small{font-size:11px;color:var(--c-text-muted);line-height:1.35}
+.ap-mini{position:relative;display:block;height:38px;border-radius:5px;overflow:hidden;background:var(--c-header)}
+.ap-mini i{position:absolute;left:8px;top:13px;width:42%;height:6px;border-radius:3px;background:rgba(255,255,255,.75)}
+.apm-enc-brillo{background-image:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.22) 50%,transparent 65%)}
+.apm-enc-degrade{background-image:linear-gradient(120deg,var(--ap-marino-1),var(--c-header),var(--ap-marino-2))}
+.apm-enc-lino{background-image:repeating-linear-gradient(45deg,rgba(201,209,218,.16) 0 1px,transparent 1px 4px),repeating-linear-gradient(-45deg,rgba(201,209,218,.16) 0 1px,transparent 1px 4px)}
+.apm-enc-lineas{background-image:repeating-radial-gradient(circle at 0 130%,transparent 0 7px,rgba(201,209,218,.2) 7px 8px)}
+/* Las de la barra: una tira oscura con pestañas y cómo se ve la barra */
+[class*="apm-barra-"]{background:#0c1620}
+[class*="apm-barra-"] i{top:9px;width:70%;height:5px;background:rgba(255,255,255,.35)}
+[class*="apm-barra-"]::after{content:'';position:absolute;left:8px;bottom:6px;height:2px;width:40%;border-radius:2px;background:rgba(255,255,255,.22)}
+.apm-barra-plateada::after{height:5px;bottom:5px;background:rgba(201,209,218,.7)}
+.apm-barra-oculta::after{display:none}
+.apm-barra-oculta i{-webkit-mask-image:linear-gradient(90deg,#000 70%,transparent);mask-image:linear-gradient(90deg,#000 70%,transparent)}
+.apm-barra-flechas::after{content:'‹  ›';background:none;color:#fff;font-size:13px;width:auto;height:auto;left:auto;right:8px;bottom:9px;letter-spacing:2px}
+.ap-nota{display:block;font-size:11px;color:var(--c-text-muted);margin-top:-4px}
