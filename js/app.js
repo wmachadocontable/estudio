@@ -462,15 +462,17 @@ function stripViewStateFromShared() {
 // El logo de fábrica (un JPG sin transparencia) con el filtro blanco se ve como un cuadro vacío:
 // en su lugar va el del estudio. Vale también para copias viejas guardadas en el navegador.
 function logoMarca(b) { return (!b || !b.logo || b.logo === DEFAULT_LOGO) ? './img/logo-estudio.png' : b.logo; }
+// El filtro blanco (logoInvert) es para el logo cargado en la base; el del estudio ya trae su fondo azul.
+function logoClase(b) { return (b && b.logoInvert && logoMarca(b) === b.logo) ? 'invert' : ''; }
 function applyBranding() {
   const b = state.branding;
   const set = (id, fn) => { const el = document.getElementById(id); if (el) fn(el); };
   set('header-name', el => el.textContent = b.name);
   set('header-subtitle', el => el.textContent = b.subtitle);
   set('year-badge', el => el.textContent = b.year);
-  set('header-logo-img', el => { el.src = logoMarca(b); el.className = b.logoInvert ? 'invert' : ''; });
+  set('header-logo-img', el => { el.src = logoMarca(b); el.className = logoClase(b); });
   // also sync login screen if visible
-  set('login-logo-img', el => { el.src = logoMarca(b); el.className = b.logoInvert ? 'invert' : ''; });
+  set('login-logo-img', el => { el.src = logoMarca(b); el.className = logoClase(b); });
   set('login-name', el => el.textContent = b.name);
   set('login-subtitle', el => el.textContent = b.subtitle);
   set('login-year', el => el.textContent = b.year);
@@ -6796,7 +6798,7 @@ function showLogin() {
   document.getElementById('login-screen').style.display = 'flex';
   // sync login-side branding
   document.getElementById('login-logo-img').src = logoMarca(state.branding);
-  document.getElementById('login-logo-img').className = state.branding.logoInvert ? 'invert' : '';
+  document.getElementById('login-logo-img').className = logoClase(state.branding);
   document.getElementById('login-name').textContent = state.branding.name;
   document.getElementById('login-subtitle').textContent = state.branding.subtitle;
   document.getElementById('login-year').textContent = state.branding.year;

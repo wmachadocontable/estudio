@@ -26,7 +26,7 @@ function aplicarFondoIngreso() {
   // Logo blanco (invertido): necesita fondo azul y mostrar el título. Se marca acá (sin :has(), que
   // algunos navegadores viejos no entienden).
   const card = el.querySelector('.login-card');
-  if (card) card.classList.toggle('logo-blanco', !!(state && state.branding && state.branding.logoInvert));
+  if (card) card.classList.toggle('logo-blanco', !!(state && state.branding && logoClase(state.branding)));
   const s = document.getElementById('login-saludo');
   if (s) s.textContent = saludoHora();
 }
@@ -47,7 +47,7 @@ function setLoginFondo(f) {
 function verIngresoPrevia() {
   const el = document.getElementById('login-screen'); if (!el) return;
   const img = document.getElementById('login-logo-img');
-  if (img && state.branding) { img.src = logoMarca(state.branding); img.className = state.branding.logoInvert ? 'invert' : ''; }
+  if (img && state.branding) { img.src = logoMarca(state.branding); img.className = logoClase(state.branding); }
   aplicarFondoIngreso();
   el.classList.add('vista-previa'); el.style.display = 'flex';
   const b = document.createElement('button');
