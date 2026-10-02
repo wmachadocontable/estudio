@@ -26,6 +26,9 @@ Forma general esperada (resumen):
 - `state.sueldos`: objeto por periodo
 - `state.sueldosColumns`: array
 - `state.vault`: objeto cuando la boveda esta habilitada
+- `state.finanzas`: objeto (oct. 2026, ver seccion 13)
+- `state.sueldosV2`: objeto `{at, by}` cuando Sueldos ya paso al formato nuevo (oct. 2026)
+- `state.branding.loginFondo`: `'elegante'` | `'clasico'` (oct. 2026, pantalla de ingreso)
 - otras secciones agregadas por modulos (ej. declaraciones/honorarios dentro de tabs)
 
 ## 2) state.users
@@ -195,3 +198,23 @@ No permitido durante este refactor arquitectonico:
 - cambiar keys de persistencia;
 - cambiar metadata de concurrencia;
 - cambiar reglas de serializacion JSON actuales.
+
+## 13) Cambios de octubre 2026 (rama mejoras-octubre)
+
+Son agregados: no se borra ni se renombra nada de lo anterior.
+
+- `state.sueldos[ym][sub][]`, formato nuevo (`_v2: true`): `id` (fijo, sale del nombre; el mismo en
+  todos los meses), `name`, `grupo`, `observaciones`, `envia`, `marcas` (`recLiq`, `recEnv`, `bpsEmi`,
+  `bpsEnv`, `fosmetal`, `contabilizado`, `controlFacturaBps`, `auditoria` → `{u, t}`), `noLleva`
+  (`{clave: true}`); Reliquidaciones ademas `concepto` e `importe`. El estado NO se guarda: se calcula
+  con `sldEstado` (js/modules/sueldos.js). Los campos viejos (`status`, `prontos`, `avisadoEnviado`,
+  `bps`, `flagLabels`, ...) quedan sin uso; `notaInterna` se paso a `observaciones` y se borro.
+  El paso al formato nuevo lo hace una administradora desde la pestana (descarga un respaldo antes).
+- `state.finanzas` (pestana Finanzas, solo Wendy): `gastos[]`, `cuotas[]`, `impuestos[]` (todas con
+  `id`), `gastoCats[]`, `venc{grupos, editadas, confirmadas, ocultas, abiertos, frecuencia}`. Lo crea el
+  inicializador `finanzas` (js/finanzas/finanzas.js).
+- `state.tabs`: se agrega `{id:'finanzas', type:'finanzas'}`. Honorarios, Calendario y Ej. Economicos
+  siguen en `state.tabs` pero no se muestran en la barra (`tabFueraDelMenu`, js/core/navigation.js).
+- Declaraciones: `tab.types` suma `{id:'dty_iyc', name:'Industria y Comercio', linkTabId, cols:[], years:{}}`,
+  un tipo vinculado que muestra la tabla anual de Ej. Economicos sin copiar datos.
+- Todas las listas nuevas tienen `id` en cada elemento, para que `merge3` las mezcle de a uno.

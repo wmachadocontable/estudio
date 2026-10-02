@@ -31,10 +31,17 @@ Aplicación web interna para gestión operativa contable.
   - vault.js
 - js/modules
   - clientes.js
+  - sueldos.js, sueldos-vista.js, sueldos-bandeja.js (oct. 2026: Sueldos, bandeja y Controles)
+  - ingreso.js (oct. 2026: fondo de la pantalla de ingreso)
+- js/finanzas (oct. 2026: pestaña Finanzas, solo Wendy)
+  - finanzas.js (datos en state.finanzas, subpestañas, acceso, exportación)
+  - gastos.js, gastos-form.js, impuestos.js, vencimientos.js
 - Otros scripts
   - app.js
-  - declaraciones.js
-  - honorarios.js
+  - declaraciones.js (incluye «Industria y Comercio», vinculado a Ej. Económicos)
+  - honorarios.js (se dibuja adentro de Finanzas)
+- css: app.css, honorarios.css, declaraciones.css, sueldos.css, finanzas.css, ingreso.css y
+  pulido.css (retoques visuales; se carga último y se puede sacar sin romper nada)
 
 ## Autenticación
 
@@ -61,7 +68,26 @@ Aplicación web interna para gestión operativa contable.
 - Campos sensibles de Clientes se almacenan cifrados cuando Vault está migrada.
 - Al bloquear Vault, se limpia plaintext en memoria y material de clave.
 
-## Desarrollo local
+## Desarrollo local con emuladores (oct. 2026) — recomendado
+
+Abierta desde **localhost / 127.0.0.1**, la página usa los **emuladores** de Firebase con un proyecto
+ficticio (`demo-wmachado`): no hay forma de tocar la base real. Para abrir la base real desde la PC
+hay que pedirlo a propósito con `?real=1`. Se ve el cartel rojo «MODO PRUEBA» abajo a la derecha.
+
+1. `node herramientas/prueba/emuladores.js` — levanta Auth + Realtime Database (necesita Java 21 y
+   firebase-tools), crea Daniela / Wendy / Lorena y carga datos **inventados** (`semilla.js`).
+   La clave de prueba queda en `herramientas/prueba/datos-locales/usuarias.json` (no va a Git).
+2. `node herramientas/servidor-local.js` → http://localhost:5540
+3. Cada vez que se levantan los emuladores, la base de prueba arranca de cero.
+
+Herramientas:
+
+- `node herramientas/vista-previa-sueldos.js respaldo.json` — con un respaldo exportado
+  (Personalizar → Exportar JSON) muestra cómo quedaría Sueldos en el formato nuevo. No cambia nada.
+- `node herramientas/version-archivos.js` — **antes de publicar**: agrega `?v=fecha` a los css/js/img
+  de index.html para que nadie quede con archivos viejos mezclados con nuevos.
+
+## Desarrollo local contra la base real (con cuidado)
 
 Recomendado ejecutar por HTTP local (no usar file://):
 
@@ -71,7 +97,7 @@ python -m http.server 8080
 
 Abrir en navegador:
 
-- http://127.0.0.1:8080
+- http://127.0.0.1:8080/?real=1 — sin `?real=1`, desde localhost la página busca los emuladores.
 
 ## Validación antes de cambios
 
