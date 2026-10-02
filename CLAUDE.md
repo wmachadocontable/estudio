@@ -76,11 +76,20 @@
   23 h). Primer respaldo OK (11 pestañas, 94 clientes, 143 filas de Sueldos). Causa del corte: el script viejo («Proyecto sin
   título», 22:16) fallaba con 401 al leer Firebase desde que se ajustaron los permisos de la base; se borró su activador.
 
+## Publicación (02/10/2026)
+- **Publicada el 02/10/2026** por decisión de la usuaria («publicá y que funcione»), **sin esperar la revisión
+  de Álvaro** (queda para después, sobre `main`). Antes se ensayó con una copia de los datos reales en los
+  emuladores: Wendy y Lorena, todas las pestañas, paso de Sueldos (65 notas y 309 tildes sin pérdidas), celular.
+- Se publica con **GitHub Pages desde `main`** (raíz) → https://wmachadocontable.github.io/estudio/. Aunque el
+  repo es privado, la web es pública: `_config.yml` deja afuera CLAUDE.md, README, docs, herramientas y scripts.
+- **Para publicar un cambio:** `node herramientas/version-archivos.js` → commit en `mejoras-octubre` →
+  `git push origin mejoras-octubre:main` (avance directo) → a los 2-3 minutos está en la web.
+- Después de publicar, que las tres recarguen la página (una pestaña vieja abierta podría seguir escribiendo
+  con el formato anterior) y que una administradora haga el paso de Sueldos.
+
 ## Pendiente
-- Revisión de **Álvaro** (pull request de `mejoras-octubre`).
-- Publicar: **solo con aprobación explícita**. Antes: `node herramientas/version-archivos.js`. Después de
-  publicar, que las tres recarguen la página (una pestaña vieja abierta podría seguir escribiendo con el
-  formato anterior) y que una administradora haga el paso de Sueldos.
+- Revisión de **Álvaro** de lo ya publicado.
+- Paso de Sueldos al formato nuevo (lo hace Wendy o Daniela desde la página).
 
 ## Reglas
 - Siempre en español rioplatense, explicaciones simples. Las del manual general (`..\CLAUDE.md`).

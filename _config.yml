@@ -1,0 +1,8 @@
+# GitHub Pages publica la carpeta raíz de main. Esto deja AFUERA de la web lo interno
+# (sigue en el repositorio privado, pero no se puede abrir desde internet).
+exclude:
+  - CLAUDE.md
+  - README.md
+  - docs
+  - herramientas
+  - scripts
