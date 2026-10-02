@@ -5401,7 +5401,7 @@ function renderMyDashSection(key, d) {
       <div class="mydash-stickies" id="mydash-stickies"
            ${F.reorder ? `ondragover="onStickyContainerDragOver(event)"` : ''}>
         ${notesHTML}
-        ${!myNotes.length && !sharedToMe.length ? `<div class="mydash-empty">${d.stickySearchTerm ? 'Ninguna nota coincide con la búsqueda.' : 'Sin notas todavía. Hacé clic en "+ Nota" para agregar una.'}</div>` : ''}
+        ${!myNotes.length && !sharedToMe.length ? (d.stickySearchTerm ? `<div class="mydash-empty">Ninguna nota coincide con la búsqueda.</div>` : notasVacioHTML()) : ''}
       </div>`;
 
     // Sección "Notas del estudio" (compartidas con TODO el estudio) - desplegable
@@ -5674,7 +5674,7 @@ function renderStickyNote(n, d, isStudio) {
   // Acciones (botones top-right)
   let actions = '';
   if (!readonly) {
-    actions += `<button class="sticky-color" onclick="cycleStickyColor('${n.id}',${isStudioNote ? 'true' : 'false'})" title="Cambiar color">🎨</button>`;
+    actions += `<button class="sticky-color" onclick="notaPaleta(event,'${n.id}',${isStudioNote ? 'true' : 'false'})" title="Cambiar color">🎨</button>`;
     if (F.size && !F.autoFit && !isStudioNote) {
       actions += `<button class="sticky-size-btn" onclick="cycleStickySize('${n.id}')" title="Cambiar tamaño (S/M/L/XL)">${size}</button>`;
     }
@@ -5706,20 +5706,22 @@ function renderStickyNote(n, d, isStudio) {
       <button onclick="stickyFmt('${n.id}','removeFormat',${isStudioNote ? 'true' : 'false'})" title="Quitar formato" style="font-size:10px;">⌫T</button>
     </div>`;
 
-  return `<div class="sticky-note ${sizeClass}${readonly?' sticky-readonly':''}${isStudioNote?' sticky-studio':''}" style="background:${n.color || '#fff3a0'};" data-id="${n.id}" ${dragAttrs}>
+  return `<div class="sticky-note ${sizeClass}${readonly?' sticky-readonly':''}${isStudioNote?' sticky-studio':''}" style="--nc:${notaColor(n.color)};" data-id="${n.id}" ${dragAttrs}>
     ${toolbar}
     <div class="sticky-content" ${readonly?'':`contenteditable="true"`}
          ${readonly ? '' : `oninput="${saveHandler}" onkeydown="stickyKeyHandler(event, '${n.id}')" onfocus="onStickyFocus('${n.id}',${isStudioNote ? 'true' : 'false'})" onblur="onStickyBlur('${n.id}')"`}
          ${checkboxClickHandler}
          data-placeholder="Escribí tu nota...">${displayHtml}</div>
     ${footerHTML ? `<div class="sticky-footer">${footerHTML}</div>` : ''}
+    ${notaFechaHTML(n)}
     <div class="sticky-actions">
       ${actions}
     </div>
   </div>`;
 }
 
-const STICKY_COLORS = ['#fff3a0','#ffe0b2','#c5f5d4','#bbdefb','#f8bbd0','#e1bee7','#d7ccc8'];
+// Oct. 2026: colores pastel, como papel (las notas viejas se ven con su equivalente suave: notaColor()).
+const STICKY_COLORS = ['#fff3bf','#ffd8e4','#d3f0dd','#d6e6fb','#eadcf7','#d3ecec','#ffe4c4'];
 const STICKY_SIZES = ['S','M','L','XL'];
 
 // Helper: obtener nota (personal o estudio) por id

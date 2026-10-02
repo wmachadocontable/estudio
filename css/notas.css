@@ -1,0 +1,68 @@
+/*
+ * NOTAS ADHESIVAS (oct. 2026): como papel, al estilo del demo de María Lucía.
+ * Pastel (--nc), una cinta arriba, leve inclinación que se endereza al pasar el mouse o al escribir,
+ * letra cómoda y la fecha abajo. Sobre las reglas .sticky-* de app.css.
+ */
+:root{
+  --nota-texto: #3a3524;
+  --nota-sombra: 0 3px 10px rgba(19,34,39,.10);
+  --nota-sombra-alta: 0 12px 26px rgba(19,34,39,.18);
+  --nota-cinta: rgba(255,255,255,.55);
+}
+
+.mydash-stickies{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:22px 18px;padding:12px 4px 6px}
+
+.sticky-note{background:var(--nc);border-radius:3px 3px 10px 10px;padding:20px 14px 12px;min-height:130px;box-shadow:var(--nota-sombra);
+  transform:rotate(-1.2deg);transition:transform .18s ease,box-shadow .18s ease,opacity .15s}
+.sticky-note:nth-child(3n+2){transform:rotate(1.1deg)}
+.sticky-note:nth-child(3n){transform:rotate(.4deg)}
+/* Al pasar el mouse o al escribir: se endereza y se levanta */
+.sticky-note:hover,.sticky-note:focus-within{transform:rotate(0) translateY(-4px);box-shadow:var(--nota-sombra-alta);z-index:3}
+/* La cinta */
+.sticky-note::before{content:'';position:absolute;top:-8px;left:50%;width:58px;height:17px;margin-left:-29px;transform:rotate(-3deg);
+  background:var(--nota-cinta);border:1px solid rgba(0,0,0,.05);border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);pointer-events:none}
+
+/* El texto */
+.sticky-content{font-size:14px;line-height:1.55;color:var(--nota-texto)}
+.sticky-content:empty::before{color:rgba(0,0,0,.35)}
+.sticky-content h4{color:var(--nota-texto)}
+.nota-fecha{font-size:10.5px;color:rgba(0,0,0,.4);margin-top:10px;font-weight:700;letter-spacing:.3px}
+
+/* La barra de formato (aparece al escribir) y los botones de arriba, más prolijos */
+.sticky-toolbar{border-bottom-color:rgba(0,0,0,.1)}
+.sticky-toolbar button{border-radius:4px;color:var(--nota-texto)}
+.sticky-actions{top:6px;right:6px;gap:3px}
+.sticky-actions button{background:rgba(255,255,255,.6);border-radius:50%;width:24px;height:24px;color:rgba(0,0,0,.55);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.sticky-actions button:hover{background:#fff;color:#000}
+.sticky-del{color:rgba(0,0,0,.4)!important;font-size:15px!important}
+.sticky-del:hover{color:var(--c-red)!important}
+.sticky-footer{border-top-color:rgba(0,0,0,.08)}
+.sticky-meta-chip{background:rgba(255,255,255,.55);border-radius:10px}
+
+/* Notas del estudio y compartidas */
+.sticky-note.sticky-studio{border-left:none;box-shadow:var(--nota-sombra),inset 0 3px 0 rgba(212,175,55,.55)}
+.sticky-note.sticky-readonly{border:1px dashed rgba(91,59,158,.35)}
+
+/* Arrastrar para reordenar: sin inclinación, para que no salte */
+.sticky-note.sticky-dragging{transform:scale(.97)!important}
+
+/* Los círculos de colores */
+.nota-paleta{position:fixed;z-index:400;display:flex;gap:9px;padding:10px 12px;background:var(--c-card);border:1px solid var(--c-border);
+  border-radius:24px;box-shadow:0 10px 30px rgba(16,32,48,.18);animation:nota-pal .15s ease}
+@keyframes nota-pal{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.ncol{width:26px;height:26px;border-radius:50%;border:2px solid rgba(0,0,0,.08);cursor:pointer;transition:transform .15s;padding:0}
+.ncol:hover{transform:scale(1.12)}
+.ncol.active{border-color:var(--c-header);box-shadow:0 0 0 3px rgba(16,32,48,.12)}
+
+/* Sin notas */
+.notas-vacio{grid-column:1/-1;text-align:center;padding:26px 10px;color:var(--c-text-muted)}
+.notas-vacio .ne-ico{font-size:38px;opacity:.5}
+.notas-vacio p{margin:8px 0 14px;font-size:13.5px}
+
+/* En el celular: sin inclinación (se escribe más cómodo) y los botones siempre a mano */
+@media (max-width:760px){
+  .mydash-stickies{grid-template-columns:1fr 1fr;gap:18px 12px}
+  .sticky-note,.sticky-note:nth-child(3n+2),.sticky-note:nth-child(3n){transform:none}
+  .sticky-actions{opacity:1}
+}
+@media (max-width:420px){ .mydash-stickies{grid-template-columns:1fr} }

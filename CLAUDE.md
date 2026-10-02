@@ -54,6 +54,9 @@
 - **Personalizar** (`js/modules/apariencia.js`): estilo del encabezado (Clásico, Brillo, Degradé, Lino,
   Líneas finas) y barra de pestañas (Clásica, Fina, Con flechas, Plateada, Oculta; ojo: declaraciones.css pinta la Clásica con #nav-tabs, por eso las opciones van con el id). Rueda del mouse = mover pestañas.
 - **Selectores** con flechita propia (en `css/pulido.css`).
+- **Notas adhesivas** de Personal al estilo de María Lucía (`js/modules/notas.js`, `css/notas.css`): papel pastel,
+  cinta, leve inclinación, fecha y círculos de colores. Se mantiene todo lo que ya hacían. Los colores viejos
+  se muestran con su equivalente pastel (`notaColor`), sin tocar el dato.
 - **Celular** (`css/celular.css`, `js/modules/celular.js`): pestañas en una barra abajo con ícono, campanita
   visible, tablas con la primera columna fija, ventanas de abajo hacia arriba. Revisado a 375 px.
 
