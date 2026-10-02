@@ -2552,6 +2552,9 @@ function renderSettings() {
       <button class="btn btn-gold" onclick="openCustomize()">⚙ Abrir personalización</button>
     </div>`;
 
+  // Oct. 2026: el fondo de la pantalla de ingreso (js/modules/ingreso.js).
+  if (typeof ingresoCfgCard === 'function') html += ingresoCfgCard();
+
   html += `</div>`;
   return html;
 }

@@ -5,8 +5,11 @@ const path = require('path');
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-// El logo del estudio se toma del propio app.js (DEFAULT_LOGO), para que la prueba se vea igual.
+// El logo: si está el real en datos-locales/logo.png (sacado del historial, no va a Git) se usa ese;
+// si no, el de reserva de app.js (DEFAULT_LOGO).
 function logoDelEstudio() {
+  const real = path.join(__dirname, 'datos-locales', 'logo.png');
+  if (fs.existsSync(real)) return 'data:image/png;base64,' + fs.readFileSync(real).toString('base64');
   const app = fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'app.js'), 'utf8');
   const m = app.match(/const DEFAULT_LOGO = "([^"]+)"/);
   return m ? m[1] : '';
@@ -78,7 +81,7 @@ function estadoDePrueba() {
   const ahora = Date.now();
   return {
     branding: {
-      name: 'W. Machado', subtitle: 'Estudio Contable', year: '2026', logo: logoDelEstudio(), logoInvert: true,
+      name: 'W. Machado', subtitle: 'Estudio Contable', year: '2026', logo: logoDelEstudio(), logoInvert: false,
       colors: { accent: '#a8b0b8', header: '#102030', bg: '#f9f8f6', text: '#0a0a0a' },
       fonts: { display: "'Playfair Display', serif", body: "'Lato', sans-serif" }
     },

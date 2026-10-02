@@ -13,13 +13,18 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <link rel="stylesheet" href="./css/app.css">
+<link rel="stylesheet" href="./css/ingreso.css">
 </head>
 <body class="" data-role="admin">
 
 <!-- LOGIN SCREEN -->
-<div class="login-screen" id="login-screen" style="display: none;">
+<div class="login-screen fondo-elegante" id="login-screen" style="display: none;">
   <div class="login-bg-pattern"></div>
+  <!-- Fondo «Elegante» (oct. 2026): luces que se mueven despacio. Se elige en Configuración → Pantalla de ingreso. -->
+  <div class="login-fx" aria-hidden="true"><i class="lfx-orb lfx-1"></i><i class="lfx-orb lfx-2"></i><i class="lfx-orb lfx-3"></i><i class="lfx-grid"></i><i class="lfx-brillo"></i></div>
+  <img class="login-marca-agua" src="img/wydan-horizontal.png" alt="" aria-hidden="true">
   <div class="login-card">
+    <div class="login-saludo" id="login-saludo"></div>
     <div class="login-logo-wrap">
       <img id="login-logo-img" class="" alt="logo">
     </div>
@@ -42,9 +47,10 @@
     </div>
     <div class="login-footer">
       <span>© <span id="login-year">2026</span> · W. Machado Estudio Contable</span>
-      <br><button onclick="openManageUsers()" style="background:none;border:none;color:var(--c-accent);font-size:11px;cursor:pointer;margin-top:6px;letter-spacing:1px;">⚙ Administrar usuarios</button>
+      <br><button class="login-admin" onclick="openManageUsers()" style="background:none;border:none;color:var(--c-accent);font-size:11px;cursor:pointer;margin-top:6px;letter-spacing:1px;">⚙ Administrar usuarios</button>
     </div>
   </div>
+  <div class="login-wydan">Desarrollado por <img src="img/wydan-horizontal.png" alt="Wydan Solutions"></div>
 </div>
 
 <!-- MANAGE USERS MODAL -->
@@ -1073,6 +1079,7 @@
 <script src="./js/modules/sueldos.js"></script>
 <script src="./js/modules/sueldos-vista.js"></script>
 <script src="./js/modules/sueldos-bandeja.js"></script>
+<script src="./js/modules/ingreso.js"></script>
 
 <link id="hon-styles" rel="stylesheet" href="./css/honorarios.css">
 <script id="hon-module" src="./js/honorarios.js"></script>
