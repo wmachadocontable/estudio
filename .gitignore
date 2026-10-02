@@ -1,0 +1,14 @@
+*.backup
+*.bak
+*.tmp
+*.local
+*.secret
+*.secrets
+*.env
+.env*
+local.settings.json
+backup/
+backups/
+exports/
+private/
+secrets/
