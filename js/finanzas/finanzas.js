@@ -81,20 +81,12 @@ function finCellIn(col, id, f, v, opt){
    Honorarios guarda UN año (12 meses por cliente, tab.tabYear). Para otro año no hay datos: null. */
 function finHonTab(){ return state.tabs.find(t => t.type === 'honorarios' && t.honData) || null; }
 function finHonAnio(){ const t = finHonTab(); return t ? (parseInt(t.tabYear || finAnioActivo(), 10)) : null; }
+// Oct. 2026: el IVA va por la FECHA DE FACTURA y lo cobrado por la FECHA DE COBRO, no por el mes del casillero
+// (honorarios-factura.js). Así una factura de diciembre emitida en enero cae en el año siguiente.
 function finHonMes(y, m, que){
-  const t = finHonTab(); if (!t || finHonAnio() !== y) return null;
-  const hd = t.honData, rate = (typeof hd.taxRate === 'number') ? hd.taxRate : 0.22;
-  let tot = 0;
-  (hd.clients || []).forEach(c => {
-    if (c.archivedFrom) { const p = c.archivedFrom.split('-').map(Number); if (y > p[0] || (y === p[0] && m >= p[1]-1)) return; }
-    const cell = (c.months || [])[m]; if (!cell) return;
-    const sin = Number(cell.sinIva); if (cell.sinIva == null || cell.sinIva === '' || isNaN(sin) || !sin) return;
-    const conFac = !!(cell.factura && String(cell.factura).trim());
-    const iva = conFac ? Math.round(sin * rate * 100) / 100 : 0;
-    if (que === 'iva') tot += iva;
-    else if (que === 'cobrado' && cell.fecha) tot += sin + iva;
-  });
-  return Math.round(tot * 100) / 100;
+  const t = finHonTab(), hy = finHonAnio(); if (!t || (y !== hy && y !== hy + 1)) return null;
+  const n = honNumerosMes(t.honData, hy, y, m);
+  return que === 'iva' ? n.iva : que === 'cobrado' ? n.cobr : 0;
 }
 
 /* ===== LA FICHA DE GASTO (ventana) ===== */

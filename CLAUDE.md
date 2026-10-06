@@ -131,6 +131,16 @@
 - **El IVA de compras sigue por fecha de factura** (como lo toma DGI). Los gastos fijos que se traen solos
   corren también el vencimiento (`gstMesesEntre`).
 
+## Honorarios: mes corriente / mes vencido y fecha de factura (06/10/2026, pedido de la usuaria)
+- El casillero de cada mes es el **mes del trabajo**. Aparte (`js/finanzas/honorarios-factura.js`):
+  `cell.fFac` = **fecha de factura** → el IVA va a ese mes (vacía = el mes del casillero, lo viejo no se movió);
+  `cell.fecha` = fecha de cobro (caja); `c.facturacion = 'vencido'` (vacío = mes corriente) en la ficha del cliente.
+- Mes vencido: al escribir el N° la fecha de factura se sugiere en el mes siguiente, y no figura «Atrasado» ni en
+  «Quién debe» hasta que termina ese mes (`honPlazoCobro`).
+- Vista mensual: Honorarios del mes · **Facturado en el mes** (por fecha de factura, el IVA) · **Cobrado en el mes**
+  (por fecha de pago) · Pendiente de cobro. `finHonMes` (Impuestos y la línea de resultado de Gastos) usa las mismas
+  fechas; una factura de diciembre emitida en enero cae en el IVA de enero del año siguiente.
+
 ## «Se borró Sv. Profesionales» (02/10/2026) — no se había borrado
 - El año del estudio estaba guardado como `"2026 "` (con un espacio). Sv. Profesionales tenía los datos en el
   formato viejo (`row.cells`) y no tenía `tabYear`; al elegir un año en el selector se puso `tabYear: '2026'`,

@@ -72,3 +72,12 @@ body.edit-mode .hon-edit-name { display:inline; }
 .hon-pill.hon-archpill:hover { color:var(--ho-accent); border-color:var(--ho-accent); }
 .hon-year td.hon-yc.arch { color:var(--c-border); text-align:center; background:var(--c-bg-alt); }
 
+
+/* Oct. 2026: fecha de factura y mes vencido (js/finanzas/honorarios-factura.js) */
+.hon-ffac { display:block; font-size:10px; color:var(--c-text-muted); margin-top:2px; }
+.hon-iva-a { display:inline-block; margin-top:3px; font-size:10px; font-weight:700; color:var(--c-blue); background:var(--c-blue-light); border-radius:3px; padding:1px 6px; white-space:nowrap; }
+.hon-venc-chip { display:inline-block; margin-left:6px; font-size:9.5px; font-weight:700; letter-spacing:.3px; text-transform:uppercase; color:var(--c-pending); background:var(--c-pending-light); border-radius:3px; padding:1px 6px; vertical-align:middle; }
+.hon-ffac-ayuda { font-size:12px; color:var(--c-blue); margin:-6px 0 12px; }
+.hon-kpis .stat-card .stat-num { font-size:20px; }
+.hon-editor .hon-ec-in.hon-ec-ffac { width:128px; text-align:center; }
+.hon-fac-w { display:inline-block; text-align:inherit; }

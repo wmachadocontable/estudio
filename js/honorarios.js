@@ -40,11 +40,12 @@
 
   function honYear(tab){ return parseInt(tab.tabYear || (state.branding&&state.branding.year) || new Date().getFullYear(),10); }
 
-  function honStatus(cell, monthIdx, year){
+  function honStatus(cell, monthIdx, year, client){
     const sin = cell ? cell.sinIva : null;
     if (sin===null || sin===undefined || sin==='' || Number(sin)===0) return 'na';
     if (cell && cell.fecha) return 'paid';
-    const monthEnd = new Date(year, monthIdx+1, 0, 23, 59, 59);
+    // Oct. 2026: a mes vencido el plazo es el fin del mes siguiente (honorarios-factura.js).
+    const monthEnd = (typeof honPlazoCobro==='function') ? honPlazoCobro(client, year, monthIdx) : new Date(year, monthIdx+1, 0, 23, 59, 59);
     if (new Date() > monthEnd) return 'late';
     return 'pending';
   }
@@ -173,7 +174,7 @@
   function honStatsBar(rows, hd, year){
     let fact=0, cobr=0, atr=0, np=0, natr=0, npend=0;
     rows.forEach(r=>{
-      const st = honStatus(r.cell, r.m, year); if (st==='na') return;
+      const st = honStatus(r.cell, r.m, year, r.client); if (st==='na') return;
       const tot = honTotal(r.cell, hd); fact += tot;
       if (st==='paid'){ cobr+=tot; np++; } else if (st==='late'){ atr+=tot; natr++; } else { npend++; }
     });
@@ -199,7 +200,7 @@
     // filtrar por archivado (para totales y filas). La búsqueda se aplica visualmente luego.
     const visible = hd.clients.filter(c=>{ const arch=honArchivedAt(c,year,mi); return showArch ? true : !arch; });
     const rowsData = visible.filter(c=>!honArchivedAt(c,year,mi)).map(c=>({client:c, m:mi, cell:c.months[mi]}));
-    h += honStatsBar(rowsData, hd, year);
+    h += (typeof honKpisMes==='function') ? honKpisMes(tab, rowsData, year, mi) : honStatsBar(rowsData, hd, year);
     h += '<div class="table-wrap"><table class="hon-table"><thead><tr>';
     h += '<th>Empresa</th><th>Honorarios</th><th>IVA 22%</th><th>Total</th><th>N° Factura</th><th>Recibo</th><th>Fecha pago</th><th>Medio</th><th>Estado</th>';
     hd.extraCols.forEach(col=>{ h += '<th><span>'+honEsc(col.name)+'</span><span class="col-x" onclick="window.honDelCol(\''+tab.id+'\',\''+col.id+'\')">×</span></th>'; });
@@ -207,7 +208,7 @@
     let tSin=0,tIva=0,tTot=0;
     visible.forEach((c)=>{
       const archHere = honArchivedAt(c,year,mi);
-      const cell=c.months[mi]; const st=honStatus(cell,mi,year);
+      const cell=c.months[mi]; const st=honStatus(cell,mi,year,c);
       const hasIva=honHasIva(cell); const sin=cell.sinIva; const iva=honIva(cell,hd); const tot=honTotal(cell,hd);
       if(!archHere && st!=='na'){ tSin+=Number(sin); tIva+=iva; tTot+=tot; }
       const sel = (selId===c.id)?' hon-selected':'';
@@ -215,7 +216,7 @@
       const ed='onclick="window.honEdit(\''+tab.id+'\',\''+c.id+'\','+mi+')"';
       const archBadge = c.archivedFrom?(' <span class="hon-arch-badge" title="Archivado desde '+honArchLabel(c)+'">📦</span>'):'';
       h += '<tr class="hon-row'+sel+(archHere?' hon-archived':'')+'" data-cid="'+c.id+'" data-name="'+honEsc(String(c.name||'').toLowerCase())+'">';
-      h +=   '<td class="hon-name" onclick="window.honOpenClient(\''+tab.id+'\',\''+c.id+'\')" ondblclick="event.stopPropagation();window.honRenameClient(\''+tab.id+'\',\''+c.id+'\')" title="Clic: editar nombre e importes · Doble clic: renombrar">'+honEsc(c.name)+archBadge+'<span class="hon-edit-name" onclick="event.stopPropagation();window.honRenameClient(\''+tab.id+'\',\''+c.id+'\')" title="Renombrar">✎</span><span class="row-x" onclick="event.stopPropagation();window.honDelClient(\''+tab.id+'\',\''+c.id+'\')">×</span></td>';
+      h +=   '<td class="hon-name" onclick="window.honOpenClient(\''+tab.id+'\',\''+c.id+'\')" ondblclick="event.stopPropagation();window.honRenameClient(\''+tab.id+'\',\''+c.id+'\')" title="Clic: editar nombre e importes · Doble clic: renombrar">'+honEsc(c.name)+archBadge+(typeof honVencidoChip==='function'?honVencidoChip(c):'')+'<span class="hon-edit-name" onclick="event.stopPropagation();window.honRenameClient(\''+tab.id+'\',\''+c.id+'\')" title="Renombrar">✎</span><span class="row-x" onclick="event.stopPropagation();window.honDelClient(\''+tab.id+'\',\''+c.id+'\')">×</span></td>';
       if(archHere){
         h += '<td class="hon-num"></td><td class="hon-num hon-muted"></td><td class="hon-num"></td><td></td><td></td><td></td><td></td><td><span class="hon-pill hon-archpill" onclick="window.honUnarchiveClient(\''+tab.id+'\',\''+c.id+'\')" title="Clic para desarchivar">📦 Archivado</span></td>';
         hd.extraCols.forEach(()=>{ h+='<td></td>'; });
@@ -223,7 +224,7 @@
         h +=   '<td class="hon-num" '+ed+'>'+(st==='na'?'<span class="hon-na">—</span>':honMoney(sin))+'</td>';
         h +=   '<td class="hon-num hon-muted" '+ed+'>'+(st==='na'?'':(hasIva?honMoney(iva):'<span class="hon-na" title="Sin factura: no corresponde IVA">—</span>'))+'</td>';
         h +=   '<td class="hon-num hon-total" '+ed+'>'+(st==='na'?'':'<strong>'+honMoney(tot)+'</strong>')+'</td>';
-        h +=   '<td '+ed+'>'+(cell.factura?honEsc(cell.factura):'<span class="hon-add">+ N°</span>')+'</td>';
+        h +=   '<td '+ed+'>'+(cell.factura?'<span class="hon-fac-w">'+honEsc(cell.factura)+(typeof honFacturaTxt==='function'?honFacturaTxt(cell,year,mi):'')+'</span>':'<span class="hon-add">+ N°</span>')+'</td>';
         h +=   '<td '+ed+'>'+(cell.recibo?('<span class="hon-recibo">🧾 '+honEsc(cell.recibo)+'</span>'):'<span class="hon-add">+ recibo</span>')+'</td>';
         h +=   '<td '+ed+'>'+(cell.fecha?honFmtDate(cell.fecha):'<span class="hon-add">+ fecha</span>')+'</td>';
         h +=   '<td '+ed+'>'+(cell.medio?('<span class="hon-medio">'+honEsc(cell.medio)+'</span>'):'<span class="hon-add">—</span>')+'</td>';
@@ -234,7 +235,7 @@
     });
     h += '<tr class="hon-noresults" style="display:none;"><td colspan="'+(9+hd.extraCols.length)+'" style="text-align:center;color:var(--c-text-muted);padding:18px;">Sin resultados para la búsqueda.</td></tr>';
     h += '</tbody><tfoot><tr class="hon-foot"><td>TOTAL · '+MONTHS[mi]+'</td><td>'+honMoney(tSin)+'</td><td>'+honMoney(tIva)+'</td><td>'+honMoney(tTot)+'</td><td colspan="'+(5+hd.extraCols.length)+'"></td></tr></tfoot></table></div>';
-    h += '<p class="hon-hint">💡 El IVA 22% se calcula únicamente cuando la fila tiene N° de factura. Sin factura, el importe queda tal cual. El estado pasa a <strong>Atrasado</strong> solo si el mes terminó sin fecha de pago. Para archivar un cliente, abrilo (clic en el nombre) y usá <strong>📦 Archivar</strong>.</p>';
+    h += '<p class="hon-hint">💡 El IVA 22% se calcula únicamente cuando la fila tiene N° de factura. Sin factura, el importe queda tal cual. El IVA va al mes de la <strong>fecha de factura</strong> (si no tiene, al mes del trabajo). El estado pasa a <strong>Atrasado</strong> si el mes terminó sin fecha de pago (a <em>mes vencido</em>, si terminó el mes siguiente). Para archivar un cliente, abrilo (clic en el nombre) y usá <strong>📦 Archivar</strong>.</p>';
     return h;
   }
 
@@ -252,10 +253,10 @@
       let cyear=0;
       const archBadge = c.archivedFrom?(' <span class="hon-arch-badge" title="Archivado desde '+honArchLabel(c)+'">📦</span>'):'';
       h += '<tr class="hon-row" data-cid="'+c.id+'" data-name="'+honEsc(String(c.name||'').toLowerCase())+'">';
-      h += '<td class="hon-name" onclick="window.honOpenClient(\''+tab.id+'\',\''+c.id+'\')" ondblclick="event.stopPropagation();window.honRenameClient(\''+tab.id+'\',\''+c.id+'\')" title="Clic: editar · Doble clic: renombrar">'+honEsc(c.name)+archBadge+'<span class="hon-edit-name" onclick="event.stopPropagation();window.honRenameClient(\''+tab.id+'\',\''+c.id+'\')" title="Renombrar">✎</span><span class="row-x" onclick="event.stopPropagation();window.honDelClient(\''+tab.id+'\',\''+c.id+'\')">×</span></td>';
+      h += '<td class="hon-name" onclick="window.honOpenClient(\''+tab.id+'\',\''+c.id+'\')" ondblclick="event.stopPropagation();window.honRenameClient(\''+tab.id+'\',\''+c.id+'\')" title="Clic: editar · Doble clic: renombrar">'+honEsc(c.name)+archBadge+(typeof honVencidoChip==='function'?honVencidoChip(c):'')+'<span class="hon-edit-name" onclick="event.stopPropagation();window.honRenameClient(\''+tab.id+'\',\''+c.id+'\')" title="Renombrar">✎</span><span class="row-x" onclick="event.stopPropagation();window.honDelClient(\''+tab.id+'\',\''+c.id+'\')">×</span></td>';
       c.months.forEach((cell,m)=>{
         if(honArchivedAt(c,year,m)){ h += '<td class="hon-yc arch" title="'+MONTHS[m]+' · archivado">·</td>'; return; }
-        const st=honStatus(cell,m,year); const tot=honTotal(cell,hd);
+        const st=honStatus(cell,m,year,c); const tot=honTotal(cell,hd);
         if(st!=='na'){ cyear+=tot; monthTotals[m]+=tot; }
         const cls = st==='paid'?'hon-yc paid':(st==='late'?'hon-yc late':(st==='pending'?'hon-yc pending':'hon-yc na'));
         h += '<td class="'+cls+'" onclick="window.honEdit(\''+tab.id+'\',\''+c.id+'\','+m+')" title="'+MONTHS[m]+' · '+HON_ST[st].label+(honHasIva(cell)?' · c/IVA':'')+'">'+(st==='na'?'·':honMoney(tot,false))+'</td>';
@@ -297,8 +298,11 @@
     const methods=hd.methods||HON_METHODS;
     let b='';
     b+='<div class="form-group"><label>Honorarios sin IVA ($)</label><input type="number" step="0.01" id="hon-f-sin" value="'+(cell.sinIva!=null?cell.sinIva:'')+'" placeholder="vacío = no aplica este mes"></div>';
+    const yy=honYear(tab);
     b+='<div class="form-row"><div class="form-group"><label>N° Factura <span class="hon-lbl-note">(activa el IVA)</span></label><input type="text" id="hon-f-fac" value="'+honEsc(cell.factura)+'" placeholder="sin N° → sin IVA"></div>';
-    b+='<div class="form-group"><label>Fecha de pago</label><input type="date" id="hon-f-fecha" value="'+honEsc(cell.fecha)+'"></div></div>';
+    b+='<div class="form-group"><label>Fecha de factura <span class="hon-lbl-note">(el IVA va a ese mes)</span></label><input type="date" id="hon-f-ffac" min="2000-01-01" max="2099-12-31" value="'+honEsc(cell.fFac||'')+'"></div></div>';
+    b+='<div class="hon-ffac-ayuda" id="hon-f-ffac-ayuda"></div>';
+    b+='<div class="form-group"><label>Fecha de pago <span class="hon-lbl-note">(cuándo entró la plata)</span></label><input type="date" id="hon-f-fecha" min="2000-01-01" max="2099-12-31" value="'+honEsc(cell.fecha)+'"></div>';
     b+='<div class="hon-calc" id="hon-f-calc"></div>';
     b+='<div class="form-group hon-recibo-toggle"><label class="hon-chk"><input type="checkbox" id="hon-f-hasrec" '+(cell.recibo?'checked':'')+' onchange="window.honToggleRecibo()"> Tiene recibo</label></div>';
     b+='<div class="form-group" id="hon-f-recwrap" style="'+(cell.recibo?'':'display:none;')+'"><label>N° / detalle de recibo</label><input type="text" id="hon-f-rec" value="'+honEsc(cell.recibo)+'"></div>';
@@ -307,7 +311,13 @@
     document.getElementById('hon-m-body').innerHTML=b;
     document.getElementById('modal-hon').classList.add('open');
     const si=document.getElementById('hon-f-sin'); const fi=document.getElementById('hon-f-fac');
-    honUpdCalc(); si.addEventListener('input',honUpdCalc); fi.addEventListener('input',honUpdCalc); si.focus();
+    honUpdCalc(); si.addEventListener('input',honUpdCalc); fi.addEventListener('input',honUpdCalc);
+    if(typeof honFFacAlEscribir==='function'){
+      fi.addEventListener('input',function(){ honFFacAlEscribir(c,yy,mi); });
+      document.getElementById('hon-f-ffac').addEventListener('input',function(){ honFFacAyuda(c,yy,mi); });
+      honFFacAyuda(c,yy,mi);
+    }
+    si.focus();
   };
   function honUpdCalc(){
     if(!HON_EDIT) return; const tab=state.tabs.find(t=>t.id===HON_EDIT.tabId); if(!tab)return;
@@ -327,6 +337,7 @@
     const sv=document.getElementById('hon-f-sin').value;
     cell.sinIva = (sv===''||isNaN(parseFloat(sv)))?null:Math.round(parseFloat(sv)*100)/100;
     cell.factura=document.getElementById('hon-f-fac').value.trim();
+    const ffac=document.getElementById('hon-f-ffac'); if(ffac) cell.fFac=ffac.value||'';
     cell.fecha=document.getElementById('hon-f-fecha').value;
     cell.medio=document.getElementById('hon-f-medio').value;
     cell.recibo = document.getElementById('hon-f-hasrec').checked ? document.getElementById('hon-f-rec').value.trim() : '';
@@ -351,19 +362,21 @@
     var year=honYear(tab); setHonSel(tabId,cid); HON_CEDIT={tabId:tabId,cid:cid};
     document.getElementById('hon-m-title').textContent='Editar: '+c.name;
     document.getElementById('hon-m-sub').textContent='Nombre, honorarios y factura \u00b7 '+year+' \u00b7 pesos uruguayos';
-    var b='<div class="form-group"><label>Nombre de la empresa / cliente</label><input type="text" id="hon-ec-name" value="'+honEsc(c.name)+'"></div>';
-    b+='<div class="table-wrap" style="margin:0 0 4px;"><table class="hon-table hon-editor"><thead><tr><th>Mes</th><th>Honorarios s/IVA</th><th>N\u00b0 Factura</th><th>IVA</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody>';
+    var b='<div class="form-row"><div class="form-group"><label>Nombre de la empresa / cliente</label><input type="text" id="hon-ec-name" value="'+honEsc(c.name)+'"></div>';
+    b+='<div class="form-group"><label>Facturación</label><select id="hon-ec-facturacion"><option value="">Mes corriente (factura en el mismo mes)</option><option value="vencido"'+(c.facturacion==='vencido'?' selected':'')+'>Mes vencido (factura al mes siguiente)</option></select></div></div>';
+    b+='<div class="table-wrap" style="margin:0 0 4px;"><table class="hon-table hon-editor"><thead><tr><th>Mes</th><th>Honorarios s/IVA</th><th>N\u00b0 Factura</th><th>Fecha factura</th><th>IVA</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody>';
     for(var m=0;m<12;m++){ var cell=c.months[m];
       b+='<tr><td style="text-align:left;font-weight:700;">'+MONTHS_SHORT[m]+'</td>'+
          '<td><input type="number" step="0.01" class="hon-ec-in" id="hon-ec-sin-'+m+'" value="'+(cell.sinIva!=null?cell.sinIva:'')+'" oninput="window.honEcCalc('+m+')" placeholder="\u2014"></td>'+
          '<td><input type="text" class="hon-ec-in hon-ec-fac" id="hon-ec-fac-'+m+'" value="'+honEsc(cell.factura)+'" oninput="window.honEcCalc('+m+')" placeholder="s/factura"></td>'+
+         '<td><input type="date" class="hon-ec-in hon-ec-ffac" id="hon-ec-ffac-'+m+'" min="2000-01-01" max="2099-12-31" value="'+honEsc(cell.fFac||'')+'" title="Fecha de la factura: el IVA va a ese mes"></td>'+
          '<td class="hon-num hon-muted" id="hon-ec-iva-'+m+'"></td>'+
          '<td class="hon-num" id="hon-ec-tot-'+m+'"></td>'+
          '<td id="hon-ec-st-'+m+'"></td>'+
          '<td><button class="btn btn-outline btn-sm" title="Fecha de pago, medio, recibo\u2026" onclick="window.honSaveClientEditor(true,'+m+')">\u22ef</button></td></tr>';
     }
-    b+='</tbody><tfoot><tr class="hon-foot"><td>Total a\u00f1o</td><td></td><td></td><td></td><td class="hon-num" id="hon-ec-year"></td><td colspan="2"></td></tr></tfoot></table></div>';
-    b+='<p class="hon-hint">El IVA 22% se agrega solo si carg\u00e1s un N\u00b0 de factura. Sin factura, el importe queda tal cual (Total = honorarios). Us\u00e1 \u22ef para fecha de pago, medio y recibo.</p>';
+    b+='</tbody><tfoot><tr class="hon-foot"><td>Total a\u00f1o</td><td></td><td></td><td></td><td></td><td class="hon-num" id="hon-ec-year"></td><td colspan="2"></td></tr></tfoot></table></div>';
+    b+='<p class="hon-hint">El IVA 22% se agrega solo si carg\u00e1s un N\u00b0 de factura. Sin factura, el importe queda tal cual (Total = honorarios). El IVA va al mes de la <b>fecha de factura</b> (vac\u00eda = el mes del trabajo). Us\u00e1 \u22ef para fecha de pago, medio y recibo.</p>';
     document.getElementById('hon-m-body').innerHTML=b;
     var act=document.querySelector('#modal-hon .hon-m-actions'); act.style.display='';
     var archBtn = c.archivedFrom
@@ -373,6 +386,7 @@
     if(c.archivedFrom){ document.getElementById('hon-m-sub').textContent='Archivado desde '+honArchLabel(c)+' · '+year+' · pesos uruguayos'; }
     document.getElementById('modal-hon').classList.add('open');
     for(var k=0;k<12;k++) window.honEcCalc(k);
+    var fs2=document.getElementById('hon-ec-facturacion'); if(fs2) fs2.addEventListener('change',function(){ for(var k2=0;k2<12;k2++) window.honEcCalc(k2); });
     var ni=document.getElementById('hon-ec-name'); if(ni) ni.focus();
   };
   window.honEcCalc=function(m){
@@ -388,7 +402,8 @@
     if(ivaEl) ivaEl.innerHTML=(sin==null)?'':(fac?honMoney(iva):'<span class="hon-na" title="Sin factura: no corresponde IVA">\u2014</span>');
     if(totEl) totEl.innerHTML=(sin==null)?'<span class="hon-na">\u2014</span>':'<strong>'+honMoney(tot)+'</strong>';
     var cell=c.months[m];
-    var st=(sin==null||sin===0)?'na':(cell.fecha?'paid':((new Date()>new Date(year,m+1,0,23,59,59))?'late':'pending'));
+    var plazo=(typeof honPlazoCobro==='function')?honPlazoCobro({facturacion:(document.getElementById('hon-ec-facturacion')||{}).value},year,m):new Date(year,m+1,0,23,59,59);
+    var st=(sin==null||sin===0)?'na':(cell.fecha?'paid':((new Date()>plazo)?'late':'pending'));
     if(stEl) stEl.innerHTML='<span class="'+HON_ST[st].cls+'">'+HON_ST[st].label+'</span>';
     var yt=0; for(var i=0;i<12;i++){ var s2e=document.getElementById('hon-ec-sin-'+i); var f2e=document.getElementById('hon-ec-fac-'+i); if(!s2e)continue; var s2=(s2e.value===''||isNaN(parseFloat(s2e.value)))?null:parseFloat(s2e.value); if(s2==null)continue; var f2=(f2e.value||'').trim(); var iv2=f2?Math.round(s2*rate*100)/100:0; yt+=Math.round((s2+iv2)*100)/100; }
     var ye=document.getElementById('hon-ec-year'); if(ye) ye.innerHTML='<strong>'+honMoney(yt)+'</strong>';
@@ -397,9 +412,11 @@
     if(!HON_CEDIT) return; var tab=state.tabs.find(function(t){return t.id===HON_CEDIT.tabId;}); if(!tab)return;
     var c=tab.honData.clients.find(function(x){return x.id===HON_CEDIT.cid;}); if(!c)return;
     var ni=document.getElementById('hon-ec-name'); if(ni){ var nm=ni.value.trim(); if(nm) c.name=nm; }
+    var fsel=document.getElementById('hon-ec-facturacion'); if(fsel){ if(fsel.value) c.facturacion=fsel.value; else delete c.facturacion; }
     for(var i=0;i<12;i++){ var sv=document.getElementById('hon-ec-sin-'+i); var fc=document.getElementById('hon-ec-fac-'+i); if(!sv)continue;
       c.months[i].sinIva=(sv.value===''||isNaN(parseFloat(sv.value)))?null:Math.round(parseFloat(sv.value)*100)/100;
       c.months[i].factura=(fc.value||'').trim();
+      var ff=document.getElementById('hon-ec-ffac-'+i); if(ff) c.months[i].fFac=ff.value||'';
     }
     honSave();
     if(openCell){ closeModal('modal-hon'); window.honEdit(HON_CEDIT.tabId, HON_CEDIT.cid, m); return; }

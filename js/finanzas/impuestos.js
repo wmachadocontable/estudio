@@ -104,11 +104,13 @@ function renderImpuestos(){
   if(impCfgAbierta)h+=vencCfgCard();
   // Honorarios guarda un solo año (sus 12 meses): el IVA facturado sale de ese año.
   var hy=finHonAnio();
-  if(hy&&hy!==y)h+='<div class="venc-aviso">Honorarios tiene cargado el año <b>'+hy+'</b>: el IVA facturado de '+y
+  if(hy&&hy+1===y)h+='<div class="venc-aviso">Honorarios tiene cargado el año <b>'+hy+'</b>: de ahí solo entran las facturas emitidas en '+y
+    +' (por ejemplo, diciembre a mes vencido). Lo que pagaste lo podés escribir igual en cada período.</div>';
+  else if(hy&&hy!==y)h+='<div class="venc-aviso">Honorarios tiene cargado el año <b>'+hy+'</b>: el IVA facturado de '+y
     +' no se puede calcular. Lo que pagaste lo podés escribir igual en cada período.</div>';
   h+='<div id="imp-kpis">'+impKpisHtml(y)+'</div>';
   h+=impTablaPeriodos(y);
-  h+='<div class="fin-nota">💡 El <b>IVA facturado</b> sale de Honorarios y cuenta solo las filas con N° de factura. '
+  h+='<div class="fin-nota">💡 El <b>IVA facturado</b> sale de Honorarios: solo las filas con N° de factura, en el mes de su <b>fecha de factura</b>. '
     +'El <b>IVA de gastos</b> sale de Gastos y ya contempla el 50% cuando corresponde. Lo que escribas en '
     +'<b>IVA a pagar</b> e <b>IRPF</b> manda sobre lo calculado: la sugerencia es una ayuda. '
     +'Las fechas de vencimiento se corrigen en <b>⚙ Mis impuestos</b>.</div>';

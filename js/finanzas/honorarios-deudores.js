@@ -3,7 +3,7 @@
  * - «Quién debe»: arriba de Honorarios, la lista de clientes con meses sin cobrar, con el total
  *   y un botón para copiarla (para mandarla por WhatsApp o mail).
  * - Campanita: una vez por día, al entrar, «N clientes deben honorarios ($ total)».
- * Atrasado = igual que en Honorarios: el mes ya terminó, tiene importe y no tiene fecha de cobro.
+ * Atrasado = igual que en Honorarios: el mes ya terminó (a mes vencido, el siguiente), tiene importe y no tiene fecha de cobro.
  * Honorarios guarda un solo año (tab.tabYear): se mira ese año.
  */
 if (typeof NOTIF_TYPES !== 'undefined' && !NOTIF_TYPES.some(t => t.key === 'honorarios')) {
@@ -21,7 +21,7 @@ function honDeudores() {
       if (!cell) return;
       const sin = Number(cell.sinIva); if (cell.sinIva == null || cell.sinIva === '' || isNaN(sin) || !sin) return;
       if (cell.fecha) return;                                             // cobrado
-      if (new Date(y, m + 1, 0, 23, 59, 59) >= hoy) return;              // el mes todavía no terminó
+      if (honPlazoCobro(c, y, m) >= hoy) return;                          // todavía en plazo (a mes vencido, hasta fin del mes siguiente)
       if (c.archivedFrom) { const p = c.archivedFrom.split('-').map(Number); if (y > p[0] || (y === p[0] && m >= p[1] - 1)) return; }
       const conFac = !!(cell.factura && String(cell.factura).trim());
       meses.push({ m, importe: Math.round((sin + (conFac ? sin * rate : 0)) * 100) / 100 });
