@@ -214,3 +214,10 @@ tbody tr.imp-vacio td{color:var(--c-text-muted)}
   .hon-deu-t2 td:nth-child(2){grid-column:1 / -1;order:3;line-height:1.9}
   .hon-deu-pie{padding:8px 12px 12px}
 }
+
+/* Gastos por vencimiento y pago (oct. 2026) */
+.fin-app .pill.st-venc{background:var(--c-red-light);color:var(--c-red);border-color:var(--c-red)}
+.gst-venc,.gst-otro{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border-radius:10px;padding:2px 8px;margin-left:6px}
+.gst-venc{background:var(--c-red-light);color:var(--c-red)}
+.gst-otro{background:var(--c-green-light);color:var(--c-green)}
+.gst-pago{display:block;font-size:10.5px;color:var(--c-text-muted);margin-top:3px;white-space:nowrap}

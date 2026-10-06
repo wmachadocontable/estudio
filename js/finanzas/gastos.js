@@ -8,6 +8,14 @@
  * CONTADO Y CRÉDITO (criterio de caja): una compra se carga UNA sola vez.
  * Si es a crédito, sus cuotas son la forma de pagarla: cada cuota aparece en el mes que vence,
  * nunca la compra entera. Así el "total del mes" siempre significa lo que sale del bolsillo.
+ *
+ * VENCIMIENTO Y PAGO (oct. 2026, pedido de la usuaria): la caja se mira por cuándo VENCE y cuándo se
+ * PAGÓ, no por la fecha de la factura (la luz facturada el 25/09 que vence el 10/10 es de octubre).
+ *   - g.vence (opcional; si falta, la fecha de la compra). Las cuotas: su fecha ya es el vencimiento.
+ *   - «A pagar este mes»: lo que vence en el mes. «Pagado este mes»: lo pagado en el mes (fechaPago),
+ *     aunque venciera en otro: es el egreso real. Lo vencido sin pagar de meses anteriores aparece en
+ *     el mes en curso, en rojo, hasta que se pague.
+ *   - El IVA de compras sigue por fecha de factura (como lo toma DGI).
  * Datos: colección "gastos" (la compra) + colección "cuotas" (los pagos programados de una compra).
  * La ficha de alta y edición está en gastos-form.js.
  */
@@ -44,6 +52,10 @@ function setGstVista(v){ gstVista=v; renderGastos(); }
 /* ===== fechas y cuotas ===== */
 function gstAnioDe(x){ return x&&x.fecha?+x.fecha.slice(0,4):null; }
 function gstMesDe(x){ return x&&x.fecha?+x.fecha.slice(5,7)-1:null; }
+// Cuándo vence: el campo «vence» del gasto o, si no lo tiene, su fecha (en una cuota, su fecha).
+function gstVence(x){ return (x&&(x.vence||x.fecha))||''; }
+function gstEnMes(iso,y,m){ return !!iso&&+iso.slice(0,4)===y&&+iso.slice(5,7)-1===m; }
+function gstMesesEntre(a,b){ if(!a||!b)return 0; return (+b.slice(0,4)-+a.slice(0,4))*12+(+b.slice(5,7)-+a.slice(5,7)); }
 // Suma meses a una fecha. Si el día no existe en el mes destino (31 en febrero), va al último día.
 function gstSumarMeses(iso,n){
   var p=(iso||finHoy()).split('-'), d=+p[2];
@@ -82,20 +94,42 @@ function gstComprometido(y,m){
   return {total:t,n:n};
 }
 
-/* ===== las filas de un mes: gastos al contado + cuotas que vencen ese mes ===== */
-function gstFilasMes(y,m){
-  var filas=[];
+/* ===== lo que se paga: gastos al contado + cuotas (cada uno una vez) ===== */
+function gstItems(){
+  var out=[];
   FinStore.all('gastos').forEach(function(g){
     if(g.forma==='credito')return;                         // la compra a crédito se ve a través de sus cuotas
-    if(gstAnioDe(g)!==y||gstMesDe(g)!==m)return;
-    filas.push({id:g.id,tipo:'gasto',g:g,fecha:g.fecha,importe:honNum(g.importe),pagado:!!g.pagado,det:''});
+    out.push({id:g.id,tipo:'gasto',g:g,vence:gstVence(g),importe:honNum(g.importe),pagado:!!g.pagado,fechaPago:g.fechaPago||'',det:''});
   });
   FinStore.all('cuotas').forEach(function(c){
     var g=FinStore.get('gastos',c.gastoId); if(!g)return;
-    if(gstAnioDe(c)!==y||gstMesDe(c)!==m)return;
-    filas.push({id:c.id,tipo:'cuota',g:g,c:c,fecha:c.fecha,importe:honNum(c.importe),pagado:!!c.pagado,det:'Cuota '+c.n+'/'+(g.cuotas||'?')});
+    out.push({id:c.id,tipo:'cuota',g:g,c:c,vence:c.fecha||'',importe:honNum(c.importe),pagado:!!c.pagado,fechaPago:c.fechaPago||'',det:'Cuota '+c.n+'/'+(g.cuotas||'?')});
   });
-  return filas.sort(function(a,b){ return (a.fecha||'').localeCompare(b.fecha||''); });
+  return out;
+}
+/* ===== las filas de un mes =====
+   Lo que vence en el mes, lo que se pagó en el mes (aunque venciera en otro) y, en el mes en curso,
+   lo vencido de antes que sigue sin pagar. f.fecha = vencimiento (para ordenar y mostrar). */
+function gstFilasMes(y,m){
+  var hoy=new Date(), esActual=(y===hoy.getFullYear()&&m===hoy.getMonth());
+  var inicio=y+'-'+String(m+1).padStart(2,'0')+'-01';
+  var filas=[];
+  gstItems().forEach(function(it){
+    var vence=gstEnMes(it.vence,y,m), pagoAca=it.pagado&&gstEnMes(it.fechaPago,y,m);
+    var arrastre=esActual&&!it.pagado&&!!it.vence&&it.vence<inicio;
+    if(!vence&&!pagoAca&&!arrastre)return;
+    it.fecha=it.vence; it.venceAca=vence; it.pagoAca=pagoAca; it.arrastre=arrastre;
+    filas.push(it);
+  });
+  return filas.sort(function(a,b){ return (b.arrastre?1:0)-(a.arrastre?1:0)||(a.fecha||'').localeCompare(b.fecha||''); });
+}
+// Para la vista anual y el Excel del año: cada pago UNA vez, en el mes en que salió la plata
+// (o, si todavía no se pagó, en el mes en que vence).
+function gstMesCaja(it){ var d=it.pagado&&it.fechaPago?it.fechaPago:it.vence; return d?{y:+d.slice(0,4),m:+d.slice(5,7)-1}:null; }
+function gstFilasCaja(y,m){
+  return gstItems().filter(function(it){ var k=gstMesCaja(it); return k&&k.y===y&&k.m===m; })
+    .map(function(it){ it.fecha=it.vence; it.venceAca=true; it.pagoAca=it.pagado; return it; })
+    .sort(function(a,b){ return (a.fecha||'').localeCompare(b.fecha||''); });
 }
 function gstFiltradas(){
   var q=gstQ.trim().toLowerCase();
@@ -105,9 +139,15 @@ function gstFiltradas(){
     return true;
   });
 }
+// A pagar = vence en el mes · Pagado = salió en el mes · Pendiente = lo del mes sin pagar + lo vencido de antes.
 function gstTotales(filas){
-  var t={total:0,pag:0,pen:0,nPen:0};
-  filas.forEach(function(f){ var n=f.importe||0; t.total+=n; if(f.pagado)t.pag+=n; else {t.pen+=n;t.nPen++;} });
+  var t={total:0,pag:0,pen:0,nPen:0,venc:0,nVenc:0};
+  filas.forEach(function(f){
+    var n=f.importe||0;
+    if(f.venceAca)t.total+=n;
+    if(f.pagoAca)t.pag+=n;
+    if(!f.pagado){ t.pen+=n; t.nPen++; if(f.arrastre){ t.venc+=n; t.nVenc++; } }
+  });
   return t;
 }
 // IVA de las COMPRAS del mes (el crédito fiscal corresponde a la fecha de la factura, no a la de la cuota).
@@ -155,7 +195,7 @@ function gstBorrar(tipo,id){
 function gstDuplicar(id){
   var g=FinStore.get('gastos',id); if(!g)return;
   var n=Object.assign({},g); delete n.id; delete n._t;
-  n.fecha=finHoy(); n.pagado=false; n.fechaPago=''; n.factura='';
+  n.fecha=finHoy(); n.vence=''; n.pagado=false; n.fechaPago=''; n.factura='';
   if(n.forma==='credito')n.primera=gstSumarMeses(finHoy(),1);
   var nuevo=FinStore.upsert('gastos',n);
   gstSincronizarCuotas(nuevo);
@@ -179,7 +219,7 @@ function renderGastos(){
     h+='<div class="month-filter">'+MONTHS_SHORT.map(function(m,i){return '<button class="month-btn'+(i===gstMes?' active':'')+'" onclick="setGstMes('+i+')">'+m.toUpperCase()+'</button>';}).join('')+'</div>';
   }
   h+='<div id="gst-body"></div>';
-  h+='<div class="fin-nota">💡 Marcá un gasto como <b>fijo</b> (alquiler, luz, agua…) y el mes que viene lo traés con un solo botón. Las compras <b>a crédito</b> aparecen en el mes de cada cuota, nunca el total de golpe.</div>';
+  h+='<div class="fin-nota">💡 Marcá un gasto como <b>fijo</b> (alquiler, luz, agua…) y el mes que viene lo traés con un solo botón. Cada gasto aparece en el mes en que <b>vence</b>; «Pagado este mes» es la plata que salió de verdad. Las compras <b>a crédito</b> aparecen en el mes de cada cuota, nunca el total de golpe.</div>';
   finQ('#view-gastos').innerHTML=h;
   syncGstListas(); renderGstBody();
 }
@@ -188,25 +228,29 @@ function renderGstBody(){ finQ('#gst-body').innerHTML = gstVista==='anual' ? gst
 function gstTablaMensual(){
   var y=gstYear(), m=gstMes, filas=gstFiltradas(), t=gstTotales(filas), comp=gstComprometido(y,m);
   var kpis='<div class="kpis '+(comp.n?'kpis-4':'kpis-3')+'">'
-    +finKpi('A pagar este mes',money(t.total),MONTHS[m],'')
-    +finKpi('Pagado',money(t.pag),'','k-green')
-    +finKpi('Pendiente',money(t.pen),t.nPen?(t.nPen+' sin pagar'):'todo al día',t.pen?'k-amber':'')
+    +finKpi('A pagar este mes',money(t.total),'lo que vence en '+MONTHS[m],'')
+    +finKpi('Pagado este mes',money(t.pag),'la plata que salió','k-green')
+    +finKpi('Pendiente',money(t.pen),t.nVenc?('incluye '+money(t.venc)+' vencido de antes'):(t.nPen?(t.nPen+' sin pagar'):'todo al día'),t.nVenc?'k-alerta':(t.pen?'k-amber':''))
     +(comp.n?finKpi('Comprometido a futuro',money(comp.total),comp.n+(comp.n===1?' cuota por venir':' cuotas por venir'),'k-acento'):'')
     +'</div>';
   var cuerpo=filas.map(function(f){
     var g=f.g;
     return '<tr>'
-      +'<td style="white-space:nowrap">'+(f.tipo==='cuota'?'<span class="gst-fecha">'+fDate(f.fecha)+'</span>':finCellIn('gastos',g.id,'fecha',g.fecha,{type:'date'}))+'</td>'
+      +'<td style="white-space:nowrap" title="'+(f.tipo==='cuota'?'Vence la cuota':'Vence · factura del '+fDate(g.fecha))+'">'+(f.tipo==='cuota'?'<span class="gst-fecha">'+fDate(f.fecha)+'</span>':finCellIn('gastos',g.id,'vence',gstVence(g),{type:'date'}))+'</td>'
       +'<td><div class="name-cell"><span class="gst-ico">'+gstIco(g.cat)+'</span>'
         +(f.tipo==='cuota'?'<b class="gst-nom">'+finEsc(g.concepto)+'</b>':finCellIn('gastos',g.id,'concepto',g.concepto,{ph:'¿Qué se pagó?'}))
         +(f.det?'<span class="gst-cuota">'+f.det+'</span>':'')
-        +(g.fijo?'<span class="gst-fijo" title="Gasto fijo: se puede traer del mes anterior con un botón">fijo</span>':'')+'</div></td>'
+        +(g.fijo?'<span class="gst-fijo" title="Gasto fijo: se puede traer del mes anterior con un botón">fijo</span>':'')
+        +(f.arrastre?'<span class="gst-venc" title="Venció en un mes anterior y sigue sin pagar">vencido</span>':'')
+        +(!f.venceAca&&f.pagoAca?'<span class="gst-otro" title="Vence en otro mes, pero se pagó en este">pagado este mes</span>':'')+'</div></td>'
       +'<td>'+(f.tipo==='cuota'?'<span class="muted-cell">'+finEsc(g.cat||'—')+'</span>':finCellIn('gastos',g.id,'cat',g.cat,{list:'dl-gastocats',ph:'Categoría'}))+'</td>'
       +'<td class="num"><b>'+(f.importe===null?'<span class="muted-cell">—</span>':money(f.importe))+'</b></td>'
       +'<td class="num gst-iva">'+gstCeldaIva(f)+'</td>'
       +'<td>'+(f.pagado
-        ?'<span class="pill st-done clk" onclick="gstTogglePago(\''+f.tipo+'\',\''+f.id+'\')" title="Tocá para marcarlo como pendiente">Pagado</span>'
-        :'<span class="pill st-pend clk" onclick="gstTogglePago(\''+f.tipo+'\',\''+f.id+'\')" title="Tocá para marcarlo como pagado">Pendiente</span>')+'</td>'
+        ?'<span class="pill st-done clk" onclick="gstTogglePago(\''+f.tipo+'\',\''+f.id+'\')" title="Tocá para marcarlo como pendiente">Pagado</span>'+(f.fechaPago?'<span class="gst-pago">el '+fDate(f.fechaPago)+'</span>':'')
+        :(f.vence&&f.vence<finHoy()
+          ?'<span class="pill st-venc clk" onclick="gstTogglePago(\''+f.tipo+'\',\''+f.id+'\')" title="Venció y no está pagado. Tocá para marcarlo como pagado">Vencido</span>'
+          :'<span class="pill st-pend clk" onclick="gstTogglePago(\''+f.tipo+'\',\''+f.id+'\')" title="Tocá para marcarlo como pagado">Pendiente</span>'))+'</td>'
       +'<td><div class="row-act">'
         +'<button class="btn-ghost" title="Ver o editar" onclick="gastoForm(\''+g.id+'\')">✎</button>'
         +'<button class="btn-ghost" title="Duplicar" onclick="gstDuplicar(\''+g.id+'\')">⧉</button>'
@@ -214,8 +258,8 @@ function gstTablaMensual(){
       +'</div></td></tr>';
   }).join('');
   if(!cuerpo)cuerpo=finEmptyRow(7,'Todavía no hay gastos cargados en '+MONTHS[m]+'.');
-  var pie=filas.length?'<tr class="gst-tot"><td colspan="3">Total de '+MONTHS[m]+'</td><td class="num">'+money(t.total)+'</td><td colspan="3"></td></tr>':'';
-  return kpis+'<div class="table-wrap"><table style="min-width:900px"><thead><tr><th>Fecha</th><th>Gasto</th><th>Categoría</th><th class="num">Importe</th><th class="num">IVA</th><th>Estado</th><th></th></tr></thead>'
+  var pie=filas.length?'<tr class="gst-tot"><td colspan="3">Vence en '+MONTHS[m]+'</td><td class="num">'+money(t.total)+'</td><td colspan="3"></td></tr>':'';
+  return kpis+'<div class="table-wrap"><table style="min-width:900px"><thead><tr><th>Vence</th><th>Gasto</th><th>Categoría</th><th class="num">Importe</th><th class="num">IVA</th><th>Estado</th><th></th></tr></thead>'
     +'<tbody>'+cuerpo+pie+'</tbody></table></div>'+gstResultado(y,m,t);
 }
 
@@ -238,7 +282,7 @@ function gstResultado(y,m,t){
 function gstTablaAnual(){
   var y=gstYear(), cats=[], porCat={}, porMes=new Array(12).fill(0), total=0;
   for(var m=0;m<12;m++){
-    gstFilasMes(y,m).forEach(function(f){
+    gstFilasCaja(y,m).forEach(function(f){
       var c=(f.g.cat||'Sin categoría').trim(), n=f.importe||0;
       if(!porCat[c]){ porCat[c]=new Array(12).fill(0); cats.push(c); }
       porCat[c][m]+=n; porMes[m]+=n; total+=n;
@@ -271,8 +315,9 @@ function gstCopiarFijos(){
   fijos.forEach(function(g){
     var repetido=yaHay.some(function(x){ return (x.concepto||'').trim().toLowerCase()===(g.concepto||'').trim().toLowerCase(); });
     if(repetido)return;
+    var nf=y+'-'+String(m+1).padStart(2,'0')+'-'+((g.fecha||'').slice(8,10)||'01');
     FinStore.upsert('gastos',{concepto:g.concepto,cat:g.cat,importe:g.importe,proveedor:g.proveedor||'',medio:g.medio||'',
-      fecha:y+'-'+String(m+1).padStart(2,'0')+'-'+((g.fecha||'').slice(8,10)||'01'), pagado:false, fechaPago:'', factura:'',
+      fecha:nf, vence:g.vence?gstSumarMeses(g.vence,gstMesesEntre(g.fecha,nf)):'', pagado:false, fechaPago:'', factura:'',
       fijo:true, forma:'contado', conIva:!!g.conIva, iva:g.conIva?g.iva:0, notas:''});
     nuevos++;
   });
@@ -308,9 +353,9 @@ function gstFijosAutomaticos() {
     const id = 'gf' + clave + '_' + slug(g.concepto);
     if (f.gastos.some(x => x.id === id)) return;
     if (yaHay.some(x => (x.concepto || '').trim().toLowerCase() === (g.concepto || '').trim().toLowerCase())) return;
-    const dia = Math.min(+((g.fecha || '').slice(8, 10)) || 1, ultimo);
+    const dia = Math.min(+((g.fecha || '').slice(8, 10)) || 1, ultimo), nf = clave + '-' + String(dia).padStart(2, '0');
     f.gastos.push({ id, _t: Date.now(), concepto: g.concepto, cat: g.cat, importe: g.importe, proveedor: g.proveedor || '', medio: g.medio || '',
-      fecha: clave + '-' + String(dia).padStart(2, '0'), pagado: false, fechaPago: '', factura: '', fijo: true, forma: 'contado',
+      fecha: nf, vence: g.vence ? gstSumarMeses(g.vence, gstMesesEntre(g.fecha, nf)) : '', pagado: false, fechaPago: '', factura: '', fijo: true, forma: 'contado',
       conIva: !!g.conIva, iva: g.conIva ? g.iva : 0, ivaModo: g.ivaModo || 'incluido', ivaDed: g.ivaDed || 100, notas: '', _auto: true });
     n++;
   });

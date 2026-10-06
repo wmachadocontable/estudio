@@ -104,6 +104,17 @@
 - **Celular:** Finanzas y CEDE en fichas (final de `js/modules/celular.js` y `css/celular.css`), «Quién debe»
   en fichas, subpestañas de Finanzas entran en el ancho. Honorarios anual entra en la pantalla (computadora).
 
+## Gastos por vencimiento y pago (06/10/2026, pedido de la usuaria)
+- Para ver el egreso real de efectivo, los gastos al contado ya no van por la fecha de la factura:
+  campo nuevo **`vence`** (opcional; vacío = la fecha de la compra). Las cuotas ya iban por vencimiento.
+- Vista mensual (`gstFilasMes`): lo que vence en el mes + lo pagado en el mes aunque venciera en otro
+  («pagado este mes») + en el mes en curso, lo vencido de antes sin pagar (en rojo). Números: **A pagar** (vence
+  en el mes) · **Pagado este mes** (por `fechaPago`, la plata que salió) · **Pendiente** (incluye lo vencido).
+  La barra de resultado usa lo pagado. Vista anual y Excel del año: cada pago una vez, en su mes de caja
+  (`gstFilasCaja`: el de pago o, si no se pagó, el de vencimiento).
+- **El IVA de compras sigue por fecha de factura** (como lo toma DGI). Los gastos fijos que se traen solos
+  corren también el vencimiento (`gstMesesEntre`).
+
 ## «Se borró Sv. Profesionales» (02/10/2026) — no se había borrado
 - El año del estudio estaba guardado como `"2026 "` (con un espacio). Sv. Profesionales tenía los datos en el
   formato viejo (`row.cells`) y no tenía `tabYear`; al elegir un año en el selector se puso `tabYear: '2026'`,

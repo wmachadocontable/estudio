@@ -134,15 +134,15 @@ function finExpRows(kind){
   if (kind === 'imp') return impExpRows();
   // Gastos: lo que se ve (mes elegido o todo el año), con el desglose del IVA.
   const y = gstYear();
-  const filas = gstVista === 'anual' ? [].concat(...Array.from({length:12}, (_, m) => gstFilasMes(y, m))) : gstFiltradas();
+  const filas = gstVista === 'anual' ? [].concat(...Array.from({length:12}, (_, m) => gstFilasCaja(y, m))) : gstFiltradas();
   return {
     title: 'Gastos del estudio · ' + (gstVista === 'anual' ? y : MONTHS[gstMes] + ' ' + y),
-    cols: ['Fecha','Gasto','Categoría','Proveedor','Subtotal','IVA','% deducible','IVA deducible','Importe','Estado'],
+    cols: ['Vence','Gasto','Categoría','Proveedor','Subtotal','IVA','% deducible','IVA deducible','Importe','Estado','Fecha de pago'],
     data: filas.map(f => {
       const g = f.g, cuota = f.tipo === 'cuota', iva = (!cuota && g.conIva) ? (honNum(g.iva) || 0) : 0;
       return [fDate(f.fecha), (g.concepto || '') + (f.det ? ' · ' + f.det : ''), g.cat || '', g.proveedor || '',
         cuota ? numTxt(f.importe) : numTxt((f.importe || 0) - iva), iva ? numTxt(iva) : '', iva ? (g.ivaDed || 100) + '%' : '',
-        iva ? numTxt(gstIvaDeducible(g)) : '', numTxt(f.importe), f.pagado ? 'Pagado' : 'Pendiente'];
+        iva ? numTxt(gstIvaDeducible(g)) : '', numTxt(f.importe), f.pagado ? 'Pagado' : (f.fecha && f.fecha < finHoy() ? 'Vencido' : 'Pendiente'), fDate(f.fechaPago)];
     })
   };
 }
