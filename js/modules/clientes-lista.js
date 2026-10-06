@@ -49,6 +49,10 @@ function pedirCliente(o) {
   document.getElementById('pc-ok').textContent = o.boton || 'Agregar';
   const inp = document.getElementById('pc-nombre');
   inp.value = o.valor || ''; inp.placeholder = o.placeholder || 'Empezá a escribir…';
+  // o.lista === false: un texto cualquiera (sin la lista de Info. Clientes).
+  const ayuda = ov.querySelector('.pc-ayuda');
+  if (o.lista === false) { inp.removeAttribute('list'); inp.removeAttribute('data-lista'); inp.classList.remove('con-lista'); if (ayuda) ayuda.style.display = 'none'; }
+  else { inp.setAttribute('data-lista', 'dl-clientes'); inp.classList.add('con-lista'); if (ayuda) ayuda.style.display = ''; }
   ov.classList.add('open');
   setTimeout(() => inp.focus(), 80);
   return new Promise(resolve => {

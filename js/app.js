@@ -7812,6 +7812,8 @@ function _xlsxSueldosSheets(wb){
   hoja('Sueldos', 'sueldos', 'Sueldos (todos los meses)');
   hoja('Serv. Domésticos', 'sd', 'Servicios Domésticos');
   hoja('Reliquidaciones', 'reliq', 'Reliquidaciones');
+  // Oct. 2026: las subpestañas propias de Sueldos (sueldos-subtabs.js).
+  if (typeof sldSubsTodas === 'function') sldSubsTodas().filter(function(s){ return s.extra; }).forEach(function(s){ hoja(String(s.nombre).slice(0, 28), s.key, s.nombre); });
 }
 
 function _xlsxDownload(wb, filename){

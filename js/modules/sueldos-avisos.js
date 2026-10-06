@@ -21,7 +21,7 @@ function sldAvisar(destinos, titulo, cuerpo) {
   [...new Set(destinos)].filter(n => n && n !== yo && findUserByName(n))
     .forEach(n => notifyUserByName(n, 'sueldos', titulo, cuerpo, SLD_LINK));
 }
-function sldDonde(r, ym, sub) { return '«' + (r.name || '') + '» (' + formatYearMonth(ym) + (sub !== 'sueldos' ? ' · ' + SLD_SUBS[sub] : '') + ')'; }
+function sldDonde(r, ym, sub) { return '«' + (r.name || '') + '» (' + formatYearMonth(ym) + (sub !== 'sueldos' ? ' · ' + sldSubNombre(sub) : '') + ')'; }
 
 // Se llama desde sldTocar, después de marcar un paso.
 function sldAvisarMarca(ym, sub, r, k, estadoAntes) {

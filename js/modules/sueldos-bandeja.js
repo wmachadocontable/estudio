@@ -10,24 +10,30 @@
  *   Los envíos sin nadie asignado les aparecen a las tres como «sin asignar».
  */
 
-function sldMesesBandeja() {
-  const d = new Date(), hoy = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-  return [sldMesSumar(hoy, -1), hoy].filter(m => state.sueldos && state.sueldos[m]);
+function sldHoyYM() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+// Oct. 2026: los meses que mira la bandeja terminan en el mes elegido (o en el actual, si se eligió uno
+// futuro): nunca aparecen pendientes de meses que vienen después. El número rojo de la pestaña mira hoy.
+function sldMesesBandeja(hasta) {
+  const hoy = sldHoyYM(), lim = (hasta && hasta < hoy) ? hasta : hoy;
+  return [sldMesSumar(lim, -1), lim].filter(m => state.sueldos && state.sueldos[m]);
 }
 
 // Todas las tareas pendientes. resp = a quién le toca ('' = sin asignar).
-function sldTareas() {
-  const out = [];
-  sldMesesBandeja().forEach(ym => ['sueldos', 'sd', 'reliq', 'ctlExtra'].forEach(sub => sldFilas(ym, sub).forEach(r => {
+// Liquidar y emitir: solo de meses que ya terminaron (los sueldos de octubre se hacen en noviembre).
+// Enviar: siempre que ya esté liquidado o emitido, aunque el mes esté en curso.
+function sldTareas(hasta) {
+  const out = [], hoy = sldHoyYM();
+  sldMesesBandeja(hasta).forEach(ym => sldSubsVisibles().map(s => s.key).concat(['ctlExtra']).forEach(sub => sldFilas(ym, sub).forEach(r => {
     if (!r._v2) return;
+    const terminado = ym < hoy;
     const base = { ym, sub, id: r.id, nombre: r.name };
     Object.keys(SLD_GRUPOS).forEach(g => {
       if (!sldLleva(r, g)) return;
       const G = SLD_GRUPOS[g], h = sldMarca(r, G.hecho);
-      if (!h) out.push(Object.assign({ tipo: 'hacer', grupo: g, paso: G.hecho, resp: SLD_LIQUIDA, orden: 2 }, base));
+      if (!h) { if (terminado) out.push(Object.assign({ tipo: 'hacer', grupo: g, paso: G.hecho, resp: SLD_LIQUIDA, orden: 2 }, base)); }
       else if (!sldMarca(r, G.envio)) out.push(Object.assign({ tipo: 'enviar', grupo: g, paso: G.envio, resp: sldEnvia(r), desde: h, orden: 1, dias: sldDiasDesde(h.t) }, base));
     });
-    if ((sub === 'sueldos' && sldEstado(r, sub) === 'enviado') || sub === 'ctlExtra') {
+    if ((sub === 'sueldos' && sldEstado(r, sub) === 'enviado') || (sub === 'ctlExtra' && terminado)) {
       const faltan = sldControlesDe(r, sub).filter(c => !sldMarca(r, c.key));
       if (faltan.length) out.push(Object.assign({ tipo: 'controles', faltan, resp: SLD_LIQUIDA, orden: 3 }, base));
     }
@@ -54,11 +60,11 @@ function sldBandejaVerTodo() { userPrefs.sldBandejaTodo = !userPrefs.sldBandejaT
 function sldBandejaHTML() {
   const yo = sldYo(), f = sldFiltroBandeja();
   const quien = f === 'mio' ? yo : f;
-  const todas = sldTareas(), lista = sldTareasDe(quien, todas);
+  const sel = getCurrentSueldosMonth(), todas = sldTareas(sel), lista = sldTareasDe(quien, todas);
   const max = userPrefs.sldBandejaTodo ? 999 : 6;
   const titulo = f === 'mio' ? 'Esto está esperando por vos' : (f === 'todas' ? 'Todo lo pendiente' : 'Lo que le toca a ' + sldNombre(f));
   let h = '<div class="sld-bandeja"><div class="sld-band-head"><div><div class="sld-band-t">' + titulo + '</div>'
-    + '<div class="sld-band-s">' + sldMesesBandeja().map(formatYearMonth).join(' y ') + '</div></div>'
+    + '<div class="sld-band-s">' + sldMesesBandeja(sel).map(formatYearMonth).join(' y ') + '</div></div>'
     + '<div class="sld-band-f">' + [['mio', 'Mío']].concat(SLD_ENVIAN.map(n => [n, sldNombre(n)])).concat([['todas', 'Todas']])
       .map(([k, l]) => '<button class="' + (f === k ? 'on' : '') + '" onclick="setSldFiltroBandeja(\'' + k + '\')">' + bbEscape(l) + '</button>').join('') + '</div></div>';
   if (!lista.length) return h + '<div class="sld-band-vacia">✓ No hay nada pendiente' + (f === 'mio' ? ' para vos' : '') + '.</div></div>';
@@ -70,7 +76,7 @@ function sldBandejaHTML() {
 function sldTareaHTML(t, mostrarResp) {
   const mes = MONTHS[parseInt(t.ym.split('-')[1], 10) - 1];
   const args = (k) => '\'' + t.ym + '\',\'' + t.sub + '\',\'' + t.id + '\',\'' + k + '\'';
-  const donde = bbEscape(t.nombre) + ' <span class="sld-t-mes">' + mes + (t.sub !== 'sueldos' ? ' · ' + SLD_SUBS[t.sub] : '') + '</span>';
+  const donde = bbEscape(t.nombre) + ' <span class="sld-t-mes">' + mes + (t.sub !== 'sueldos' ? ' · ' + sldSubNombre(t.sub) : '') + '</span>';
   let ico, que, det = '', btn = '', cls = '';
   if (t.tipo === 'hacer') {
     const G = SLD_GRUPOS[t.grupo];

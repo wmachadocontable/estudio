@@ -29,6 +29,18 @@ const SLD_ENVIAN = ['Wendy', 'Daniela', 'Lorena'];
 const SLD_DIAS_ALERTA = 3;                    // «Falta enviar» se pone rojo a partir de estos días
 
 const SLD_SUBS = { sueldos: 'Sueldos', sd: 'Servicios Domésticos', reliq: 'Reliquidaciones' };
+/* Subpestañas propias (oct. 2026): state.sueldosSubs = { extra:[{ id, nombre, _alta }], ocultas:{ clave:{u,t} } }.
+   Las propias funcionan como Sueldos pero solo con Recibos: sus filas nacen con la factura BPS en «No lleva».
+   Quitar una subpestaña la oculta: los datos quedan. Sueldos no se puede quitar. (sueldos-subtabs.js) */
+function sldSubsCfg() { const c = state.sueldosSubs || {}; return { extra: Array.isArray(c.extra) ? c.extra : [], ocultas: c.ocultas || {} }; }
+function sldSubsTodas() {
+  return Object.keys(SLD_SUBS).map(k => ({ key: k, nombre: SLD_SUBS[k], fija: k === 'sueldos' }))
+    .concat(sldSubsCfg().extra.map(x => ({ key: x.id, nombre: x.nombre, extra: true })));
+}
+function sldSubsVisibles() { const o = sldSubsCfg().ocultas; return sldSubsTodas().filter(s => s.fija || !o[s.key]); }
+function sldSubKeys() { return sldSubsTodas().map(s => s.key); }
+function sldSubNombre(k) { const s = sldSubsTodas().find(x => x.key === k); return s ? s.nombre : (k === 'ctlExtra' ? 'Controles' : k); }
+function sldSubExtra(k) { return sldSubsCfg().extra.some(x => x.id === k); }
 const SLD_GRUPOS = {
   recibos: { label: 'Recibos',     hecho: 'recLiq', envio: 'recEnv', hLabel: 'Liquidados', eLabel: 'Enviados', hVerbo: 'liquidó', eVerbo: 'envió',  objeto: 'los recibos' },
   bps:     { label: 'Factura BPS', hecho: 'bpsEmi', envio: 'bpsEnv', hLabel: 'Emitida',    eLabel: 'Enviada',  hVerbo: 'emitió',  eVerbo: 'envió',  objeto: 'la factura BPS' }
@@ -56,7 +68,7 @@ function getCurrentSueldosMonth() {
 function ensureSueldosMonth(ym) {
   if (!state.sueldos) state.sueldos = {};
   if (!state.sueldos[ym]) state.sueldos[ym] = { sueldos: [], sd: [], reliq: [] };
-  ['sueldos', 'sd', 'reliq'].forEach(k => { if (!Array.isArray(state.sueldos[ym][k])) state.sueldos[ym][k] = []; });
+  sldSubKeys().forEach(k => { if (!Array.isArray(state.sueldos[ym][k])) state.sueldos[ym][k] = []; });
   return state.sueldos[ym];
 }
 function setSueldosMonth(ym) { userPrefs.sueldosMonth = ym; saveUserPrefs(); ensureSueldosMonth(ym); renderContent(); }
@@ -187,15 +199,16 @@ function sldSetCampo(ym, sub, id, campo, valor) {
 }
 async function openAddSueldoRow() {
   const sub = userPrefs.sueldosSubtab || 'sueldos';
-  const label = { sueldos: 'la empresa', sd: 'el empleado o familia', reliq: 'la empresa o concepto' }[sub] || 'la fila';
+  const label = { sueldos: 'la empresa', sd: 'el empleado o familia', reliq: 'la empresa o concepto' }[sub] || 'la empresa';
   const name = (typeof pedirCliente === 'function')
-    ? await pedirCliente({ titulo: 'Agregar a Sueldos', sub: formatYearMonth(getCurrentSueldosMonth()) + ' · ' + (SLD_SUBS[sub] || ''), etiqueta: 'Nombre de ' + label })
+    ? await pedirCliente({ titulo: 'Agregar a ' + sldSubNombre(sub), sub: formatYearMonth(getCurrentSueldosMonth()), etiqueta: 'Nombre de ' + label })
     : prompt('Nombre de ' + label + ':');
   if (!name || !name.trim()) return;
   const ym = getCurrentSueldosMonth(), lista = ensureSueldosMonth(ym)[sub];
   const row = { id: sldIdPara(name.trim(), sub, lista), name: name.trim(), grupo: '', observaciones: '', envia: '', marcas: {}, noLleva: {}, _v2: true };
   if (/factura\s*bps/i.test(row.name)) row.noLleva.recibos = true;
   if (sub === 'reliq') { row.concepto = ''; row.importe = ''; }
+  if (sldSubExtra(sub)) row.noLleva.bps = true;          // las subpestañas propias van solo con Recibos
   lista.push(row);
   sldGuardar();
   toast('Agregado: ' + row.name);
@@ -203,9 +216,19 @@ async function openAddSueldoRow() {
 function removeSueldoRow(sub, id) {
   const ym = getCurrentSueldosMonth(), m = state.sueldos && state.sueldos[ym]; if (!m) return;
   const row = sldFila(ym, sub, id); if (!row) return;
-  if (!confirm('¿Eliminar «' + row.name + '» de ' + formatYearMonth(ym) + '?')) return;
+  if (!confirm('¿Sacar «' + row.name + '» de ' + sldSubNombre(sub) + ' en ' + formatYearMonth(ym) + '?\n\nLos otros meses no se tocan, y el mes que viene ya no se copia.')) return;
   m[sub] = m[sub].filter(r => r.id !== id);
   sldGuardar();
+  toast('Se sacó: ' + row.name);
+}
+// Cambiar el nombre: en este mes y en los siguientes que ya existan (es la misma fila: mismo id).
+async function sldRenombrarFila(sub, id) {
+  const ym = getCurrentSueldosMonth(), row = sldFila(ym, sub, id); if (!row) return;
+  const nuevo = await pedirCliente({ titulo: 'Cambiar el nombre', sub: sldSubNombre(sub) + ' · desde ' + formatYearMonth(ym), etiqueta: 'Nombre', valor: row.name || '', boton: 'Guardar' });
+  if (!nuevo || nuevo.trim() === row.name) return;
+  Object.keys(state.sueldos || {}).filter(m => m >= ym).forEach(m => { const r = sldFila(m, sub, id); if (r) r.name = nuevo.trim(); });
+  sldGuardar();
+  toast('✓ Nombre cambiado');
 }
 // Copia del mes anterior las empresas, «Envía», los «No lleva» y las Observaciones. NO los tildes.
 // Si este mes ya tiene filas, solo agrega las que falten (nunca borra lo cargado).
@@ -214,7 +237,7 @@ function copySueldosFromPreviousMonth() {
   const src = state.sueldos && state.sueldos[prev];
   if (!src) { toast('No hay datos en ' + formatYearMonth(prev)); return; }
   const dst = ensureSueldosMonth(ym);
-  const yaHay = ['sueldos', 'sd', 'reliq'].reduce((a, s) => a + dst[s].length, 0);
+  const yaHay = sldSubKeys().reduce((a, s) => a + (dst[s] || []).length, 0);
   if (!confirm(yaHay ? '¿Traer de ' + formatYearMonth(prev) + ' las empresas que falten en ' + formatYearMonth(ym) + '? Lo que ya está cargado no se toca.'
                      : '¿Copiar las empresas de ' + formatYearMonth(prev) + ' a ' + formatYearMonth(ym) + '? Se copian «Envía», los «No lleva» y las Observaciones, sin los tildes.')) return;
   const n = sldCopiarFilas(src, dst);
@@ -226,7 +249,7 @@ function copySueldosFromPreviousMonth() {
 // Cada fila mantiene su id: si dos sesiones copian a la vez, quedan las mismas filas (no se duplican).
 function sldCopiarFilas(src, dst) {
   let n = 0;
-  ['sueldos', 'sd', 'reliq', 'ctlExtra'].forEach(sub => {
+  sldSubKeys().concat(['ctlExtra']).forEach(sub => {
     if (!src[sub] || !src[sub].length) return;
     if (!dst[sub]) dst[sub] = [];
     (src[sub] || []).forEach(r => {
@@ -250,7 +273,7 @@ function sldMesAutomatico() {
   if (!state.sueldosV2 || typeof cloudSynced === 'undefined' || !cloudSynced) return false;
   if (typeof currentUser !== 'function' || !currentUser()) return false;
   const hoy = new Date(), ym = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0');
-  const tieneFilas = (m) => !!m && ['sueldos', 'sd', 'reliq'].some(s => (m[s] || []).length);
+  const tieneFilas = (m) => !!m && sldSubKeys().some(s => (m[s] || []).length);
   const actual = state.sueldos && state.sueldos[ym];
   if (actual && (actual._auto || tieneFilas(actual))) return false;
   let prev = null;

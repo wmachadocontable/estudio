@@ -1,6 +1,6 @@
 /*
  * SUELDOS — la pantalla (rediseño oct. 2026). Datos y acciones en sueldos.js.
- * Subpestañas: Sueldos · Servicios Domésticos · Reliquidaciones · Controles.
+ * Subpestañas: Sueldos · Servicios Domésticos · Reliquidaciones · las propias (sueldos-subtabs.js) · Controles.
  * Arriba de la tabla va la bandeja «Esto está esperando por vos» (sueldos-bandeja.js).
  */
 
@@ -8,7 +8,7 @@ function renderSueldos() {
   const ym = getCurrentSueldosMonth();
   const md = ensureSueldosMonth(ym);
   const pref = userPrefs.sueldosSubtab;
-  const sub = (SLD_SUBS[pref] || pref === 'controles') ? pref : 'sueldos';
+  const sub = (sldSubsVisibles().some(x => x.key === pref) || pref === 'controles') ? pref : 'sueldos';
   const [y, m] = ym.split('-');
   let h = '<div class="sld-app">';
   h += '<div class="section-header"><div class="section-title">Sueldos <span>' + MONTHS[parseInt(m, 10) - 1] + ' ' + y + '</span></div>'
@@ -24,10 +24,16 @@ function renderSueldos() {
   h += sldBandejaHTML();
 
   const pendCtl = sldControlesPendientes(ym);
+  const ocultas = sldSubsTodas().filter(x => !x.fija && sldSubsCfg().ocultas[x.key]);
   h += '<div class="sueldos-subtabs">'
-    + Object.keys(SLD_SUBS).map(k => '<button class="sueldos-subtab' + (sub === k ? ' active' : '') + '" onclick="setSueldosSubtab(\'' + k + '\')">' + SLD_SUBS[k] + ' <span class="sueldos-subtab-count">' + md[k].length + '</span></button>').join('')
+    + sldSubsVisibles().map(x => '<button class="sueldos-subtab' + (sub === x.key ? ' active' : '') + '" onclick="setSueldosSubtab(\'' + x.key + '\')">' + bbEscape(x.nombre)
+      + ' <span class="sueldos-subtab-count">' + (md[x.key] || []).length + '</span>'
+      + (x.fija ? '' : '<span class="sld-sub-x" title="Quitar esta subpestaña (no se borra nada)" onclick="event.stopPropagation();sldSubOcultar(\'' + x.key + '\')">✕</span>')
+      + '</button>').join('')
     + '<button class="sueldos-subtab' + (sub === 'controles' ? ' active' : '') + '" onclick="setSueldosSubtab(\'controles\')">Controles'
     + (pendCtl ? ' <span class="sueldos-subtab-count sld-cnt-alerta" title="' + pendCtl + ' controles pendientes">' + pendCtl + ' pendiente' + (pendCtl === 1 ? '' : 's') + '</span>' : '') + '</button>'
+    + '<button class="sld-sub-nueva" onclick="sldSubNueva()" title="Crear una subpestaña (funciona como Sueldos, solo con Recibos)">+ Subpestaña</button>'
+    + (ocultas.length ? '<button class="sld-sub-ocultas" onclick="sldMenuOcultas(event)" title="Subpestañas quitadas: se pueden volver a mostrar">Ocultas (' + ocultas.length + ')</button>' : '')
     + '</div>';
 
   if (sub === 'controles') return h + sldControlesHTML(ym) + '</div>';
@@ -58,21 +64,23 @@ function sldTablaHTML(ym, sub) {
   const filas = todas.filter(r => (!q || [r.name, r.observaciones, r.grupo, r.concepto].some(v => String(v || '').toLowerCase().includes(q)))
     && (!filtro || sldEstado(r, sub) === filtro));
 
-  let h = '<div class="sld-barra"><input type="text" id="sueldos-search-input" class="sld-buscar" placeholder="Buscar empresa, grupo u observación…" value="' + bbEscape(userPrefs.sueldosSearch || '') + '">'
-    + '<button class="btn btn-gold btn-sm" onclick="openAddSueldoRow()">+ Agregar fila</button></div>';
+  // «+ Agregar fila» primero: a la derecha quedaba fuera de la vista en pantallas angostas.
+  let h = '<div class="sld-barra"><button class="btn btn-gold btn-sm" onclick="openAddSueldoRow()">+ Agregar a ' + bbEscape(sldSubNombre(sub)) + '</button>'
+    + '<input type="text" id="sueldos-search-input" class="sld-buscar" placeholder="Buscar empresa, grupo u observación…" value="' + bbEscape(userPrefs.sueldosSearch || '') + '"></div>';
   h += '<div class="stats-bar sld-stats">' + SLD_ESTADOS.map(s => '<div class="stat-card sld-st-' + s.key + (filtro === s.key ? ' sld-st-on' : '') + '" onclick="sldFiltrarEstado(\'' + s.key + '\')" title="Tocá para ver solo estas">'
     + '<div class="stat-num">' + cuenta[s.key] + '</div><div class="stat-label">' + s.label + '</div></div>').join('') + '</div>';
   if (filtro) h += '<div class="sld-filtro-on">Mostrando solo «' + sldEstadoInfo(filtro).label + '» · <a onclick="sldFiltrarEstado(\'' + filtro + '\')">ver todas</a></div>';
 
-  const reliq = sub === 'reliq';
+  const reliq = sub === 'reliq', conBps = !sldSubExtra(sub);
+  const nCols = 7 + (reliq ? 2 : 0) + (conBps ? 2 : 0);
   h += '<div class="table-wrap sld-wrap"><table class="sld-table"><thead><tr>'
     + '<th rowspan="2" class="sld-emp">' + (sub === 'sd' ? 'Empleado / Familia' : 'Empresa') + '</th>'
     + (reliq ? '<th rowspan="2">Empleado / Concepto</th><th rowspan="2">Importe</th>' : '')
     + '<th rowspan="2">Estado</th><th rowspan="2">Envía</th>'
-    + '<th colspan="2" class="sld-grupo-th">Recibos</th><th colspan="2" class="sld-grupo-th">Factura BPS</th>'
-    + '<th rowspan="2">Grupo</th><th rowspan="2" class="sld-obs-th">Observaciones</th><th rowspan="2"></th></tr>'
-    + '<tr class="sld-sub-th"><th>Liquidados</th><th>Enviados</th><th>Emitida</th><th>Enviada</th></tr></thead><tbody>';
-  if (!filas.length) h += '<tr><td colspan="' + (reliq ? 12 : 10) + '" class="sld-vacio">' + (todas.length ? 'Nada coincide con la búsqueda.' : 'No hay filas en ' + formatYearMonth(ym) + '. Usá «Copiar mes anterior» o «+ Agregar fila».') + '</td></tr>';
+    + '<th colspan="2" class="sld-grupo-th">Recibos</th>' + (conBps ? '<th colspan="2" class="sld-grupo-th">Factura BPS</th>' : '')
+    + '<th rowspan="2">Grupo</th><th rowspan="2" class="sld-obs-th">Observaciones</th></tr>'
+    + '<tr class="sld-sub-th"><th>Liquidados</th><th>Enviados</th>' + (conBps ? '<th>Emitida</th><th>Enviada</th>' : '') + '</tr></thead><tbody>';
+  if (!filas.length) h += '<tr><td colspan="' + nCols + '" class="sld-vacio">' + (todas.length ? 'Nada coincide con la búsqueda.' : 'No hay filas en ' + formatYearMonth(ym) + '. Usá «Copiar mes anterior» o «+ Agregar fila».') + '</td></tr>';
   filas.forEach(r => { h += sldFilaHTML(ym, sub, r); });
   h += '</tbody></table></div>';
   h += '<div class="sld-pie">El estado se calcula solo con los tildes. Cada tilde guarda quién lo marcó y cuándo. «⋯» en Liquidados o Emitida para marcar que esa empresa no lo lleva.</div>';
@@ -84,7 +92,10 @@ function sldFilaHTML(ym, sub, r) {
   const rojo = falta && falta.dias !== null && falta.dias >= SLD_DIAS_ALERTA;
   const cls = falta ? (rojo ? ' sld-fila-roja' : ' sld-fila-amarilla') : '';
   const a = (fn) => '\'' + ym + '\',\'' + sub + '\',\'' + r.id + '\'' + (fn ? ',' + fn : '');
-  let h = '<tr class="sld-fila' + cls + '" data-id="' + r.id + '"><td class="sld-emp"><strong>' + bbEscape(r.name || '—') + '</strong></td>';
+  // El nombre con sus botones: ✎ cambiar el nombre · ✕ sacar (siempre a la vista, aunque la tabla sea ancha).
+  let h = '<tr class="sld-fila' + cls + '" data-id="' + r.id + '"><td class="sld-emp"><div class="sld-emp-in"><strong>' + bbEscape(r.name || '—') + '</strong>'
+    + '<span class="sld-emp-acc"><button class="sld-emp-btn" title="Cambiar el nombre" onclick="sldRenombrarFila(\'' + sub + '\',\'' + r.id + '\')">✎</button>'
+    + '<button class="sld-emp-btn sld-emp-x" title="Sacar de este mes" onclick="removeSueldoRow(\'' + sub + '\',\'' + r.id + '\')">✕</button></span></div></td>';
   if (sub === 'reliq') {
     h += '<td><input class="sld-in" value="' + bbEscape(r.concepto || '') + '" onblur="sldSetCampo(' + a() + ',\'concepto\',this.value)" placeholder="—"></td>'
       + '<td><input class="sld-in sld-num" value="' + bbEscape(r.importe || '') + '" onblur="sldSetCampo(' + a() + ',\'importe\',this.value)" placeholder="—"></td>';
@@ -96,6 +107,7 @@ function sldFilaHTML(ym, sub, r) {
     + (env ? sldIni(env) + '<span>' + bbEscape(sldNombre(env)) + '</span>' : '<span class="sld-sin">Sin asignar</span>') + '</button></td>';
   Object.keys(SLD_GRUPOS).forEach(g => {
     const G = SLD_GRUPOS[g];
+    if (g === 'bps' && sldSubExtra(sub)) return;           // las subpestañas propias van sin factura BPS
     if (!sldLleva(r, g)) {
       h += '<td colspan="2" class="sld-nl-td"><span class="sld-nolleva">No lleva</span>'
         + '<button class="sld-mas" title="Opciones" onclick="sldMenuNoLleva(event,' + a('\'' + g + '\'') + ')">⋯</button></td>';
@@ -106,7 +118,7 @@ function sldFilaHTML(ym, sub, r) {
   });
   h += '<td><input class="sld-in sld-grupo" value="' + bbEscape(r.grupo || '') + '" onblur="sldSetCampo(' + a() + ',\'grupo\',this.value)" placeholder="—"></td>';
   h += '<td class="sld-obs-td"><textarea class="sld-obs" rows="1" title="' + bbEscape(r.observaciones || '') + '" placeholder="—" onfocus="sldObsAbrir(this)" onblur="sldObsCerrar(this);sldSetCampo(' + a() + ',\'observaciones\',this.value)">' + bbEscape(r.observaciones || '') + '</textarea></td>';
-  h += '<td><button class="sueldos-del-btn" onclick="removeSueldoRow(\'' + sub + '\',\'' + r.id + '\')" aria-label="Eliminar fila" title="Eliminar fila">✕</button></td></tr>';
+  h += '</tr>';
   return h;
 }
 

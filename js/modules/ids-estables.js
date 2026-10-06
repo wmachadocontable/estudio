@@ -33,7 +33,7 @@ function idsEstables() {
     });
   });
   // Sueldos antes del paso al formato nuevo: el mismo id que le daría ese paso (sldIdPara).
-  Object.keys(state.sueldos || {}).forEach(ym => ['sueldos', 'sd', 'reliq', 'ctlExtra'].forEach(sub => {
+  Object.keys(state.sueldos || {}).forEach(ym => Object.keys(state.sueldos[ym] || {}).forEach(sub => {
     const l = state.sueldos[ym] && state.sueldos[ym][sub];
     if (!Array.isArray(l)) return;
     l.forEach(r => {

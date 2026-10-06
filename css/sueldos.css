@@ -183,3 +183,20 @@
 .dash-sld-vacio{color:var(--c-text-muted);padding:14px 0;font-style:italic}
 .dash-sld-mas{color:var(--c-text-muted);font-size:11px}
 .dash-sld-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+
+/* Oct. 2026: botones al lado del nombre y subpestañas propias */
+.sld-emp-in{display:flex;align-items:center;gap:6px}
+.sld-emp-acc{display:inline-flex;gap:2px;margin-left:auto}
+.sld-emp-btn{border:none;background:none;color:var(--c-text-muted);cursor:pointer;font-size:12px;padding:2px 5px;border-radius:5px;opacity:.55}
+.sld-fila:hover .sld-emp-btn{opacity:1}
+.sld-emp-btn:hover{background:var(--c-bg-alt);color:var(--c-header-tx,var(--c-header))}
+.sld-emp-x:hover{color:var(--c-red)}
+.sld-sub-x{margin-left:6px;font-size:10px;opacity:.5;padding:0 3px;border-radius:4px}
+.sld-sub-x:hover{opacity:1;color:var(--c-red)}
+.sld-sub-nueva,.sld-sub-ocultas{border:1px dashed var(--c-border);background:transparent;color:var(--c-text-muted);border-radius:16px;
+  padding:5px 12px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;margin-left:6px;white-space:nowrap}
+.sld-sub-nueva:hover,.sld-sub-ocultas:hover{border-color:var(--c-header);color:var(--c-header-tx,var(--c-header))}
+.sld-sub-ocultas{border-style:solid}
+.sld-menu-sub{display:block;font-size:10.5px;color:var(--c-text-muted);font-weight:400;margin-top:1px}
+@media (max-width:760px){ .sld-emp-btn{opacity:1;font-size:14px;padding:4px 7px} }
+.sueldos-subtabs{flex-wrap:wrap;row-gap:6px}

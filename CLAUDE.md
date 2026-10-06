@@ -104,6 +104,20 @@
 - **Celular:** Finanzas y CEDE en fichas (final de `js/modules/celular.js` y `css/celular.css`), «Quién debe»
   en fichas, subpestañas de Finanzas entran en el ancho. Honorarios anual entra en la pantalla (computadora).
 
+## Sueldos: meses futuros, Reliquidaciones y subpestañas propias (06/10/2026)
+- **Bandeja y número rojo:** liquidar/emitir solo de meses **terminados** (los sueldos de octubre se hacen en
+  noviembre); con un mes elegido, la bandeja mira ese mes y el anterior, nunca los siguientes
+  (`sldTareas(hasta)`, `sldMesesBandeja(hasta)`). Los envíos de lo ya liquidado/emitido sí aparecen aunque el
+  mes esté en curso. El número rojo de la pestaña mira hoy.
+- **Botones al lado del nombre** en todas las subpestañas: ✎ cambiar el nombre (`sldRenombrarFila`, este mes y
+  los siguientes) y ✕ sacar (solo este mes). Antes la ✕ estaba al final de una tabla muy ancha y no se veía
+  (en Reliquidaciones, nunca). «+ Agregar a …» quedó al comienzo de la barra.
+- **Subpestañas propias** (`js/modules/sueldos-subtabs.js`, `state.sueldosSubs = { extra:[{id,nombre,_alta}],
+  ocultas:{clave:{u,t}} }`): «+ Subpestaña» crea una (ej. Aguinaldos) que funciona **como Sueldos pero solo con
+  Recibos** (filas con `noLleva.bps`). La ✕ de la subpestaña la oculta sin borrar datos; «Ocultas (N)» las
+  vuelve a mostrar. Sueldos y Controles son fijas. Entran en copiar mes, mes automático, bandeja, campanita,
+  ids estables y el Excel. En el código: `sldSubsTodas()`, `sldSubsVisibles()`, `sldSubKeys()`, `sldSubNombre()`.
+
 ## Gastos por vencimiento y pago (06/10/2026, pedido de la usuaria)
 - Para ver el egreso real de efectivo, los gastos al contado ya no van por la fecha de la factura:
   campo nuevo **`vence`** (opcional; vacío = la fecha de la compra). Las cuotas ya iban por vencimiento.
