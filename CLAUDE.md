@@ -109,6 +109,8 @@
   noviembre); con un mes elegido, la bandeja mira ese mes y el anterior, nunca los siguientes
   (`sldTareas(hasta)`, `sldMesesBandeja(hasta)`). Los envíos de lo ya liquidado/emitido sí aparecen aunque el
   mes esté en curso. El número rojo de la pestaña mira hoy.
+  **Los pendientes cuentan desde septiembre 2026** (`SLD_PENDIENTES_DESDE`, decisión de la usuaria): lo anterior
+  no aparece en la bandeja, el número rojo ni los avisos.
 - **Botones al lado del nombre** en todas las subpestañas: ✎ cambiar el nombre (`sldRenombrarFila`, este mes y
   los siguientes) y ✕ sacar (solo este mes). Antes la ✕ estaba al final de una tabla muy ancha y no se veía
   (en Reliquidaciones, nunca). «+ Agregar a …» quedó al comienzo de la barra.

@@ -13,9 +13,11 @@
 function sldHoyYM() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
 // Oct. 2026: los meses que mira la bandeja terminan en el mes elegido (o en el actual, si se eligió uno
 // futuro): nunca aparecen pendientes de meses que vienen después. El número rojo de la pestaña mira hoy.
+// Decisión de la usuaria (06/10/2026): los pendientes cuentan desde septiembre 2026; lo anterior no aparece.
+const SLD_PENDIENTES_DESDE = '2026-09';
 function sldMesesBandeja(hasta) {
   const hoy = sldHoyYM(), lim = (hasta && hasta < hoy) ? hasta : hoy;
-  return [sldMesSumar(lim, -1), lim].filter(m => state.sueldos && state.sueldos[m]);
+  return [sldMesSumar(lim, -1), lim].filter(m => m >= SLD_PENDIENTES_DESDE && state.sueldos && state.sueldos[m]);
 }
 
 // Todas las tareas pendientes. resp = a quién le toca ('' = sin asignar).
