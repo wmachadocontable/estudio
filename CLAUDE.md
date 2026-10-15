@@ -101,6 +101,9 @@
 - **Controles**: «+ Agregar a Controles» (`ctlExtra` del mes) y ✕ para quitar (`sinCtl`), firmados.
 - **CEDE mensual** (`js/declaraciones-cede.js`, `css/cede.css`): `ty.meses['AAAA-MM'].rows`, tipo de DJ que se
   copia al mes siguiente; lo que había por año se pasó al mes en curso (ty.years queda).
+  **Varias DJ del mismo cliente en el mes** (15/10/2026): una fila por declaración. «+» en la fila (`cedeOtraDJ`) o
+  «+ Cliente» con uno que ya está (pregunta) agrega otra debajo, con id único (`idOtra`, sello de tiempo). Pasan
+  todas al mes siguiente; «Traer del mes anterior» no repite las que tienen el mismo cliente y tipo de DJ.
 - **Celular:** Finanzas y CEDE en fichas (final de `js/modules/celular.js` y `css/celular.css`), «Quién debe»
   en fichas, subpestañas de Finanzas entran en el ancho. Honorarios anual entra en la pantalla (computadora).
 

@@ -10,6 +10,9 @@
  *     y tenían el mismo tipo (y desde ahí se copia el nuevo).
  * Datos: ty.meses['AAAA-MM'] = { rows:[{ id, cliente, tipoDJ, presentado, estado, importe, notas, _u, _t }] }.
  * Lo que se había cargado por año (ty.years) no se borra: se pasa al mes en curso una sola vez.
+ * Un cliente puede tener VARIAS declaraciones en el mes (15/10/2026, pedido de la usuaria): una fila por DJ.
+ * «+ Cliente» con uno que ya está agrega otra fila, y el «+» de cada fila suma otra DJ de ese cliente debajo.
+ * Las filas extra llevan un id con sello de tiempo (dos sesiones a la vez no se pisan).
  */
 (function () {
   const ESTADOS = ['Pendiente', 'En curso', 'Presentada', 'No corresponde'];
@@ -25,6 +28,14 @@
   function declTabDe(id) { return state.tabs.find(t => t.id === id && t.type === 'declaraciones'); }
   function tipoDe(tab, id) { return (tab && Array.isArray(tab.types)) ? tab.types.find(t => t.id === id) : null; }
   function idPara(nombre, rows) { const base = 'ce_' + slug(nombre); let id = base, n = 2; while (rows.some(r => r.id === id)) id = base + '_' + (n++); return id; }
+  // Otra DJ del mismo cliente: id único aunque dos la agreguen a la vez.
+  function idOtra(nombre, rows) { const base = 'ce_' + slug(nombre) + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); return rows.some(r => r.id === base) ? base + 'x' : base; }
+  const mismo = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+  // La fila nueva va justo debajo de la última del mismo cliente (así quedan juntas).
+  function insertarJunto(rows, fila) {
+    let k = -1; rows.forEach((r, i) => { if (mismo(r.cliente, fila.cliente)) k = i; });
+    if (k < 0) rows.push(fila); else rows.splice(k + 1, 0, fila);
+  }
 
   // Lo cargado por año → al mes en curso (una sola vez; ty.years queda como estaba).
   function migrar(ty) {
@@ -73,11 +84,12 @@
     if (!de) { toast('No hay meses anteriores con clientes'); return; }
     let n = 0;
     ty.meses[de].rows.forEach(r => {
-      if (!r.cliente || mes.rows.some(x => x.id === r.id || String(x.cliente).toLowerCase() === String(r.cliente).toLowerCase())) return;
-      mes.rows.push({ id: r.id, cliente: r.cliente, tipoDJ: r.tipoDJ || '', presentado: '', estado: 'Pendiente', importe: '', notas: '', _u: null, _t: null }); n++;
+      // Ya está si tiene el mismo id, o el mismo cliente con el mismo tipo de DJ.
+      if (!r.cliente || mes.rows.some(x => x.id === r.id || (mismo(x.cliente, r.cliente) && mismo(x.tipoDJ, r.tipoDJ)))) return;
+      insertarJunto(mes.rows, { id: r.id, cliente: r.cliente, tipoDJ: r.tipoDJ || '', presentado: '', estado: 'Pendiente', importe: '', notas: '', _u: null, _t: null }); n++;
     });
     saveState(); renderContent();
-    toast(n ? '✓ ' + n + ' cliente' + (n === 1 ? '' : 's') + ' de ' + nombreMes(de) : 'No faltaba ninguno');
+    toast(n ? '✓ ' + n + ' declaraci' + (n === 1 ? 'ón' : 'ones') + ' de ' + nombreMes(de) : 'No faltaba ninguna');
   };
   function nombreMes(ym) { return (typeof formatYearMonth === 'function') ? formatYearMonth(ym) : ym; }
 
@@ -104,10 +116,22 @@
     const nombre = await pedirCliente({ titulo: 'Agregar a CEDE', sub: nombreMes(ym) + ' (después se copia a los meses siguientes)', etiqueta: 'Cliente' });
     if (!nombre) return;
     const mes = asegurarMes(ty, ym).mes;
-    if (mes.rows.some(r => String(r.cliente).toLowerCase() === nombre.toLowerCase())) { toast('«' + nombre + '» ya está en ' + nombreMes(ym)); return; }
-    mes.rows.push({ id: idPara(nombre, mes.rows), cliente: nombre, tipoDJ: '', presentado: '', estado: 'Pendiente', importe: '', notas: '', _u: yo() || null, _t: new Date().toISOString() });
+    const ya = mes.rows.filter(r => mismo(r.cliente, nombre)).length;
+    if (ya && !confirm('«' + nombre + '» ya tiene ' + ya + ' declaraci' + (ya === 1 ? 'ón' : 'ones') + ' en ' + nombreMes(ym) + '.\n\n¿Agregar otra?')) return;
+    const fila = { id: ya ? idOtra(nombre, mes.rows) : idPara(nombre, mes.rows), cliente: nombre, tipoDJ: '', presentado: '', estado: 'Pendiente', importe: '', notas: '', _u: yo() || null, _t: new Date().toISOString() };
+    insertarJunto(mes.rows, fila);
     saveState(); renderContent();
-    toast('✓ Agregado: ' + nombre);
+    toast(ya ? '✓ Otra declaración de ' + nombre + ' (ya son ' + (ya + 1) + '): completá el tipo de DJ' : '✓ Agregado: ' + nombre);
+  };
+  // El «+» de cada fila: otra DJ del mismo cliente, debajo.
+  window.cedeOtraDJ = function (tabId, tyId, ym, id) {
+    const ty = tipoDe(declTabDe(tabId), tyId); if (!ty || !ty.meses || !ty.meses[ym]) return;
+    const rows = ty.meses[ym].rows, r = rows.find(x => x.id === id); if (!r || !r.cliente) return;
+    insertarJunto(rows, { id: idOtra(r.cliente, rows), cliente: r.cliente, tipoDJ: '', presentado: '', estado: 'Pendiente', importe: '', notas: '', _u: yo() || null, _t: new Date().toISOString() });
+    saveState(); renderContent();
+    const n = rows.filter(x => mismo(x.cliente, r.cliente)).length;
+    toast('✓ Otra declaración de ' + r.cliente + ' (ya son ' + n + '): completá el tipo de DJ');
+    setTimeout(() => { const t = document.querySelectorAll('.ce-tabla tr.ce-misma .ce-tipo'), u = [...t].reverse().find(i => !i.value); if (u) u.focus(); }, 80);
   };
   window.cedeQuitar = function (tabId, tyId, ym, id) {
     const ty = tipoDe(declTabDe(tabId), tyId); if (!ty || !ty.meses || !ty.meses[ym]) return;
@@ -129,12 +153,13 @@
 
   function render(tab, ty) {
     const ym = mesActivo(ty), info = asegurarMes(ty, ym), mes = info.mes;
-    if (info.copiado) setTimeout(() => { saveState(); toast('📅 CEDE ' + nombreMes(ym) + ': se copiaron ' + mes.rows.length + ' clientes de ' + nombreMes(info.de)); }, 50);
+    if (info.copiado) setTimeout(() => { saveState(); toast('📅 CEDE ' + nombreMes(ym) + ': se copiaron ' + mes.rows.length + ' declaraciones de ' + nombreMes(info.de)); }, 50);
     const y = ym.slice(0, 4), mi = +ym.slice(5) - 1, A = q(tab.id) + ',' + q(ty.id);
     const anios = []; for (let a = +y - 2; a <= +y + 2; a++) anios.push(a);
     const filas = mes.rows || [];
     const pres = filas.filter(r => r.estado === 'Presentada').length, nc = filas.filter(r => r.estado === 'No corresponde').length;
     const pend = filas.length - pres - nc;
+    const nCli = new Set(filas.map(r => String(r.cliente || '').trim().toLowerCase())).size;
     const colorEst = (e) => ({ 'Presentada': 'ce-ok', 'En curso': 'ce-curso', 'No corresponde': 'ce-nc' }[e] || 'ce-pend');
     let h = '<div class="decl-crumb"><span onclick="declBackLanding(' + q(tab.id) + ')">Declaraciones</span> › <b>' + bbEscape(ty.name) + '</b> › ' + bbEscape(nombreMes(ym)) + '</div>';
     h += '<div class="ce-v"><div class="ce-top"><div class="ce-tit">' + bbEscape(ty.name) + ' <i>' + bbEscape(nombreMes(ym)) + '</i></div>'
@@ -144,23 +169,26 @@
     h += '<div class="ce-meses">' + MS.map((m, i) => { const k = y + '-' + String(i + 1).padStart(2, '0'), hay = ty.meses[k] && (ty.meses[k].rows || []).length;
       return '<button class="' + (i === mi ? 'on' : '') + (hay ? ' hay' : '') + '" onclick="cedeIrMes(' + A + ',' + q(k) + ')">' + m + '</button>'; }).join('') + '</div>';
     h += '<div class="ce-kpis"><div class="ce-kpi k-ok"><b>' + pres + '</b><span>Presentadas</span></div><div class="ce-kpi k-pend"><b>' + pend + '</b><span>Pendientes</span></div>'
-      + '<div class="ce-kpi"><b>' + filas.length + '</b><span>Clientes en el mes</span></div></div>';
+      + '<div class="ce-kpi"><b>' + filas.length + '</b><span>Declaraciones · ' + nCli + ' cliente' + (nCli === 1 ? '' : 's') + '</span></div></div>';
     h += '<datalist id="dl-cede-tipos">' + tiposUsados(ty).map(t => '<option value="' + bbEscape(t) + '"></option>').join('') + '</datalist>';
     h += '<div class="table-wrap ce-wrap"><table class="ce-tabla"><thead><tr><th>Cliente</th><th>Tipo de DJ a presentar</th><th>Presentado</th><th>Estado</th><th>Importe</th><th>Notas</th><th></th></tr></thead><tbody>';
     if (!filas.length) h += '<tr><td colspan="7" class="ce-vacio">No hay clientes en ' + bbEscape(nombreMes(ym)) + '. Tocá «+ Cliente» o «⤵ Traer del mes anterior».</td></tr>';
-    filas.forEach(r => {
+    filas.forEach((r, i) => {
       const R = A + ',' + q(ym) + ',' + q(r.id);
+      // Segunda (o más) DJ del mismo cliente seguida: la fila se marca para que se vea agrupada.
+      const otra = i > 0 && r.cliente && mismo(filas[i - 1].cliente, r.cliente);
       const firma = r._u ? (r._u + (r._t ? ' · ' + new Date(r._t).toLocaleDateString('es-UY') : '')) : '';
-      h += '<tr><td><input class="ce-in ce-cli" list="dl-clientes" autocomplete="off" value="' + bbEscape(r.cliente || '') + '" onchange="cedeSet(' + R + ',\'cliente\',this.value)"></td>'
+      h += '<tr' + (otra ? ' class="ce-misma"' : '') + '><td><input class="ce-in ce-cli" list="dl-clientes" autocomplete="off" value="' + bbEscape(r.cliente || '') + '" onchange="cedeSet(' + R + ',\'cliente\',this.value)"></td>'
         + '<td><input class="ce-in ce-tipo" list="dl-cede-tipos" autocomplete="off" placeholder="Ej.: 2/181" value="' + bbEscape(r.tipoDJ || '') + '" onchange="cedeSet(' + R + ',\'tipoDJ\',this.value)"></td>'
         + '<td><input class="ce-in" type="date" value="' + bbEscape(r.presentado || '') + '" onchange="cedeSet(' + R + ',\'presentado\',this.value)"></td>'
         + '<td><select class="ce-in ce-est ' + colorEst(r.estado) + '" onchange="cedeSet(' + R + ',\'estado\',this.value)">' + ESTADOS.map(e => '<option' + (e === (r.estado || 'Pendiente') ? ' selected' : '') + '>' + e + '</option>').join('') + '</select></td>'
         + '<td><input class="ce-in ce-imp" type="number" step="any" placeholder="—" value="' + bbEscape(r.importe == null ? '' : r.importe) + '" onchange="cedeSet(' + R + ',\'importe\',this.value)"></td>'
         + '<td><input class="ce-in" placeholder="—" value="' + bbEscape(r.notas || '') + '" onchange="cedeSet(' + R + ',\'notas\',this.value)"></td>'
-        + '<td class="ce-fin"><span class="ce-quien" title="' + bbEscape(firma ? 'Último cambio: ' + firma : 'Sin cambios todavía') + '">' + ini(r._u) + '</span><button class="ce-x" title="Quitar de este mes" onclick="cedeQuitar(' + R + ')">✕</button></td></tr>';
+        + '<td class="ce-fin"><span class="ce-quien" title="' + bbEscape(firma ? 'Último cambio: ' + firma : 'Sin cambios todavía') + '">' + ini(r._u) + '</span>' + (r.cliente ? '<button class="ce-mas" title="Otra declaración de este cliente en el mes" onclick="cedeOtraDJ(' + R + ')">+</button>' : '')
+        + '<button class="ce-x" title="Quitar de este mes" onclick="cedeQuitar(' + R + ')">✕</button></td></tr>';
     });
     h += '</tbody></table></div>';
-    h += '<div class="ce-pie">Al abrir un mes nuevo se copian los clientes y su <b>Tipo de DJ</b> del último mes cargado. Si cambiás el tipo, se corrige también en los meses siguientes que tenían el mismo.</div></div>';
+    h += '<div class="ce-pie">Al abrir un mes nuevo se copian los clientes y su <b>Tipo de DJ</b> del último mes cargado. Si cambiás el tipo, se corrige también en los meses siguientes que tenían el mismo. Si un cliente presenta varias DJ en el mes, tocá <b>+</b> en su fila: va una fila por declaración.</div></div>';
     return h;
   }
 
