@@ -149,6 +149,8 @@
   ponía el cursor en una nota ya escrita (una nueva sí, porque se le da el foco solo). Ahora se arrastra solo desde
   ⋮⋮ (`renderMyDashSection`), y con «reordenar notas» la nota se arrastra desde el borde (`notaArrastrable`).
   **No volver a poner `draggable` en un contenedor con campos para escribir adentro.**
+- **Botones de la nota** (🎨 🔗 👥 📁 ✓ ×): iban flotando arriba a la derecha y tapaban la barra de formato; ahora van en
+  su propio renglón arriba y la barra debajo (final de `css/notas.css`).
 - **Notas realizadas** (`js/modules/notas.js`): ✓ en cada nota personal (`n.hecha` = fecha, `n.hechaPor`) y filtro
   Pendientes · Realizadas · Todas (`userPrefs.notasFiltro`, por defecto Pendientes). Las del estudio no cambian.
 - **Honorarios, subtotal facturado:** tarjeta «Facturado en el mes · subtotal» (sin IVA + IVA = total) y, en la vista
