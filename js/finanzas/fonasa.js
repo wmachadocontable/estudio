@@ -1,5 +1,5 @@
 /*
- * FONASA (27/10/2026, pedido de la usuaria) — dentro de Finanzas › Impuestos, debajo del registro de IVA e IRPF.
+ * FONASA (27/10/2026, pedido de la usuaria) — en Finanzas › Impuestos, como una columna más de la tabla del IVA (28/10).
  *
  * Un renglón por mes:
  *   Base    = lo FACTURADO sin IVA en el mes, por fecha de emisión de la factura (Honorarios con N° de factura,
@@ -75,7 +75,7 @@ function fonTotalesAnio(y){
   return t;
 }
 
-/* ===== el cuadro ===== */
+/* ===== en la tabla del IVA (28/10/2026: antes era un cuadro aparte) ===== */
 function fonDesdeHTML(){
   var c=fonCfg(), hoy=new Date(), op='<option value="">Todo el año</option>';
   for(var i=-14;i<=2;i++){
@@ -85,41 +85,43 @@ function fonDesdeHTML(){
   return '<label class="fon-cfg-i" title="Los meses anteriores no piden pago (ya los pagabas por fuera de la página)"><span>Desde</span>'
     +'<select class="filt" onchange="fonSetCfg(\'desde\',this.value)">'+op+'</select></label>';
 }
-function fonTablaHTML(y){
-  var cfg=fonCfg(), hay=honNum(cfg.tasa)!=null, t={base:0,calc:0,pag:0};
-  var inCfg=function(campo,ph,suf){
-    return '<label class="fon-cfg-i"><span>'+(campo==='tasa'?'Tasa':'Mínimo mensual')+'</span><input class="cell-in num" value="'
-      +finEsc(numTxt(cfg[campo]))+'" placeholder="'+ph+'" onchange="fonSetCfg(\''+campo+'\',this.value)">'+suf+'</label>';
+// Arriba de la tabla del IVA: tasa, mínimo y desde.
+function fonCfgHTML(){
+  var cfg=fonCfg();
+  var inCfg=function(campo,ph,lbl,suf){
+    return '<label class="fon-cfg-i"><span>'+lbl+'</span><input class="cell-in num" value="'+finEsc(numTxt(cfg[campo]))+'" placeholder="'+ph+'"'
+      +' onchange="fonSetCfg(\''+campo+'\',this.value)">'+suf+'</label>';
   };
-  var h='<div class="card-head imp-head fon-head"><h3>FONASA '+y+'</h3><div class="fon-cfg">'
-    +inCfg('tasa','Ej.: 6','%')+inCfg('minimo','$ por mes','')+fonDesdeHTML()+'</div></div>';
-  if(!hay)h+='<div class="venc-aviso">Escribí la <b>tasa</b> (y el <b>mínimo</b>, si corresponde) para que la página calcule el FONASA de cada mes. '
-    +'La base es lo facturado sin IVA, por fecha de emisión de la factura.</div>';
-  var filas='';
-  for(var m=0;m<12;m++){
-    var c=fonCalculo(y,m), est=fonEstado(c), A=y+','+m;
-    if(c.activo){ if(c.base)t.base+=c.base; if(c.calc)t.calc+=c.calc; }
-    if(c.aPagar)t.pag+=c.aPagar;
-    var minBtn=(c.minimo==null||c.calc==null||!c.activo)?'<span class="muted-cell">—</span>'
-      :'<button class="fon-min'+(c.aplica?' si':'')+'" onclick="fonToggleMin('+A+')" title="'+(c.auto?'El cálculo da menos que el mínimo':'El cálculo supera el mínimo')
-        +(c.manual?' · lo elegiste vos':' · sugerido por la página')+'. Tocá para cambiarlo.">'+(c.aplica?'Sí':'No')+'</button>'
-        +(c.manual?'<button class="fon-auto" onclick="fonMinAuto('+A+')" title="Volver a lo sugerido">↺</button>':'<span class="fon-sug">auto</span>');
-    filas+='<tr'+(c.activo?'':' class="imp-vacio"')+'><td><b>'+MONTHS[m]+'</b></td>'
-      +'<td class="num">'+(c.base==null?'<span class="muted-cell" title="Honorarios tiene cargado otro año">—</span>':(c.base?money(c.base):'—'))+'</td>'
-      +'<td class="num">'+(c.calc==null||!c.activo?'—':money(c.calc))+'</td>'
-      +'<td class="num">'+(c.minimo==null?'—':money(c.minimo))+'</td>'
-      +'<td class="fon-min-td">'+minBtn+'</td>'
-      +'<td class="num"><b>'+(c.aPagar==null?'—':money(c.aPagar))+'</b></td>'
-      +'<td class="imp-venc"><input class="cell-in" type="date"'+FIN_DR+' value="'+finEsc(c.venc)+'" onchange="if(finFechaOk(this))fonSet('+A+',\'venc\',this.value)"></td>'
-      +'<td>'+(c.aPagar?'<span class="pill clk imp-'+est+'" onclick="fonTogglePago('+A+')">'+IMP_EST[est]+'</span>':'<span class="muted-cell">—</span>')+'</td>'
-      +'<td><input class="cell-in" type="date"'+FIN_DR+' value="'+finEsc(c.fechaPago)+'" onchange="if(finFechaOk(this))fonSet('+A+',\'fechaPago\',this.value)"></td></tr>';
-  }
-  var tot='<tr class="gst-tot"><td>TOTAL '+y+'</td><td class="num">'+money(t.base)+'</td><td class="num">'+money(t.calc)+'</td><td></td><td></td>'
-    +'<td class="num"><b>'+money(t.pag)+'</b></td><td colspan="3"></td></tr>';
-  return h+'<div class="table-wrap"><table class="fon-tabla" style="min-width:980px"><thead><tr><th>Mes</th><th class="num">Base (facturado s/IVA)</th>'
-    +'<th class="num">Cálculo'+(hay?' · '+numTxt(cfg.tasa)+'%':'')+'</th><th class="num">Mínimo</th><th>Aplica mínimo</th><th class="num">A pagar</th>'
-    +'<th class="imp-venc">Vence</th><th>Estado</th><th>Fecha de pago</th></tr></thead><tbody>'+filas+tot+'</tbody></table></div>'
-    +'<div class="fin-nota">💡 <b>Aplica mínimo</b> se marca solo cuando el cálculo da menos que el mínimo; si lo cambiás queda el tuyo (↺ vuelve a lo sugerido). '
-    +'La fecha de vencimiento sale del calendario de BPS (Servicios Personales, mes siguiente) y se puede corregir. '
-    +'<b>Desde</b>: los meses anteriores no piden pago. Lo pendiente y lo pagado aparece también en <b>Gastos</b>.</div>';
+  return '<div class="fon-cfg"><b class="fon-cfg-t">FONASA</b>'+inCfg('tasa','Ej.: 6','Tasa','%')+inCfg('minimo','$ por mes','Mínimo','')+fonDesdeHTML()+'</div>';
+}
+// Lo de FONASA de los meses de un período (1 en mensual, 2 en bimestral).
+function fonDelPeriodo(y,meses){
+  var r={total:0,hay:false};
+  meses.forEach(function(m){ var c=fonCalculo(y,m); if(c.aPagar){ r.total+=c.aPagar; r.hay=true; } });
+  r.total=Math.round(r.total*100)/100; return r;
+}
+/* La celda FONASA de un renglón de la tabla del IVA: una línea por mes, cada una con su importe, de dónde sale,
+   «mín.» Sí/No, su vencimiento de BPS y su propio Pagado (se paga aparte del IVA). */
+function fonCeldaHTML(y,meses){
+  if(honNum(fonCfg().tasa)==null)return '<span class="muted-cell" title="Escribí la tasa de FONASA arriba de la tabla">—</span>';
+  var h='';
+  meses.forEach(function(m){
+    var c=fonCalculo(y,m), A=y+','+m, ms=MONTHS_SHORT[m];
+    if(!c.activo){ h+='<div class="fon-l fon-off"><span class="fon-mes">'+ms+'</span><span class="muted-cell" title="'
+      +(fonCfg().desde&&fonYM(y,m)<fonCfg().desde?'Antes de «Desde»: no pide pago':'Todavía sin facturas: el mes no terminó')+'">—</span></div>'; return; }
+    var est=fonEstado(c);
+    var min=(c.minimo==null||c.calc==null)?''
+      :'<button class="fon-min'+(c.aplica?' si':'')+'" onclick="fonToggleMin('+A+')" title="Aplica el mínimo: '+(c.aplica?'Sí':'No')
+        +(c.manual?' (lo elegiste vos)':' (sugerido: el cálculo da '+(c.auto?'menos':'más')+' que el mínimo)')+'. Tocá para cambiarlo.">mín. '+(c.aplica?'Sí':'No')+'</button>'
+        +(c.manual?'<button class="fon-auto" onclick="fonMinAuto('+A+')" title="Volver a lo sugerido">↺</button>':'');
+    var de=c.calc==null?'':numTxt(c.tasa)+' % de '+money(c.base||0)+(c.aplica&&c.minimo!=null?' = '+money(c.calc)+' → mínimo':'');
+    h+='<div class="fon-l">'
+      +'<div class="fon-l1"><span class="fon-mes">'+ms+'</span><b>'+money(c.aPagar)+'</b>'+min
+        +'<span class="pill clk imp-'+est+'" onclick="fonTogglePago('+A+')" title="Tocá para cambiarlo">'+IMP_EST[est]+'</span></div>'
+      +'<div class="fon-l2">'+de+'</div>'
+      +'<div class="fon-l2">vence <input class="cell-in fon-fecha" type="date"'+FIN_DR+' value="'+finEsc(c.venc)+'" onchange="if(finFechaOk(this))fonSet('+A+',\'venc\',this.value)">'
+        +(c.pagado?' · pagado <input class="cell-in fon-fecha" type="date"'+FIN_DR+' value="'+finEsc(c.fechaPago)+'" onchange="if(finFechaOk(this))fonSet('+A+',\'fechaPago\',this.value)">':'')+'</div>'
+      +'</div>';
+  });
+  return h;
 }

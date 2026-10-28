@@ -113,8 +113,9 @@ function renderImpuestos(){
   h+='<div class="fin-nota">💡 El <b>IVA facturado</b> sale de Honorarios: solo las filas con N° de factura, en el mes de su <b>fecha de factura</b>. '
     +'El <b>IVA de gastos</b> sale de Gastos y ya contempla el 50% cuando corresponde. Lo que escribas en '
     +'<b>IVA a pagar</b> e <b>IRPF</b> manda sobre lo calculado: la sugerencia es una ayuda. '
-    +'Las fechas de vencimiento se corrigen en <b>⚙ Mis impuestos</b>.</div>';
-  if(typeof fonTablaHTML==='function')h+=fonTablaHTML(y);   // FONASA (fonasa.js)
+    +'Las fechas de vencimiento se corrigen en <b>⚙ Mis impuestos</b>. '
+    +'<b>FONASA</b> va por mes y se paga aparte (BPS): cada mes tiene su vencimiento y su propio Pagado; '
+    +'<b>mín.</b> Sí/No se marca solo cuando el cálculo da menos que el mínimo (↺ vuelve a lo sugerido).</div>';
   finQ('#view-imp').innerHTML=h;
 }
 var impCfgAbierta=false;
@@ -140,15 +141,20 @@ function impKpisHtml(y){
     +'</div>';
 }
 
+// 28/10/2026 (pedido de la usuaria): FONASA va en esta misma tabla, en su columna (fonasa.js). Como se paga aparte
+// (BPS, mensual, otro vencimiento), cada mes de FONASA conserva su propio vencimiento y su propio Pagado.
+// Vence / Estado / Fecha de pago / Comprobante de las columnas son los de DGI (IVA e IRPF).
 function impTablaPeriodos(y){
-  var per=impPeriodos(y), t={v:0,c:0,iva:0,irpf:0};
+  var per=impPeriodos(y), t={v:0,c:0,iva:0,irpf:0,fon:0,tot:0}, conFon=(typeof fonCeldaHTML==='function');
   var filas=per.map(function(p){
     var f=impFilaPeriodo(y,p.i,false)||{};
     var iva=honNum(f.iva), irpf=honNum(f.irpf);
     var venc=f.venc||p.venc||'';
     var est=(f.pagado?'pag':(venc&&daysTo(venc)<0?'venc':'pen'));
-    var hayAlgo=p.ventas||p.compras||iva!==null||irpf!==null;
-    t.v+=p.ventas; t.c+=p.compras; t.iva+=iva||0; t.irpf+=irpf||0;
+    var fon=conFon?fonDelPeriodo(y,p.meses):{total:0,hay:false};
+    var total=(iva||0)+(irpf||0)+fon.total;
+    var hayAlgo=p.ventas||p.compras||iva!==null||irpf!==null||fon.hay;
+    t.v+=p.ventas; t.c+=p.compras; t.iva+=iva||0; t.irpf+=irpf||0; t.fon+=fon.total; t.tot+=total;
     return '<tr'+(hayAlgo?'':' class="imp-vacio"')+'>'
       +'<td><b>'+p.label+'</b></td>'
       +'<td class="imp-venc">'+impInPer(y,p.i,'venc',venc,{type:'date'})
@@ -157,20 +163,28 @@ function impTablaPeriodos(y){
       +'<td class="num">'+(p.compras?money(p.compras):'—')+'</td>'
       +'<td>'+impInPer(y,p.i,'iva',iva,{ph:p.sugerido?numTxt(p.sugerido):'—',sug:p.sugerido})+'</td>'
       +'<td>'+impInPer(y,p.i,'irpf',irpf,{ph:'—'})+'</td>'
+      +(conFon?'<td class="fon-td">'+fonCeldaHTML(y,p.meses)+'</td>':'')
+      +'<td class="num"><b>'+(total?money(total):'—')+'</b></td>'
       +'<td>'+((iva||irpf)?'<span class="pill clk imp-'+est+'" onclick="impTogglePagoPer('+y+','+p.i+')">'+IMP_EST[est]+'</span>'
                          :'<span class="muted-cell">—</span>')+'</td>'
       +'<td>'+impInPer(y,p.i,'fechaPago',f.fechaPago,{type:'date'})+'</td>'
       +'<td>'+impInPer(y,p.i,'comprobante',f.comprobante,{ph:'+ N°'})+'</td></tr>';
   }).join('');
   var tot='<tr class="gst-tot"><td>TOTAL '+y+'</td><td></td><td class="num">'+money(t.v)+'</td><td class="num">'+money(t.c)+'</td>'
-    +'<td class="num"><b>'+money(t.iva)+'</b></td><td class="num"><b>'+money(t.irpf)+'</b></td><td colspan="3"></td></tr>';
+    +'<td class="num"><b>'+money(t.iva)+'</b></td><td class="num"><b>'+money(t.irpf)+'</b></td>'
+    +(conFon?'<td class="num"><b>'+money(t.fon)+'</b></td>':'')
+    +'<td class="num"><b>'+money(t.tot)+'</b></td><td colspan="3"></td></tr>';
   return '<div class="card-head imp-head"><h3>Registro de '+y+'</h3>'
+    +(conFon?fonCfgHTML():'')
     +'<button class="btn btn-outline btn-sm" onclick="impUsarCalculado()">✨ Completar el IVA con lo calculado</button></div>'
-    +'<div class="table-wrap"><table style="min-width:1020px"><thead><tr>'
-    +'<th>Período</th><th class="imp-venc">Vence</th>'
+    +(conFon&&honNum(fonCfg().tasa)==null?'<div class="venc-aviso">Para calcular el <b>FONASA</b>, escribí la tasa (y el mínimo, si corresponde) acá arriba. '
+      +'La base es lo facturado sin IVA, por fecha de emisión de la factura.</div>':'')
+    +'<div class="table-wrap"><table class="imp-tabla" style="min-width:1240px"><thead><tr>'
+    +'<th>Período</th><th class="imp-venc">Vence (DGI)</th>'
     +'<th class="num">IVA facturado</th><th class="num">IVA de gastos</th>'
     +'<th class="num">IVA a pagar</th><th class="num">IRPF</th>'
-    +'<th>Estado</th><th>Fecha de pago</th><th>Comprobante</th>'
+    +(conFon?'<th>FONASA (BPS)</th>':'')+'<th class="num">Total</th>'
+    +'<th>Estado (DGI)</th><th>Fecha de pago (DGI)</th><th>Comprobante</th>'
     +'</tr></thead><tbody>'+filas+tot+'</tbody></table></div>';
 }
 

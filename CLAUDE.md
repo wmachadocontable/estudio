@@ -155,7 +155,9 @@
   Pendientes · Realizadas · Todas (`userPrefs.notasFiltro`, por defecto Pendientes). Las del estudio no cambian.
 - **Honorarios, subtotal facturado:** tarjeta «Facturado en el mes · subtotal» (sin IVA + IVA = total) y, en la vista
   anual, renglones Subtotal / IVA / Total facturado por mes (`honFilasFacturado`), por fecha de factura.
-- **FONASA** (`js/finanzas/fonasa.js`, en Impuestos debajo del IVA): base = facturado sin IVA por **fecha de emisión**
+- **FONASA** (`js/finanzas/fonasa.js`), **en la misma tabla del IVA** desde el 28/10 (columna «FONASA (BPS)», una línea por mes:
+  1 en mensual, 2 en bimestral, cada una con su vencimiento y su propio Pagado porque se paga aparte; columna Total =
+  IVA + IRPF + FONASA; tasa/mínimo/desde arriba de la tabla, `fonCfgHTML`/`fonCeldaHTML`). Antes era un cuadro aparte: base = facturado sin IVA por **fecha de emisión**
   (decisión de la usuaria), cálculo = base × tasa, «Aplica mínimo» Sí/No sugerido (↺ vuelve a lo sugerido), vence con
   el calendario BPS Servicios Personales del mes siguiente. **Tasa, mínimo y «Desde» los escribe ella**
   (`vencCfg().fonasa`); sin «Desde» la página pedía todos los meses del año como vencidos.
