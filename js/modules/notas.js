@@ -49,3 +49,45 @@ function notasVacioHTML() {
   return '<div class="notas-vacio"><div class="ne-ico">🗒️</div><p>Sin notas todavía.</p>'
     + '<button class="btn btn-gold btn-sm" onclick="addMyDashStickyNote()">✎ Escribir una nota</button></div>';
 }
+
+/* ===== REALIZADAS Y PENDIENTES (27/10/2026, pedido de la usuaria) =====
+   Cada nota personal tiene ✓ para marcarla como realizada (n.hecha = fecha ISO, n.hechaPor). Arriba,
+   Pendientes · Realizadas · Todas (cada una el suyo: userPrefs.notasFiltro, por defecto Pendientes).
+   No se borra nada: una realizada solo pasa a la otra lista. Las «Notas del estudio» no cambian. */
+function notasFiltro() { const f = userPrefs.notasFiltro; return (f === 'hechas' || f === 'todas') ? f : 'pendientes'; }
+function setNotasFiltro(f) { userPrefs.notasFiltro = f; if (typeof saveUserPrefs === 'function') saveUserPrefs(); renderContent(); }
+function notasFiltrar(lista) {
+  const f = notasFiltro();
+  if (f === 'hechas') return lista.filter(n => n.hecha);
+  if (f === 'pendientes') return lista.filter(n => !n.hecha);
+  return lista;
+}
+function notasFiltroHTML(d) {
+  const t = d.stickyNotes || [], nH = t.filter(n => n.hecha).length, nP = t.length - nH, f = notasFiltro();
+  const chip = (k, l, c) => '<button class="mydash-task-chip' + (f === k ? ' active' : '') + '" onclick="setNotasFiltro(\'' + k + '\')">' + l
+    + '<span class="mydash-task-chip-n">' + c + '</span></button>';
+  return '<div class="notas-filtro">' + chip('pendientes', 'Pendientes', nP) + chip('hechas', 'Realizadas', nH) + chip('todas', 'Todas', t.length) + '</div>';
+}
+function notasVacioFiltroHTML() {
+  return '<div class="mydash-empty">' + (notasFiltro() === 'hechas' ? 'Todavía no marcaste ninguna nota como realizada. Usá ✓ en la nota.'
+    : '🎉 No te quedan notas pendientes. Las realizadas están en «Realizadas».') + '</div>';
+}
+function notaBotonHecha(n) {
+  return '<button class="sticky-hecha-btn' + (n.hecha ? ' on' : '') + '" onclick="notaMarcarHecha(\'' + n.id + '\')" title="'
+    + (n.hecha ? 'Volver a pendiente' : 'Marcar como realizada') + '">✓</button>';
+}
+function notaSelloHecha(n) {
+  if (!n.hecha) return '';
+  const d = new Date(n.hecha), f = isNaN(d) ? '' : ' ' + String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+  return '<div class="nota-sello">✓ Realizada' + f + '</div>';
+}
+function notaMarcarHecha(id) {
+  const n = findStickyNote(id, false); if (!n) return;
+  if (n.hecha) { delete n.hecha; delete n.hechaPor; } else { n.hecha = new Date().toISOString(); n.hechaPor = (currentUser() || {}).name || ''; }
+  saveState(); renderContent();
+  toast(n.hecha ? (notasFiltro() === 'pendientes' ? '✓ Nota realizada: la tenés en «Realizadas»' : '✓ Nota realizada') : 'La nota volvió a pendientes');
+}
+// «Reordenar notas»: la nota se arrastra desde el borde; desde el texto, la barra o los botones, no (así se puede escribir).
+function notaArrastrable(ev, el) {
+  el.draggable = !(ev.target.closest && ev.target.closest('.sticky-content, .sticky-toolbar, .sticky-actions'));
+}

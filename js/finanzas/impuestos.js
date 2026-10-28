@@ -114,6 +114,7 @@ function renderImpuestos(){
     +'El <b>IVA de gastos</b> sale de Gastos y ya contempla el 50% cuando corresponde. Lo que escribas en '
     +'<b>IVA a pagar</b> e <b>IRPF</b> manda sobre lo calculado: la sugerencia es una ayuda. '
     +'Las fechas de vencimiento se corrigen en <b>⚙ Mis impuestos</b>.</div>';
+  if(typeof fonTablaHTML==='function')h+=fonTablaHTML(y);   // FONASA (fonasa.js)
   finQ('#view-imp').innerHTML=h;
 }
 var impCfgAbierta=false;
@@ -129,10 +130,12 @@ function impKpisHtml(y){
     var t=impTotalFila(f); aPagar+=t;
     if(!f.pagado){ sinPagar+=t; if(impEstado(f)==='venc'&&t>0)venc++; }
   });
+  var fo=(typeof fonTotalesAnio==='function')?fonTotalesAnio(y):null;
+  if(fo){ aPagar+=fo.aPagar; sinPagar+=fo.sinPagar; venc+=fo.venc; }
   return '<div class="kpis kpis-4">'
     +finKpi('IVA facturado · '+y,money(v),'de los honorarios con factura','')
     +finKpi('IVA de gastos',money(c),'deducible','k-green')
-    +finKpi('A pagar en el año',money(aPagar),'IVA e IRPF','')
+    +finKpi('A pagar en el año',money(aPagar),fo&&fo.aPagar?'IVA, IRPF y FONASA':'IVA e IRPF','')
     +finKpi('Sin pagar',money(sinPagar),venc?(venc+' vencido'+(venc===1?'':'s')):'al día',venc?'k-alerta':(sinPagar?'k-amber':'k-green'))
     +'</div>';
 }

@@ -5293,13 +5293,12 @@ function renderMyDashboard(tab) {
 
 // Cada sección de Mi Dashboard como bloque drag-and-droppable
 function renderMyDashSection(key, d) {
-  const dragAttrs = `draggable="true"
-    ondragstart="onMyDashSectionDragStart(event,'${key}')"
-    ondragover="onMyDashSectionDragOver(event,'${key}')"
+  // Oct. 2026: el recuadro entero ya no es «draggable» (no dejaba poner el cursor en las notas):
+  // se arrastra solo desde ⋮⋮, y el recuadro sigue recibiendo donde se suelta.
+  const dragAttrs = `ondragover="onMyDashSectionDragOver(event,'${key}')"
     ondragleave="onMyDashSectionDragLeave(event,'${key}')"
-    ondrop="onMyDashSectionDrop(event,'${key}')"
-    ondragend="onMyDashSectionDragEnd(event)"`;
-  const dragHandle = `<span class="mydash-section-drag" title="Arrastrá para reordenar">⋮⋮</span>`;
+    ondrop="onMyDashSectionDrop(event,'${key}')"`;
+  const dragHandle = `<span class="mydash-section-drag" title="Arrastrá para reordenar" draggable="true" ondragstart="onMyDashSectionDragStart(event,'${key}')" ondragend="onMyDashSectionDragEnd(event)">⋮⋮</span>`;
 
   if (key === 'stickyNotes') {
     const F = d.stickyFeatures;
@@ -5323,6 +5322,7 @@ function renderMyDashSection(key, d) {
         <button class="sticky-group-add" onclick="openStickyGroupModal()" title="Crear grupo">+ Grupo</button>
       </div>`;
     }
+    topBar += notasFiltroHTML(d);
     topBar += `<button class="btn btn-outline btn-sm" onclick="openStickyFeaturesModal()" title="Activar/desactivar funciones de las notas" style="margin-left:auto;font-size:11px;">⚙ Opciones</button>`;
     topBar += `<button class="btn btn-gold btn-sm" onclick="addMyDashStickyNote()">+ Nota</button>`;
     topBar += `</div>`;
@@ -5351,6 +5351,8 @@ function renderMyDashSection(key, d) {
       });
     }
 
+    const sinFiltroHecha = myNotes.length;
+    myNotes = notasFiltrar(myNotes);
     // Notas compartidas conmigo por otra usuaria (read-only)
     const sharedToMe = F.share ? getSharedToMe() : [];
 
@@ -5370,7 +5372,7 @@ function renderMyDashSection(key, d) {
       <div class="mydash-stickies" id="mydash-stickies"
            ${F.reorder ? `ondragover="onStickyContainerDragOver(event)"` : ''}>
         ${notesHTML}
-        ${!myNotes.length && !sharedToMe.length ? (d.stickySearchTerm ? `<div class="mydash-empty">Ninguna nota coincide con la búsqueda.</div>` : notasVacioHTML()) : ''}
+        ${!myNotes.length && !sharedToMe.length ? (d.stickySearchTerm ? `<div class="mydash-empty">Ninguna nota coincide con la búsqueda.</div>` : (sinFiltroHecha ? notasVacioFiltroHTML() : notasVacioHTML())) : ''}
       </div>`;
 
     // Sección "Notas del estudio" (compartidas con TODO el estudio) - desplegable
@@ -5532,8 +5534,9 @@ function onMyDashSectionDragStart(ev, key) {
   _myDashDragKey = key;
   ev.dataTransfer.effectAllowed = 'move';
   ev.dataTransfer.setData('text/plain', key);
-  // Visual: marcar la sección que se arrastra
-  const el = ev.currentTarget;
+  // Visual: marcar la sección que se arrastra (se arrastra desde ⋮⋮, se ve el recuadro entero)
+  const el = ev.currentTarget.closest('.mydash-section') || ev.currentTarget;
+  try { ev.dataTransfer.setDragImage(el, 20, 20); } catch (e) {}
   setTimeout(() => el.classList.add('mydash-dragging'), 0);
 }
 
@@ -5629,7 +5632,7 @@ function renderStickyNote(n, d, isStudio) {
 
   // Atributos drag-and-drop si reorder está activo (sólo para mis notas, no read-only ni estudio)
   const dragAttrs = (F.reorder && !readonly && !isStudioNote)
-    ? `draggable="true" ondragstart="onStickyDragStart(event,'${n.id}')" ondragover="onStickyDragOver(event,'${n.id}')" ondragleave="onStickyDragLeave(event)" ondrop="onStickyDrop(event,'${n.id}')" ondragend="onStickyDragEnd(event)"`
+    ? `onmousedown="notaArrastrable(event,this)" ondragstart="onStickyDragStart(event,'${n.id}')" ondragover="onStickyDragOver(event,'${n.id}')" ondragleave="onStickyDragLeave(event)" ondrop="onStickyDrop(event,'${n.id}')" ondragend="onStickyDragEnd(event)"`
     : '';
 
   // Click handler para checkboxes (delegado en el contenedor de contenido)
@@ -5656,6 +5659,7 @@ function renderStickyNote(n, d, isStudio) {
     if (F.groups && !isStudioNote) {
       actions += `<button class="sticky-group-btn" onclick="openStickyGroupAssign('${n.id}')" title="Mover a grupo">📁</button>`;
     }
+    if (!isStudioNote) actions += notaBotonHecha(n);
     actions += `<button class="sticky-del" onclick="removeStickyNote('${n.id}',${isStudioNote ? 'true' : 'false'})" title="Eliminar">×</button>`;
   } else {
     actions = `<span class="sticky-readonly-badge" title="Compartida por ${bbEscape(n._sharedBy||'')}">🔒</span>`;
@@ -5675,13 +5679,14 @@ function renderStickyNote(n, d, isStudio) {
       <button onclick="stickyFmt('${n.id}','removeFormat',${isStudioNote ? 'true' : 'false'})" title="Quitar formato" style="font-size:10px;">⌫T</button>
     </div>`;
 
-  return `<div class="sticky-note ${sizeClass}${readonly?' sticky-readonly':''}${isStudioNote?' sticky-studio':''}" style="--nc:${notaColor(n.color)};" data-id="${n.id}" ${dragAttrs}>
+  return `<div class="sticky-note ${sizeClass}${readonly?' sticky-readonly':''}${isStudioNote?' sticky-studio':''}${(!isStudioNote && n.hecha)?' sticky-hecha':''}" style="--nc:${notaColor(n.color)};" data-id="${n.id}" ${dragAttrs}>
     ${toolbar}
     <div class="sticky-content" ${readonly?'':`contenteditable="true"`}
          ${readonly ? '' : `oninput="${saveHandler}" onkeydown="stickyKeyHandler(event, '${n.id}')" onfocus="onStickyFocus('${n.id}',${isStudioNote ? 'true' : 'false'})" onblur="onStickyBlur('${n.id}')"`}
          ${checkboxClickHandler}
          data-placeholder="Escribí tu nota...">${displayHtml}</div>
     ${footerHTML ? `<div class="sticky-footer">${footerHTML}</div>` : ''}
+    ${isStudioNote ? '' : notaSelloHecha(n)}
     ${notaFechaHTML(n)}
     <div class="sticky-actions">
       ${actions}

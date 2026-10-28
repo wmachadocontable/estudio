@@ -42,17 +42,17 @@ function honFFacSugerida(c, y, m) {
    facturado = por fecha de factura (lo que va al IVA) · cobrado = por fecha de cobro (la plata que entró). */
 function honNumerosMes(hd, hy, y, m) {
   const rate = (typeof hd.taxRate === 'number') ? hd.taxRate : 0.22, ym = honYM(y, m);
-  const r = { fact: 0, iva: 0, nFact: 0, deOtroMes: 0, cobr: 0, nCobr: 0 };
+  const r = { fact: 0, sub: 0, iva: 0, nFact: 0, deOtroMes: 0, cobr: 0, nCobr: 0 };
   (hd.clients || []).forEach(c => (c.months || []).forEach((cell, mi) => {
     const sin = honImporte(cell); if (sin == null || honArchivadoEn(c, hy, mi)) return;
     const fac = honConFactura(cell), iva = fac ? Math.round(sin * rate * 100) / 100 : 0;
     if (fac && honMesFactura(cell, hy, mi) === ym) {
-      r.fact += sin + iva; r.iva += iva; r.nFact++;
+      r.fact += sin + iva; r.sub += sin; r.iva += iva; r.nFact++;
       if (!(hy === y && mi === m)) r.deOtroMes++;
     }
     if (cell.fecha && String(cell.fecha).slice(0, 7) === ym) { r.cobr += sin + iva; r.nCobr++; }
   }));
-  ['fact', 'iva', 'cobr'].forEach(k => { r[k] = Math.round(r[k] * 100) / 100; });
+  ['fact', 'sub', 'iva', 'cobr'].forEach(k => { r[k] = Math.round(r[k] * 100) / 100; });
   return r;
 }
 
@@ -71,7 +71,7 @@ function honKpisMes(tab, filas, y, m) {
   const card = (cls, num, lbl, s) => '<div class="stat-card' + cls + '"><div class="stat-num">' + money(num) + '</div><div class="stat-label">' + lbl + '</div>' + sub(s) + '</div>';
   return '<div class="stats-bar hon-kpis">'
     + card('', del, 'Honorarios de ' + mes, nDel + ' cliente' + (nDel === 1 ? '' : 's') + ' · el trabajo de este mes')
-    + card(' blue', n.fact, 'Facturado en ' + mes, 'IVA ' + money(n.iva) + ' → va a Impuestos'
+    + card(' blue', n.sub, 'Facturado en ' + mes + ' · subtotal', '+ IVA ' + money(n.iva) + ' = ' + money(n.fact)
       + (n.deOtroMes ? ' · ' + n.deOtroMes + ' de otro mes' : ''))
     + card(' green', n.cobr, 'Cobrado en ' + mes, n.nCobr + ' cobro' + (n.nCobr === 1 ? '' : 's') + ' por fecha de pago')
     + card(nAtr ? ' red' : '', pend, 'Pendiente de cobro', nPend ? (nAtr ? nAtr + ' atrasado' + (nAtr === 1 ? '' : 's') : 'todavía en plazo') : 'nada pendiente')
@@ -101,4 +101,17 @@ function honFFacAyuda(c, y, m) {
   if (!fac.trim()) { el.textContent = 'Sin N° de factura no hay IVA.'; return; }
   const ym = ff.value ? ff.value.slice(0, 7) : honYM(y, m), p = ym.split('-').map(Number);
   el.textContent = 'El IVA va a ' + MONTHS[p[1] - 1] + ' ' + p[0] + (ff.value ? '' : ' (sin fecha: el mes del trabajo)') + '.';
+}
+
+/* Vista anual: lo FACTURADO de cada mes por fecha de factura (lo que va al IVA): subtotal sin IVA, IVA y total.
+   (El renglón TOTAL de arriba es por mes del trabajo, con IVA.) 27/10/2026, pedido de la usuaria. */
+function honFilasFacturado(hd, y) {
+  const n = []; for (let m = 0; m < 12; m++) n.push(honNumerosMes(hd, y, y, m));
+  const fila = (cls, lbl, k) => {
+    const tot = n.reduce((a, x) => a + x[k], 0);
+    return '<tr class="hon-fact-fila ' + cls + '"><td>' + lbl + '</td>' + n.map(x => '<td>' + (x[k] ? numTxt(x[k]) : '·') + '</td>').join('')
+      + '<td class="hon-yearcol">' + money(Math.round(tot * 100) / 100) + '</td></tr>';
+  };
+  return '<tr class="hon-fact-tit"><td colspan="14">Facturado · por fecha de factura</td></tr>'
+    + fila('hon-fact-sub', 'Subtotal (sin IVA)', 'sub') + fila('', 'IVA', 'iva') + fila('hon-fact-tot', 'Total facturado', 'fact');
 }

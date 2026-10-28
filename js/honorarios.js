@@ -267,7 +267,7 @@
     h += '<tr class="hon-noresults" style="display:none;"><td colspan="14" style="text-align:center;color:var(--c-text-muted);padding:18px;">Sin resultados para la búsqueda.</td></tr>';
     h += '</tbody><tfoot><tr class="hon-foot"><td>TOTAL</td>';
     monthTotals.forEach(t=> h+='<td>'+(t?honMoney(t,false):'·')+'</td>');
-    h += '<td class="hon-yearcol">'+honMoney(grand)+'</td></tr></tfoot></table></div>';
+    h += '<td class="hon-yearcol">'+honMoney(grand)+'</td></tr>'+(typeof honFilasFacturado==='function'?honFilasFacturado(hd,year):'')+'</tfoot></table></div>';
     h += '<p class="hon-hint">💡 Vista anual: cada celda muestra el total del mes (con IVA solo si hay factura). Los clientes archivados (📦) muestran los meses previos al archivo; desde el corte aparecen como ·. Clic en una celda para editar; clic en la empresa para ver su detalle.</p>';
     return h;
   }

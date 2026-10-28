@@ -105,6 +105,8 @@ function gstItems(){
     var g=FinStore.get('gastos',c.gastoId); if(!g)return;
     out.push({id:c.id,tipo:'cuota',g:g,c:c,vence:c.fecha||'',importe:honNum(c.importe),pagado:!!c.pagado,fechaPago:c.fechaPago||'',det:'Cuota '+c.n+'/'+(g.cuotas||'?')});
   });
+  // Oct. 2026: los impuestos (IVA + IRPF, FONASA) leídos de Impuestos, con su vencimiento (impuestos-gastos.js).
+  if(typeof impGstItems==='function')out=out.concat(impGstItems(gstYear()));
   return out;
 }
 /* ===== las filas de un mes =====
@@ -116,7 +118,7 @@ function gstFilasMes(y,m){
   var filas=[];
   gstItems().forEach(function(it){
     var vence=gstEnMes(it.vence,y,m), pagoAca=it.pagado&&gstEnMes(it.fechaPago,y,m);
-    var arrastre=esActual&&!it.pagado&&!!it.vence&&it.vence<inicio;
+    var arrastre=esActual&&!it.pagado&&!it.noArrastre&&!!it.vence&&it.vence<inicio;
     if(!vence&&!pagoAca&&!arrastre)return;
     it.fecha=it.vence; it.venceAca=vence; it.pagoAca=pagoAca; it.arrastre=arrastre;
     filas.push(it);
@@ -175,6 +177,7 @@ function gstCobradoDelMes(y,m){ return finHonMes(y,m,'cobrado'); }
 /* ===== guardar desde la tabla ===== */
 function gstSet(id,f,v){ var g=FinStore.get('gastos',id); if(!g)return; g[f]=v; if(f==='cat')gstCatAddName(v); FinStore.upsert('gastos',g); renderGstBody(); }
 function gstTogglePago(tipo,id){
+  if(tipo==='imp'){ impGstToggle(id); renderGstBody(); return; }
   var col=tipo==='cuota'?'cuotas':'gastos', o=FinStore.get(col,id); if(!o)return;
   o.pagado=!o.pagado; o.fechaPago=o.pagado?(o.fechaPago||finHoy()):'';
   FinStore.upsert(col,o); renderGstBody();
@@ -219,7 +222,7 @@ function renderGastos(){
     h+='<div class="month-filter">'+MONTHS_SHORT.map(function(m,i){return '<button class="month-btn'+(i===gstMes?' active':'')+'" onclick="setGstMes('+i+')">'+m.toUpperCase()+'</button>';}).join('')+'</div>';
   }
   h+='<div id="gst-body"></div>';
-  h+='<div class="fin-nota">💡 Marcá un gasto como <b>fijo</b> (alquiler, luz, agua…) y el mes que viene lo traés con un solo botón. Cada gasto aparece en el mes en que <b>vence</b>; «Pagado este mes» es la plata que salió de verdad. Las compras <b>a crédito</b> aparecen en el mes de cada cuota, nunca el total de golpe.</div>';
+  h+='<div class="fin-nota">💡 Marcá un gasto como <b>fijo</b> (alquiler, luz, agua…) y el mes que viene lo traés con un solo botón. Cada gasto aparece en el mes en que <b>vence</b>; «Pagado este mes» es la plata que salió de verdad. Las compras <b>a crédito</b> aparecen en el mes de cada cuota, nunca el total de golpe. Los <b>impuestos</b> (IVA, IRPF y FONASA) vienen solos de Impuestos, con su vencimiento.</div>';
   finQ('#view-gastos').innerHTML=h;
   syncGstListas(); renderGstBody();
 }
@@ -234,6 +237,7 @@ function gstTablaMensual(){
     +(comp.n?finKpi('Comprometido a futuro',money(comp.total),comp.n+(comp.n===1?' cuota por venir':' cuotas por venir'),'k-acento'):'')
     +'</div>';
   var cuerpo=filas.map(function(f){
+    if(f.tipo==='imp')return impGstFilaHTML(f);
     var g=f.g;
     return '<tr>'
       +'<td style="white-space:nowrap" title="'+(f.tipo==='cuota'?'Vence la cuota':'Vence · factura del '+fDate(g.fecha))+'">'+(f.tipo==='cuota'?'<span class="gst-fecha">'+fDate(f.fecha)+'</span>':finCellIn('gastos',g.id,'vence',gstVence(g),{type:'date'}))+'</td>'

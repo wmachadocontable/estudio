@@ -81,3 +81,10 @@ body.edit-mode .hon-edit-name { display:inline; }
 .hon-kpis .stat-card .stat-num { font-size:20px; }
 .hon-editor .hon-ec-in.hon-ec-ffac { width:128px; text-align:center; }
 .hon-fac-w { display:inline-block; text-align:inherit; }
+/* Vista anual: lo facturado por fecha de factura (27/10/2026) */
+.hon-year tfoot tr.hon-fact-tit td { background:var(--c-card); color:var(--c-text-muted); font-size:10.5px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; text-align:left; padding-top:12px; border-top:2px solid var(--c-border); }
+.hon-year tfoot tr.hon-fact-fila td { background:var(--c-bg-alt); color:var(--c-text); font-weight:500; text-align:right; font-variant-numeric:tabular-nums; }
+.hon-year tfoot tr.hon-fact-fila td:first-child { text-align:left; font-weight:700; }
+.hon-year tfoot tr.hon-fact-sub td { color:var(--c-header-tx, var(--c-header)); font-weight:700; }
+.hon-year tfoot tr.hon-fact-tot td { font-weight:700; }
+.hon-year tfoot tr.hon-fact-fila td.hon-yearcol { background:var(--c-bg-alt); color:var(--c-text); }

@@ -221,3 +221,17 @@ tbody tr.imp-vacio td{color:var(--c-text-muted)}
 .gst-venc{background:var(--c-red-light);color:var(--c-red)}
 .gst-otro{background:var(--c-green-light);color:var(--c-green)}
 .gst-pago{display:block;font-size:10.5px;color:var(--c-text-muted);margin-top:3px;white-space:nowrap}
+
+/* Impuestos en Gastos y FONASA (27/10/2026) */
+.gst-impchip,.gst-est{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border-radius:10px;padding:2px 8px;margin-left:6px;white-space:nowrap}
+.gst-impchip{background:var(--c-blue-light);color:var(--c-blue)}
+.gst-est{background:var(--c-pending-light);color:var(--c-pending)}
+tr.gst-imp td{background:var(--c-bg-alt)}
+.fon-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:26px}
+.fon-cfg{display:flex;gap:14px;flex-wrap:wrap}
+.fon-cfg-i{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--c-text-muted);font-weight:600}
+.fon-cfg-i .cell-in{width:96px;border:1px solid var(--c-border);background:var(--c-card)}
+.fon-min{border:1px solid var(--c-border);background:var(--c-card);color:var(--c-text);border-radius:12px;padding:3px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.fon-min.si{background:var(--c-pending-light);border-color:var(--c-pending);color:var(--c-pending)}
+.fon-auto{border:none;background:none;cursor:pointer;color:var(--c-text-muted);font-size:13px;margin-left:4px}
+.fon-sug{font-size:10px;color:var(--c-text-muted);margin-left:6px;text-transform:uppercase;letter-spacing:.4px}

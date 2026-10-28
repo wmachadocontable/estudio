@@ -144,6 +144,23 @@
   (por fecha de pago) · Pendiente de cobro. `finHonMes` (Impuestos y la línea de resultado de Gastos) usa las mismas
   fechas; una factura de diciembre emitida en enero cae en el IVA de enero del año siguiente.
 
+## Notas, subtotal, FONASA e impuestos en Gastos (28/10/2026, pedido de la usuaria)
+- **Notas que no dejaban escribir:** todo el recuadro de cada sección de Personal era `draggable` y el navegador no
+  ponía el cursor en una nota ya escrita (una nueva sí, porque se le da el foco solo). Ahora se arrastra solo desde
+  ⋮⋮ (`renderMyDashSection`), y con «reordenar notas» la nota se arrastra desde el borde (`notaArrastrable`).
+  **No volver a poner `draggable` en un contenedor con campos para escribir adentro.**
+- **Notas realizadas** (`js/modules/notas.js`): ✓ en cada nota personal (`n.hecha` = fecha, `n.hechaPor`) y filtro
+  Pendientes · Realizadas · Todas (`userPrefs.notasFiltro`, por defecto Pendientes). Las del estudio no cambian.
+- **Honorarios, subtotal facturado:** tarjeta «Facturado en el mes · subtotal» (sin IVA + IVA = total) y, en la vista
+  anual, renglones Subtotal / IVA / Total facturado por mes (`honFilasFacturado`), por fecha de factura.
+- **FONASA** (`js/finanzas/fonasa.js`, en Impuestos debajo del IVA): base = facturado sin IVA por **fecha de emisión**
+  (decisión de la usuaria), cálculo = base × tasa, «Aplica mínimo» Sí/No sugerido (↺ vuelve a lo sugerido), vence con
+  el calendario BPS Servicios Personales del mes siguiente. **Tasa, mínimo y «Desde» los escribe ella**
+  (`vencCfg().fonasa`); sin «Desde» la página pedía todos los meses del año como vencidos.
+- **Impuestos en Gastos** (`js/finanzas/impuestos-gastos.js`): IVA + IRPF de cada período y FONASA de cada mes, leídos de
+  Impuestos (no se copian), con su vencimiento; pagado en un lado = pagado en el otro. IVA sin escribir → «estimado»
+  (no se arrastra como vencido; al pagarlo queda como IVA a pagar).
+
 ## «Se borró Sv. Profesionales» (02/10/2026) — no se había borrado
 - El año del estudio estaba guardado como `"2026 "` (con un espacio). Sv. Profesionales tenía los datos en el
   formato viejo (`row.cells`) y no tenía `tabYear`; al elegir un año en el selector se puso `tabYear: '2026'`,
