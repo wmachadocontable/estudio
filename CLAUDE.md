@@ -75,6 +75,9 @@
 ## Automatizaciones y respaldo (02/10/2026)
 - **Sueldos:** el mes en curso se crea solo desde el día 1 (`sldMesAutomatico`, una vez por mes: `_auto`).
 - **Gastos fijos:** aparecen solos cada mes (`gstFijosAutomaticos`, `finanzas.fijosAuto`, ids fijos `gf<mes>_<concepto>`).
+  **Desde el 03/11/2026 el mes de un fijo es el de su VENCIMIENTO** (`gstVence`), no el de la fecha: los fijos reales
+  estaban cargados con fecha 30/09 y vencimiento en octubre, y en noviembre solo pasaron 2 de 15. La copia corre fecha y
+  vencimiento juntos (`gstCopiaFija`). `fijosAuto[mes].v = 2`: el mes que corrió con la regla vieja corre una vez más.
 - **Honorarios atrasados:** «Quién debe» arriba de Honorarios + aviso diario a Wendy (`js/finanzas/honorarios-deudores.js`).
 - **Respaldo:** el viejo (Apps Script, no estaba en el repo) se cortó en silencio el **19/08/2026**. Nuevo script en
   `herramientas/respaldo-apps-script/` (ver su LEEME): 23 h, JSON + Excel en Drive y mail. Anota `wm_respaldo` en la base;

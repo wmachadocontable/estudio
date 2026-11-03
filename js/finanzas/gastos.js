@@ -310,61 +310,71 @@ function gstTablaAnual(){
   return kpis+'<div class="table-wrap"><table style="min-width:1040px"><thead>'+head+'</thead><tbody>'+cuerpo+pie+'</tbody></table></div>';
 }
 
-/* ===== traer los gastos fijos del mes anterior ===== */
+/* ===== GASTOS FIJOS: de un mes al otro, por VENCIMIENTO (03/11/2026) =====
+   Antes se buscaban por la fecha de la compra o factura: un sueldo cargado el 30/09 que vence el 10/10 contaba
+   como de septiembre, y en noviembre solo pasaban los que tenían fecha de octubre (en el caso real, 2 de 12).
+   Ahora el mes de un fijo es el de su VENCIMIENTO (gstVence: «vence» o, si está vacío, la fecha), igual que en
+   el resto de Gastos. La copia corre la fecha y el vencimiento la misma cantidad de meses. */
+function gstFijosConVence(gastos,y,m){ return gastos.filter(function(g){ return g.fijo&&g.forma!=='credito'&&gstEnMes(gstVence(g),y,m); }); }
+// ¿Ya hay un gasto con ese concepto en el mes (por vencimiento o por fecha)?
+function gstYaEnMes(gastos,y,m,concepto){
+  var c=(concepto||'').trim().toLowerCase();
+  return gastos.some(function(x){ return (x.concepto||'').trim().toLowerCase()===c&&(gstEnMes(gstVence(x),y,m)||(gstAnioDe(x)===y&&gstMesDe(x)===m)); });
+}
+// La copia de un fijo, «meses» más adelante, pendiente de pago.
+function gstCopiaFija(g,meses){
+  return {concepto:g.concepto, cat:g.cat, importe:g.importe, proveedor:g.proveedor||'', medio:g.medio||'',
+    fecha:gstSumarMeses(g.fecha||gstVence(g),meses), vence:g.vence?gstSumarMeses(g.vence,meses):'', pagado:false, fechaPago:'', factura:'',
+    fijo:true, forma:'contado', conIva:!!g.conIva, iva:g.conIva?g.iva:0, ivaModo:g.ivaModo||'incluido', ivaDed:g.ivaDed||100, notas:''};
+}
+
+/* ===== traer los gastos fijos del mes anterior (botón) ===== */
 function gstCopiarFijos(){
   var y=gstYear(), m=gstMes, pm=m-1, py=y; if(pm<0){ pm=11; py--; }
-  var fijos=FinStore.all('gastos').filter(function(g){ return g.fijo&&g.forma!=='credito'&&gstAnioDe(g)===py&&gstMesDe(g)===pm; });
-  if(!fijos.length){ toast('El mes anterior no tiene gastos fijos marcados'); return; }
-  var yaHay=FinStore.all('gastos').filter(function(g){ return gstAnioDe(g)===y&&gstMesDe(g)===m; }), nuevos=0;
+  var todos=FinStore.all('gastos'), fijos=gstFijosConVence(todos,py,pm);
+  if(!fijos.length){ toast('En '+MONTHS[pm]+' no vence ningún gasto marcado como fijo'); return; }
+  var nuevos=0;
   fijos.forEach(function(g){
-    var repetido=yaHay.some(function(x){ return (x.concepto||'').trim().toLowerCase()===(g.concepto||'').trim().toLowerCase(); });
-    if(repetido)return;
-    var nf=y+'-'+String(m+1).padStart(2,'0')+'-'+((g.fecha||'').slice(8,10)||'01');
-    FinStore.upsert('gastos',{concepto:g.concepto,cat:g.cat,importe:g.importe,proveedor:g.proveedor||'',medio:g.medio||'',
-      fecha:nf, vence:g.vence?gstSumarMeses(g.vence,gstMesesEntre(g.fecha,nf)):'', pagado:false, fechaPago:'', factura:'',
-      fijo:true, forma:'contado', conIva:!!g.conIva, iva:g.conIva?g.iva:0, notas:''});
-    nuevos++;
+    if(gstYaEnMes(todos,y,m,g.concepto))return;
+    FinStore.upsert('gastos',gstCopiaFija(g,1)); nuevos++;
   });
   renderGastos();
   toast(nuevos?('✓ Se trajeron '+nuevos+' gastos fijos de '+MONTHS[pm]):'Esos gastos fijos ya estaban cargados');
 }
 
 
-/* ===== LOS GASTOS FIJOS SE TRAEN SOLOS (oct. 2026) =====
-   Desde el día 1, al entrar a la página (con los datos ya leídos de la nube), se crean en el mes en
-   curso los gastos marcados como fijos del último mes que tenga (hasta 3 meses atrás), como pendientes
-   y con el mismo día del mes. Se hace UNA vez por mes (finanzas.fijosAuto[AAAA-MM]): si después borran
-   uno, no vuelve. Cada gasto creado tiene un id fijo (mes + concepto), así dos sesiones a la vez no lo
-   duplican. El botón «Traer los fijos del mes anterior» sigue estando, para hacerlo a mano. */
+/* ===== LOS GASTOS FIJOS SE TRAEN SOLOS (oct. 2026; por vencimiento desde el 03/11/2026) =====
+   Desde el día 1, al entrar a la página (con los datos ya leídos de la nube), se crean en el mes en curso los
+   gastos fijos que vencieron en el último mes que tenga (hasta 3 meses atrás), como pendientes. Se hace UNA vez
+   por mes (finanzas.fijosAuto[AAAA-MM], con v:2 desde el arreglo): si después borran uno, no vuelve. El mes que
+   ya había corrido con la regla vieja (v sin poner) corre una vez más con la nueva: lo ya traído no se repite.
+   Cada gasto creado tiene un id fijo (mes + concepto), así dos sesiones a la vez no lo duplican.
+   El botón «Traer los fijos del mes anterior» sigue estando, para hacerlo a mano. */
 function gstFijosAutomaticos() {
   if (typeof cloudSynced === 'undefined' || !cloudSynced || typeof currentUser !== 'function' || !currentUser()) return false;
   if (!state.finanzas || !Array.isArray(state.finanzas.gastos)) return false;
   const f = state.finanzas, hoy = new Date(), y = hoy.getFullYear(), m = hoy.getMonth();
   const clave = y + '-' + String(m + 1).padStart(2, '0');
-  if (f.fijosAuto && f.fijosAuto[clave]) return false;
-  let origen = [], de = '';
+  const previo = f.fijosAuto && f.fijosAuto[clave];
+  if (previo && previo.v >= 2) return false;
+  let origen = [], de = '', atras = 0;
   for (let i = 1; i <= 3 && !origen.length; i++) {
     const t = new Date(y, m - i, 1), py = t.getFullYear(), pm = t.getMonth();
-    origen = f.gastos.filter(g => g.fijo && g.forma !== 'credito' && gstAnioDe(g) === py && gstMesDe(g) === pm);
-    de = MONTHS[pm] + ' ' + py;
+    origen = gstFijosConVence(f.gastos, py, pm);
+    de = MONTHS[pm] + ' ' + py; atras = i;
   }
   if (!origen.length) return false;                    // nada para traer (se vuelve a mirar la próxima vez)
-  const yaHay = f.gastos.filter(g => gstAnioDe(g) === y && gstMesDe(g) === m);
-  const ultimo = new Date(y, m + 1, 0).getDate();
   const slug = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 30);
   let n = 0;
   origen.forEach(g => {
     const id = 'gf' + clave + '_' + slug(g.concepto);
     if (f.gastos.some(x => x.id === id)) return;
-    if (yaHay.some(x => (x.concepto || '').trim().toLowerCase() === (g.concepto || '').trim().toLowerCase())) return;
-    const dia = Math.min(+((g.fecha || '').slice(8, 10)) || 1, ultimo), nf = clave + '-' + String(dia).padStart(2, '0');
-    f.gastos.push({ id, _t: Date.now(), concepto: g.concepto, cat: g.cat, importe: g.importe, proveedor: g.proveedor || '', medio: g.medio || '',
-      fecha: nf, vence: g.vence ? gstSumarMeses(g.vence, gstMesesEntre(g.fecha, nf)) : '', pagado: false, fechaPago: '', factura: '', fijo: true, forma: 'contado',
-      conIva: !!g.conIva, iva: g.conIva ? g.iva : 0, ivaModo: g.ivaModo || 'incluido', ivaDed: g.ivaDed || 100, notas: '', _auto: true });
+    if (gstYaEnMes(f.gastos, y, m, g.concepto)) return;
+    f.gastos.push(Object.assign({ id, _t: Date.now() }, gstCopiaFija(g, atras), { _auto: true }));
     n++;
   });
   if (!f.fijosAuto) f.fijosAuto = {};
-  f.fijosAuto[clave] = { at: Date.now(), n: n, de: de };
+  f.fijosAuto[clave] = { at: Date.now(), n: n + ((previo && previo.n) || 0), de: de, v: 2 };
   if (n) setTimeout(() => { if (typeof finEsDuena === 'function' && finEsDuena()) toast('🧾 Gastos: se trajeron ' + n + ' gastos fijos de ' + de); }, 1200);
   return true;
 }
