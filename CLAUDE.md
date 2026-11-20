@@ -168,6 +168,13 @@
   Impuestos (no se copian), con su vencimiento; pagado en un lado = pagado en el otro. IVA sin escribir → «estimado»
   (no se arrastra como vencido; al pagarlo queda como IVA a pagar).
 
+## De dónde sale el IVA (19/11/2026, pedido de la usuaria) — solo muestra, no cambia cálculos
+- `js/finanzas/iva-detalle.js`: el IVA va por **fecha de factura** y la lista de Gastos por **vencimiento**, por eso costaba
+  ver qué IVA de compras tomaba cada mes. (1) Gastos mensual: cuadro «IVA de compras del mes» factura por factura (mismo
+  cálculo que `gstIvaDelMes`), amarillo = sin N° / copiado solo, Excel/PDF con `finExportar('ivacomp')`. (2) Marca
+  «IVA en <mes>» en los gastos cuyo IVA es de otro mes. (3/4) Impuestos: tocar «IVA de gastos» o «IVA facturado» despliega
+  el detalle del período (`ivaDetToggle`). Envuelve `finExpRows` y `gstCeldaIva`; carga después de finanzas.js y gastos.js.
+
 ## «Se borró Sv. Profesionales» (02/10/2026) — no se había borrado
 - El año del estudio estaba guardado como `"2026 "` (con un espacio). Sv. Profesionales tenía los datos en el
   formato viejo (`row.cells`) y no tenía `tabYear`; al elegir un año en el selector se puso `tabYear: '2026'`,

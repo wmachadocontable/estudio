@@ -246,7 +246,8 @@ function gstTablaMensual(){
         +(f.det?'<span class="gst-cuota">'+f.det+'</span>':'')
         +(g.fijo?'<span class="gst-fijo" title="Gasto fijo: se puede traer del mes anterior con un botón">fijo</span>':'')
         +(f.arrastre?'<span class="gst-venc" title="Venció en un mes anterior y sigue sin pagar">vencido</span>':'')
-        +(!f.venceAca&&f.pagoAca?'<span class="gst-otro" title="Vence en otro mes, pero se pagó en este">pagado este mes</span>':'')+'</div></td>'
+        +(!f.venceAca&&f.pagoAca?'<span class="gst-otro" title="Vence en otro mes, pero se pagó en este">pagado este mes</span>':'')
+        +(typeof ivaOtroMesChip==='function'?ivaOtroMesChip(f):'')+'</div></td>'
       +'<td>'+(f.tipo==='cuota'?'<span class="muted-cell">'+finEsc(g.cat||'—')+'</span>':finCellIn('gastos',g.id,'cat',g.cat,{list:'dl-gastocats',ph:'Categoría'}))+'</td>'
       +'<td class="num"><b>'+(f.importe===null?'<span class="muted-cell">—</span>':money(f.importe))+'</b></td>'
       +'<td class="num gst-iva">'+gstCeldaIva(f)+'</td>'
@@ -264,7 +265,8 @@ function gstTablaMensual(){
   if(!cuerpo)cuerpo=finEmptyRow(7,'Todavía no hay gastos cargados en '+MONTHS[m]+'.');
   var pie=filas.length?'<tr class="gst-tot"><td colspan="3">Vence en '+MONTHS[m]+'</td><td class="num">'+money(t.total)+'</td><td colspan="3"></td></tr>':'';
   return kpis+'<div class="table-wrap"><table style="min-width:900px"><thead><tr><th>Vence</th><th>Gasto</th><th>Categoría</th><th class="num">Importe</th><th class="num">IVA</th><th>Estado</th><th></th></tr></thead>'
-    +'<tbody>'+cuerpo+pie+'</tbody></table></div>'+gstResultado(y,m,t);
+    +'<tbody>'+cuerpo+pie+'</tbody></table></div>'+gstResultado(y,m,t)
+    +(typeof ivaCompCardHTML==='function'?ivaCompCardHTML(y,m):'');   // de dónde sale el IVA de compras (iva-detalle.js)
 }
 
 // Barra de resultado del mes: lo que entró, lo que salió y la diferencia.

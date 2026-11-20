@@ -249,3 +249,39 @@ tr.gst-imp td{background:var(--c-bg-alt)}
 .fin-app .imp-tabla td.fon-td .cell-in.fon-fecha{width:112px;min-width:0;font-size:11px;padding:1px 3px;flex:0 0 auto}
 .fin-app .fon-cfg-i .cell-in{width:80px;min-width:0;padding:4px 6px}
 .fon-l2{flex-wrap:nowrap;white-space:nowrap}
+/* De dónde sale el IVA (19/11/2026, js/finanzas/iva-detalle.js) */
+.ivad-card{margin-top:18px;border:1px solid var(--c-border);border-radius:6px;background:var(--c-card);padding:0 16px}
+.ivad-card>summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0;cursor:pointer;list-style:none}
+.ivad-card>summary::-webkit-details-marker{display:none}
+.ivad-card>summary::before{content:'▸';color:var(--c-text-muted);font-size:12px}
+.ivad-card[open]>summary::before{content:'▾'}
+.ivad-tit{font-weight:700;color:var(--c-header-tx,var(--c-header))}
+.ivad-tot{color:var(--c-text-muted);font-size:13px}
+.ivad-tot b{color:var(--c-green)}
+.ivad-exp{margin-left:auto;display:flex;gap:6px}
+.ivad-sub{font-size:12px;color:var(--c-text-muted);margin:-4px 0 12px}
+.ivad-vacio{font-size:12.5px;color:var(--c-text-muted);padding:6px 0 12px}
+.ivad-tabla{min-width:640px}
+.ivad-rev td,.ivad-mini .ivad-rev td{background:var(--c-pending-light)}
+.ivad-sinn{font-size:11px;font-weight:700;color:var(--c-pending)}
+.ivad-chip{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;border-radius:10px;padding:1px 7px;margin-left:6px;background:var(--c-pending-light);color:var(--c-pending);white-space:nowrap}
+.ivad-chip-n{background:var(--c-bg-alt);color:var(--c-text-muted);border:1px solid var(--c-border)}
+.ivad-pie{font-size:12px;color:var(--c-text-muted);padding:8px 0 14px}
+.gst-ivaotro{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;border-radius:10px;padding:2px 8px;margin-left:6px;background:var(--c-blue-light);color:var(--c-blue);white-space:nowrap}
+.gst-iva-gris,.gst-iva-gris *{color:var(--c-text-muted)!important}
+.ivad-btn{border:none;background:none;font:inherit;color:var(--c-blue);cursor:pointer;padding:0;border-bottom:1px dotted var(--c-blue)}
+.ivad-btn.on{font-weight:700}
+.ivad-flecha{font-size:10px}
+tr.ivad-tr>td{background:var(--c-bg-alt);padding:8px 10px}
+.ivad-caja{background:var(--c-card);border:1px solid var(--c-border);border-radius:6px;padding:10px 14px;max-width:760px}
+.ivad-caja-t{font-weight:700;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.ivad-x{margin-left:auto;border:none;background:none;cursor:pointer;color:var(--c-text-muted)}
+.ivad-mes{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--c-text-muted);margin:8px 0 2px}
+.fin-app table.ivad-mini{width:100%;min-width:0;border-collapse:collapse;font-size:12.5px}
+.fin-app table.ivad-mini td{padding:4px 6px;border-bottom:1px solid var(--c-border-soft);background:transparent}
+.ivad-caja-tot{display:flex;justify-content:space-between;gap:10px;padding-top:8px;font-size:12px;color:var(--c-text-muted)}
+.ivad-caja-tot b{font-size:14px;color:var(--c-text)}
+.fin-app table.ivad-mini td{text-align:left;white-space:nowrap}
+.fin-app table.ivad-mini td:nth-child(3){white-space:normal;width:100%}
+.fin-app table.ivad-mini td.num{text-align:right}
+tr.ivad-tr>td{text-align:left}

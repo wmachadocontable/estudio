@@ -159,8 +159,8 @@ function impTablaPeriodos(y){
       +'<td><b>'+p.label+'</b></td>'
       +'<td class="imp-venc">'+impInPer(y,p.i,'venc',venc,{type:'date'})
         +(venc?'':'<div class="imp-falta">vence en enero de '+(y+1)+', que DGI publica en diciembre</div>')+'</td>'
-      +'<td class="num">'+(p.ventas?money(p.ventas):'—')+'</td>'
-      +'<td class="num">'+(p.compras?money(p.compras):'—')+'</td>'
+      +(typeof ivaDetCelda==='function'?ivaDetCelda(y,p.i,'v',p.ventas)+ivaDetCelda(y,p.i,'c',p.compras)
+        :'<td class="num">'+(p.ventas?money(p.ventas):'—')+'</td><td class="num">'+(p.compras?money(p.compras):'—')+'</td>')
       +'<td>'+impInPer(y,p.i,'iva',iva,{ph:p.sugerido?numTxt(p.sugerido):'—',sug:p.sugerido})+'</td>'
       +'<td>'+impInPer(y,p.i,'irpf',irpf,{ph:'—'})+'</td>'
       +(conFon?'<td class="fon-td">'+fonCeldaHTML(y,p.meses)+'</td>':'')
@@ -168,7 +168,8 @@ function impTablaPeriodos(y){
       +'<td>'+((iva||irpf)?'<span class="pill clk imp-'+est+'" onclick="impTogglePagoPer('+y+','+p.i+')">'+IMP_EST[est]+'</span>'
                          :'<span class="muted-cell">—</span>')+'</td>'
       +'<td>'+impInPer(y,p.i,'fechaPago',f.fechaPago,{type:'date'})+'</td>'
-      +'<td>'+impInPer(y,p.i,'comprobante',f.comprobante,{ph:'+ N°'})+'</td></tr>';
+      +'<td>'+impInPer(y,p.i,'comprobante',f.comprobante,{ph:'+ N°'})+'</td></tr>'
+      +(typeof ivaDetFilas==='function'?ivaDetFilas(y,p,conFon?11:10):'');   // el detalle abierto (iva-detalle.js)
   }).join('');
   var tot='<tr class="gst-tot"><td>TOTAL '+y+'</td><td></td><td class="num">'+money(t.v)+'</td><td class="num">'+money(t.c)+'</td>'
     +'<td class="num"><b>'+money(t.iva)+'</b></td><td class="num"><b>'+money(t.irpf)+'</b></td>'
